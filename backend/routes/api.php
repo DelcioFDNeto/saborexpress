@@ -9,3 +9,6 @@ Route::get('/user', function (Request $request) {
 
 Route::apiResource('categories', \App\Http\Controllers\CategoryController::class);
 Route::apiResource('products', \App\Http\Controllers\ProductController::class);
+
+Route::apiResource('tables', \App\Http\Controllers\TableController::class);
+Route::post('tables/{table}/open', [\App\Http\Controllers\TableController::class, 'openTable']);
