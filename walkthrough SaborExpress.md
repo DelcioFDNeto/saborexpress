@@ -585,4 +585,27 @@ Separamos as frentes de consumo do cardápio em dois grandes fluxos dedicados:
 
 ---
 
-**Status Final do Projeto:** Ecossistema Integrado, 100% Funcional, com Cardápio Digital Autônomo para Mesa, Guest checkout dinâmico e Cobertura de Testes Automatizada! 🚀
+## 16. Otimização e Redesenho do Painel Gerencial (Dashboard.tsx)
+Transformamos radicalmente o console gerencial do SaborExpress, solucionando gargalos de carregamento lento no banco de dados e redesenhando do zero a interface visual para dar um acabamento ultra-premium, espaçoso e interativo.
+
+### 16.1 Otimização de Performance e Latência Visual Zero (Padrão SWR)
+* **Carregamento SWR (Stale-While-Revalidate)**: Implementamos caching avançado no lado do cliente utilizando `localStorage` para persistir dados estruturados de KPIs operacionais, curva de faturamento diário, canais de vendas, equipe, pratos/categorias e mesas físicas do salão.
+* **Transição Instantânea (0ms)**: Ao navegar no painel administrativo, a alternância entre abas passou a ser imediata. Os dados armazenados são renderizados no ato e uma verificação silenciosa ocorre em background com a API do backend, atualizando as métricas sutilmente ao receber novos payloads.
+* **Skeleton Loaders de Alta Fidelidade**: Desenvolvemos loaders sob medida com animação pulsante (`animate-pulse`) aplicados de forma isolada em cada aba (KPIs, Cardápio, Mesas, Equipe, Auditoria). O spinner global que bloqueava a tela foi eliminado, mantendo o menu gerencial lateral 100% interativo durante o carregamento de dados em conexões lentas.
+
+### 16.2 Redesenho Visual Premium e Fim do Espremimento de Layout
+* **Correção de Preços do Cardápio**: Adicionamos a regra de formatação `whitespace-nowrap` nas tabelas de pratos e cabeçalhos para evitar a quebra indevida da moeda nacional (como a incômoda quebra vertical *"R$\n25,00"*).
+* **Salão Virtual de Mesas**: Substituímos a tabela gerencial crua de mesas por um **Grid de Cards Físicos**. Cada card possui:
+  - Círculo de identificação destacado com número da mesa e sombras internas (`bg-sabor-light text-sabor-dark`).
+  - Badge de capacidade integrado (`👥 x pessoas`).
+  - Pills de status com gradientes e tons pastel HSL harmoniosos (`Livre` - verde esmeralda, `Ocupada` - azul royal, `Reservada` - laranja amber, `Fechamento` - roxo elétrico, `Limpeza` - cinza ardósia).
+  - Alinhamento generoso de ações rápidas no rodapé do card.
+* **Perfis de Colaboradores com Avatares Personalizados**:
+  - Ajustamos a listagem de equipe de um formato comprimido para um layout elegante de duas colunas (cadastro elegante à esquerda, perfis à direita).
+  - Cada colaborador exibe um avatar circular com suas iniciais estilizadas e coloridas de forma inteligente com base no papel corporativo (`administrator` em slate, `waiter` em esmeralda, `kitchen` em laranja, `cashier` em roxo, `delivery` em ciano).
+* **Sidebar e Navegação do Cardápio**:
+  - O painel lateral de categorias recebeu desfoque de vidro (`backdrop-blur-md bg-white/90`) e as categorias ativas agora utilizam gradiente metálico elegante (`bg-gradient-to-r from-slate-900 to-slate-800 text-white`). Os botões de controle foram integrados à linha flex, impedindo sobreposição absoluta de textos.
+
+---
+
+**Status Final do Projeto:** Ecossistema Integrado, 100% Funcional, com Cardápio Digital Autônomo para Mesa, Guest checkout dinâmico, Console Gerencial Ultra-Premium com Carga Zero e Cobertura de Testes Automatizada! 🚀

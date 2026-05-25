@@ -293,3 +293,5 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 1. **Aprimoramento de Interface (UI/UX)**: Refinar os modais e implementar mais validações de divisão de conta e pagamentos parciais.
 2. **Relatórios Financeiros Avançados**: Criar fechamentos diários ou relatórios de vendas exportáveis.
 3. **Automação de Testes**: Implementar suítes de testes automatizados no backend e testes ponta a ponta no frontend.
+4. **Otimização e Redesenho do Painel Gerencial (Concluído ✅)**: Redesenhar a interface do dashboard para acabar com o layout espremido (Cards interativos de mesas, avatares de funcionários, tabelas espaçosas, sem quebras de preço descuidadas) e acelerar a carga de dados de cardápio, mesas e equipe com cache local SWR e skeletons integrados.
+

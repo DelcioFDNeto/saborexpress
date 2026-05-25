@@ -77,22 +77,160 @@ interface AuditEvent {
   created_at: string;
 }
 
+// Safe cache retriever helper for SWR caching
+const getCache = <T,>(key: string, defaultValue: T): T => {
+  try {
+    const cached = localStorage.getItem(key);
+    return cached ? JSON.parse(cached) : defaultValue;
+  } catch (e) {
+    return defaultValue;
+  }
+};
+
+// ==========================================
+// SKELETON LOADERS DE ALTA FIDELIDADE
+// ==========================================
+const KpisSkeleton = () => (
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+    {[1, 2, 3, 4].map(i => (
+      <div key={i} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm animate-pulse space-y-4">
+        <div className="h-3 bg-slate-200 rounded w-1/3"></div>
+        <div className="h-8 bg-slate-200 rounded w-2/3"></div>
+        <div className="h-4 bg-slate-200 rounded w-1/2"></div>
+      </div>
+    ))}
+  </div>
+);
+
+const MenuSkeleton = () => (
+  <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+    <div className="lg:col-span-1 space-y-3">
+      <div className="h-4 bg-slate-200 rounded w-1/2 mb-4"></div>
+      {[1, 2, 3, 4, 5].map(i => (
+        <div key={i} className="h-11 bg-slate-200 rounded-xl w-full animate-pulse"></div>
+      ))}
+    </div>
+    <div className="lg:col-span-3">
+      <div className="bg-white rounded-3xl border border-gray-100 p-6 space-y-4">
+        <div className="flex justify-between items-center mb-6">
+          <div className="h-6 bg-slate-200 rounded w-1/4 animate-pulse"></div>
+          <div className="h-6 bg-slate-200 rounded w-16 animate-pulse"></div>
+        </div>
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="flex items-center gap-4 py-3 border-b border-slate-100 animate-pulse">
+            <div className="w-12 h-12 bg-slate-200 rounded-2xl"></div>
+            <div className="flex-1 space-y-2">
+              <div className="h-4 bg-slate-200 rounded w-1/3"></div>
+              <div className="h-3 bg-slate-200 rounded w-1/2"></div>
+            </div>
+            <div className="h-4 bg-slate-200 rounded w-12"></div>
+            <div className="h-6 bg-slate-200 rounded-full w-20"></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+const TablesSkeleton = () => (
+  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    {[1, 2, 3, 4, 5, 6].map(i => (
+      <div key={i} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4 animate-pulse">
+        <div className="flex justify-between items-center">
+          <div className="w-12 h-12 bg-slate-200 rounded-full"></div>
+          <div className="h-6 bg-slate-200 rounded-full w-20"></div>
+        </div>
+        <div className="h-4 bg-slate-200 rounded w-1/2"></div>
+        <div className="flex justify-end gap-2 pt-2">
+          <div className="w-8 h-8 bg-slate-200 rounded-lg"></div>
+          <div className="w-8 h-8 bg-slate-200 rounded-lg"></div>
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+const TeamSkeleton = () => (
+  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div className="lg:col-span-1 bg-white p-6 rounded-3xl border border-gray-100 space-y-4 animate-pulse">
+      <div className="h-5 bg-slate-200 rounded w-1/2 mb-6"></div>
+      {[1, 2, 3, 4].map(i => (
+        <div key={i} className="space-y-2">
+          <div className="h-3 bg-slate-200 rounded w-1/3"></div>
+          <div className="h-10 bg-slate-200 rounded-xl w-full"></div>
+        </div>
+      ))}
+      <div className="h-12 bg-slate-200 rounded-xl w-full pt-4"></div>
+    </div>
+    <div className="lg:col-span-2 bg-white rounded-3xl border border-gray-100 p-6 space-y-4 animate-pulse">
+      <div className="flex justify-between items-center mb-6">
+        <div className="h-5 bg-slate-200 rounded w-1/4"></div>
+        <div className="h-5 bg-slate-200 rounded w-12"></div>
+      </div>
+      {[1, 2, 3, 4].map(i => (
+        <div key={i} className="flex items-center gap-4 py-3 border-b border-slate-100">
+          <div className="w-10 h-10 bg-slate-200 rounded-full"></div>
+          <div className="flex-1 space-y-2">
+            <div className="h-4 bg-slate-200 rounded w-1/4"></div>
+            <div className="h-3 bg-slate-200 rounded w-1/3"></div>
+          </div>
+          <div className="h-4 bg-slate-200 rounded w-16"></div>
+          <div className="h-6 bg-slate-200 rounded-full w-12"></div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const AuditSkeleton = () => (
+  <div className="space-y-6">
+    <div className="bg-white p-6 rounded-3xl border border-gray-100 space-y-4 animate-pulse">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="space-y-2">
+            <div className="h-3 bg-slate-200 rounded w-1/3"></div>
+            <div className="h-10 bg-slate-200 rounded-lg w-full"></div>
+          </div>
+        ))}
+      </div>
+    </div>
+    <div className="bg-white rounded-3xl border border-gray-100 p-6 space-y-4 animate-pulse">
+      {[1, 2, 3, 4, 5].map(i => (
+        <div key={i} className="flex items-center gap-4 py-3 border-b border-slate-100">
+          <div className="h-4 bg-slate-200 rounded w-24"></div>
+          <div className="h-4 bg-slate-200 rounded w-20"></div>
+          <div className="flex-1 h-4 bg-slate-200 rounded w-1/2"></div>
+          <div className="h-4 bg-slate-200 rounded w-12"></div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<'indicators' | 'menu' | 'tables' | 'team' | 'audit'>('indicators');
-  const [loading, setLoading] = useState(true);
+  
+  // Local silent loading states
+  const [kpisLoading, setKpisLoading] = useState(!localStorage.getItem('se_cache_kpis'));
+  const [menuLoading, setMenuLoading] = useState(!localStorage.getItem('se_cache_products'));
+  const [tablesLoading, setTablesLoading] = useState(!localStorage.getItem('se_cache_tables'));
+  const [teamLoading, setTeamLoading] = useState(!localStorage.getItem('se_cache_users'));
+  const [auditLoading, setAuditLoading] = useState(!localStorage.getItem('se_cache_audit'));
+  const [loading, setLoading] = useState(false); // Backwards compatibility fallback
+
   const [period, setPeriod] = useState('all');
 
-  // Tab 1: Indicators State
-  const [kpis, setKpis] = useState<KPIs | null>(null);
-  const [abcCurve, setAbcCurve] = useState<ABCItem[]>([]);
-  const [revenueChart, setRevenueChart] = useState<RevenuePoint[]>([]);
-  const [channelsData, setChannelsData] = useState<any[]>([]);
-  const [methodsData, setMethodsData] = useState<any[]>([]);
-  const [operatorsData, setOperatorsData] = useState<any[]>([]);
+  // Tab 1: Indicators State (loaded from cache)
+  const [kpis, setKpis] = useState<KPIs | null>(() => getCache('se_cache_kpis', null));
+  const [abcCurve, setAbcCurve] = useState<ABCItem[]>(() => getCache('se_cache_abccurve', []));
+  const [revenueChart, setRevenueChart] = useState<RevenuePoint[]>(() => getCache('se_cache_revenuechart', []));
+  const [channelsData, setChannelsData] = useState<any[]>(() => getCache('se_cache_channels', []));
+  const [methodsData, setMethodsData] = useState<any[]>(() => getCache('se_cache_methods', []));
+  const [operatorsData, setOperatorsData] = useState<any[]>(() => getCache('se_cache_operators', []));
 
-  // Tab 2: Menu (Categories & Products) State
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
+  // Tab 2: Menu (Categories & Products) State (loaded from cache)
+  const [categories, setCategories] = useState<Category[]>(() => getCache('se_cache_categories', []));
+  const [products, setProducts] = useState<Product[]>(() => getCache('se_cache_products', []));
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | 'all'>('all');
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -112,15 +250,15 @@ export default function Dashboard() {
   const [prodIsAvailable, setProdIsAvailable] = useState(true);
   const [showProdForm, setShowProdForm] = useState(false);
 
-  // Tab 3: Tables State
-  const [tables, setTables] = useState<Table[]>([]);
+  // Tab 3: Tables State (loaded from cache)
+  const [tables, setTables] = useState<Table[]>(() => getCache('se_cache_tables', []));
   const [editingTable, setEditingTable] = useState<Table | null>(null);
   const [tableNumber, setTableNumber] = useState('');
   const [tableCapacity, setTableCapacity] = useState('');
   const [showTableForm, setShowTableForm] = useState(false);
 
-  // Tab 4: Team/Users State
-  const [users, setUsers] = useState<User[]>([]);
+  // Tab 4: Team/Users State (loaded from cache)
+  const [users, setUsers] = useState<User[]>(() => getCache('se_cache_users', []));
   const [newUserName, setNewUserName] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
@@ -129,8 +267,8 @@ export default function Dashboard() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [userPasswordChange, setUserPasswordChange] = useState('');
 
-  // Tab 5: Audit Events State
-  const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
+  // Tab 5: Audit Events State (loaded from cache)
+  const [auditEvents, setAuditEvents] = useState<AuditEvent[]>(() => getCache('se_cache_audit', []));
   const [auditFilterEvent, setAuditFilterEvent] = useState('');
   const [auditFilterUser, setAuditFilterUser] = useState('');
   const [auditDateFrom, setAuditDateFrom] = useState('');
@@ -140,7 +278,7 @@ export default function Dashboard() {
 
   // Load Indicator Data
   const fetchDashboardData = async () => {
-    setLoading(true);
+    if (!kpis) setKpisLoading(true);
     try {
       const res = await api.get(`/dashboard?period=${period}`);
       setKpis(res.data.kpis);
@@ -149,62 +287,78 @@ export default function Dashboard() {
       setChannelsData(res.data.channels || []);
       setMethodsData(res.data.payment_methods || []);
       setOperatorsData(res.data.operators || []);
+
+      // Gravando no cache do localStorage
+      localStorage.setItem('se_cache_kpis', JSON.stringify(res.data.kpis));
+      localStorage.setItem('se_cache_abccurve', JSON.stringify(res.data.abc_curve || []));
+      localStorage.setItem('se_cache_revenuechart', JSON.stringify(res.data.revenue_chart || []));
+      localStorage.setItem('se_cache_channels', JSON.stringify(res.data.channels || []));
+      localStorage.setItem('se_cache_methods', JSON.stringify(res.data.payment_methods || []));
+      localStorage.setItem('se_cache_operators', JSON.stringify(res.data.operators || []));
     } catch (err: any) {
       console.error(err);
       toast.error('Erro ao carregar dados dos indicadores.');
     } finally {
-      setLoading(false);
+      setKpisLoading(false);
     }
   };
 
   // Load Menu Data
   const fetchMenuData = async () => {
-    setLoading(true);
+    if (categories.length === 0 || products.length === 0) setMenuLoading(true);
     try {
       const catRes = await api.get('/categories');
-      setCategories(catRes.data.data || catRes.data);
+      const cats = catRes.data.data || catRes.data;
+      setCategories(cats);
+      localStorage.setItem('se_cache_categories', JSON.stringify(cats));
       
       const prodRes = await api.get('/products?per_page=100');
-      setProducts(prodRes.data.data || prodRes.data);
+      const prods = prodRes.data.data || prodRes.data;
+      setProducts(prods);
+      localStorage.setItem('se_cache_products', JSON.stringify(prods));
     } catch (err) {
       console.error(err);
       toast.error('Erro ao carregar dados do cardápio.');
     } finally {
-      setLoading(false);
+      setMenuLoading(false);
     }
   };
 
   // Load Tables
   const fetchTablesData = async () => {
-    setLoading(true);
+    if (tables.length === 0) setTablesLoading(true);
     try {
       const res = await api.get('/tables');
-      setTables(res.data.data || res.data);
+      const tbls = res.data.data || res.data;
+      setTables(tbls);
+      localStorage.setItem('se_cache_tables', JSON.stringify(tbls));
     } catch (err) {
       console.error(err);
       toast.error('Erro ao carregar mesas.');
     } finally {
-      setLoading(false);
+      setTablesLoading(false);
     }
   };
 
   // Load Users
   const fetchUsersData = async () => {
-    setLoading(true);
+    if (users.length === 0) setTeamLoading(true);
     try {
       const res = await api.get('/users');
-      setUsers(res.data.data || res.data);
+      const usrs = res.data.data || res.data;
+      setUsers(usrs);
+      localStorage.setItem('se_cache_users', JSON.stringify(usrs));
     } catch (err) {
       console.error(err);
       toast.error('Erro ao carregar equipe.');
     } finally {
-      setLoading(false);
+      setTeamLoading(false);
     }
   };
 
   // Load Audit Events
   const fetchAuditData = async () => {
-    setLoading(true);
+    if (auditEvents.length === 0) setAuditLoading(true);
     try {
       let url = `/audit-events?page=${auditPage}`;
       if (auditFilterEvent) url += `&event=${auditFilterEvent}`;
@@ -213,13 +367,15 @@ export default function Dashboard() {
       if (auditDateTo) url += `&date_to=${auditDateTo}`;
       
       const res = await api.get(url);
-      setAuditEvents(res.data.data || res.data);
+      const evs = res.data.data || res.data;
+      setAuditEvents(evs);
       setAuditPagination(res.data.meta || null);
+      localStorage.setItem('se_cache_audit', JSON.stringify(evs));
     } catch (err) {
       console.error(err);
       toast.error('Erro ao carregar log de auditoria.');
     } finally {
-      setLoading(false);
+      setAuditLoading(false);
     }
   };
 
@@ -581,8 +737,8 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {loading && !kpis ? (
-              <div className="flex justify-center items-center py-24"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sabor-primary"></div></div>
+            {kpisLoading && !kpis ? (
+              <KpisSkeleton />
             ) : (
               <>
                 {kpis && (
@@ -875,134 +1031,145 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* Layout Categorias + Produtos */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-              
-              {/* Categorias */}
-              <div className="lg:col-span-1 space-y-3">
-                <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">Categorias</h3>
-                <button 
-                  onClick={() => setSelectedCategoryId('all')}
-                  className={`w-full text-left px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider flex justify-between items-center transition-all ${
-                    selectedCategoryId === 'all' 
-                      ? 'bg-slate-900 text-white shadow' 
-                      : 'bg-white text-gray-600 border border-gray-100 hover:bg-gray-50'
-                  }`}
-                >
-                  <span>Todos os Produtos</span>
-                  <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-[10px]">{products.length}</span>
-                </button>
-
-                {categories.map(c => (
-                  <div key={c.id} className="relative group">
+            {menuLoading && categories.length === 0 ? (
+              <MenuSkeleton />
+            ) : (
+              /* Layout Categorias + Produtos */
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
+                
+                {/* Categorias */}
+                <div className="lg:col-span-1">
+                  <div className="bg-white/90 backdrop-blur-md p-6 rounded-3xl border border-gray-100 shadow-sm space-y-3">
+                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-4 px-1">Categorias</h3>
+                    
                     <button 
-                      onClick={() => setSelectedCategoryId(c.id)}
-                      className={`w-full text-left px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider flex justify-between items-center transition-all ${
-                        selectedCategoryId === c.id 
-                          ? 'bg-slate-900 text-white shadow' 
-                          : 'bg-white text-gray-600 border border-gray-100 hover:bg-gray-50'
+                      onClick={() => setSelectedCategoryId('all')}
+                      className={`w-full text-left px-5 py-3.5 rounded-2xl font-bold text-xs uppercase tracking-wider flex justify-between items-center transition-all ${
+                        selectedCategoryId === 'all' 
+                          ? 'bg-gradient-to-r from-slate-900 to-slate-800 text-white font-extrabold shadow-md' 
+                          : 'bg-slate-50/50 text-slate-600 border border-slate-100 hover:bg-slate-100/70'
                       }`}
                     >
-                      <span className="truncate pr-8">{c.name}</span>
+                      <span>Todos os Produtos</span>
+                      <span className={`px-2.5 py-0.5 rounded-lg text-[10px] font-black ${selectedCategoryId === 'all' ? 'bg-slate-700 text-white' : 'bg-slate-200 text-slate-700'}`}>{products.length}</span>
                     </button>
-                    
-                    {/* Categoria Hover Action Buttons */}
-                    <div className="absolute right-2 top-2.5 hidden group-hover:flex items-center gap-1 z-10 bg-inherit pl-1">
-                      <button onClick={() => handleEditCategory(c)} title="Editar" className="p-1 hover:bg-gray-100 rounded text-slate-500 hover:text-slate-800 transition-colors">
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                      </button>
-                      <button onClick={() => handleDeleteCategory(c.id)} title="Excluir" className="p-1 hover:bg-gray-100 rounded text-rose-500 hover:text-rose-700 transition-colors">
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
 
-              {/* Lista de Produtos */}
-              <div className="lg:col-span-3">
-                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-                  <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                    <h3 className="font-extrabold text-gray-900">
-                      {selectedCategoryId === 'all' ? 'Todos os Itens' : categories.find(c => c.id === selectedCategoryId)?.name || 'Produtos'}
-                    </h3>
-                    <span className="bg-sabor-light text-sabor-dark px-2.5 py-1 rounded-md text-xs font-black">{filteredProducts.length} itens</span>
-                  </div>
-
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="bg-gray-50/20 border-b border-gray-100">
-                          <th className="p-4 font-bold text-gray-500 text-xs uppercase tracking-wider">Item</th>
-                          <th className="p-4 font-bold text-gray-500 text-xs uppercase tracking-wider">Categoria</th>
-                          <th className="p-4 font-bold text-gray-500 text-xs uppercase tracking-wider">Preço</th>
-                          <th className="p-4 font-bold text-gray-500 text-xs uppercase tracking-wider">Estoque</th>
-                          <th className="p-4 font-bold text-gray-500 text-xs uppercase tracking-wider">Status</th>
-                          <th className="p-4 font-bold text-gray-500 text-xs uppercase tracking-wider text-right">Ações</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100">
-                        {filteredProducts.length === 0 ? (
-                          <tr>
-                            <td colSpan={6} className="p-8 text-center text-gray-400 font-medium">Nenhum produto cadastrado nesta categoria.</td>
-                          </tr>
-                        ) : (
-                          filteredProducts.map(p => (
-                            <tr key={p.id} className="hover:bg-gray-50/50 transition-colors">
-                              <td className="p-4">
-                                <div className="flex items-center gap-3">
-                                  <img src={p.image_url} alt={p.name} className="w-10 h-10 object-cover rounded-lg bg-gray-100 border border-gray-100 shadow-inner" />
-                                  <div>
-                                    <div className="font-bold text-gray-900 text-sm">{p.name}</div>
-                                    <div className="text-gray-400 text-xs truncate max-w-[200px]">{p.description}</div>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="p-4 text-xs font-bold text-slate-500 uppercase">
-                                {p.category?.name || categories.find(c => c.id === p.category_id)?.name || 'Sem Categoria'}
-                              </td>
-                              <td className="p-4 font-bold text-gray-900 text-sm">{formatCurrency(p.price)}</td>
-                              <td className="p-4 text-sm font-semibold">
-                                {p.stock_quantity !== null ? (
-                                  <span className={`px-2 py-0.5 rounded font-bold ${p.stock_quantity <= 5 ? 'bg-rose-50 text-rose-600' : 'bg-gray-100 text-gray-700'}`}>
-                                    {p.stock_quantity} un
-                                  </span>
-                                ) : (
-                                  <span className="text-gray-400 font-medium">Ilimitado</span>
-                                )}
-                              </td>
-                              <td className="p-4">
-                                <button 
-                                  onClick={() => handleToggleAvailability(p)}
-                                  className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider transition-colors ${
-                                    p.is_available 
-                                      ? 'bg-sabor-light text-sabor-dark hover:bg-emerald-100' 
-                                      : 'bg-rose-50 text-rose-600 hover:bg-rose-100'
-                                  }`}
-                                >
-                                  {p.is_available ? 'Disponível' : 'Indisponível'}
-                                </button>
-                              </td>
-                              <td className="p-4 text-right">
-                                <div className="flex items-center justify-end gap-2">
-                                  <button onClick={() => handleEditProduct(p)} title="Editar" className="p-1.5 hover:bg-gray-100 rounded text-slate-500 hover:text-slate-800 transition-colors">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                                  </button>
-                                  <button onClick={() => handleDeleteProduct(p.id)} title="Excluir" className="p-1.5 hover:bg-gray-100 rounded text-rose-500 hover:text-rose-700 transition-colors">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
+                    {categories.map(c => (
+                      <div key={c.id} className="relative group/cat flex items-center justify-between p-0.5 rounded-2xl bg-slate-50/20 border border-slate-100/50 hover:bg-slate-50 transition-all duration-200 shadow-sm">
+                        <button 
+                          onClick={() => setSelectedCategoryId(c.id)}
+                          className={`flex-1 text-left px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all truncate ${
+                            selectedCategoryId === c.id 
+                              ? 'bg-gradient-to-r from-slate-900 to-slate-800 text-white font-extrabold shadow-md' 
+                              : 'text-slate-600 hover:bg-slate-100/50'
+                          }`}
+                        >
+                          {c.name}
+                        </button>
+                        
+                        {/* Categoria Actions (Visible on hover inside item) */}
+                        <div className="flex items-center gap-0.5 opacity-0 group-hover/cat:opacity-100 transition-opacity duration-200 pr-2">
+                          <button onClick={() => handleEditCategory(c)} title="Editar Categoria" className="p-1.5 hover:bg-slate-200/80 rounded-lg text-slate-500 hover:text-slate-800 transition-colors">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                          </button>
+                          <button onClick={() => handleDeleteCategory(c.id)} title="Excluir Categoria" className="p-1.5 hover:bg-rose-50 rounded-lg text-rose-500 hover:text-rose-700 transition-colors">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </div>
 
-            </div>
+                {/* Lista de Produtos */}
+                <div className="lg:col-span-3">
+                  <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="p-6 md:p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                      <h3 className="font-extrabold text-gray-900 text-lg tracking-tight">
+                        {selectedCategoryId === 'all' ? 'Todos os Itens' : categories.find(c => c.id === selectedCategoryId)?.name || 'Produtos'}
+                      </h3>
+                      <span className="bg-sabor-light text-sabor-dark px-3 py-1 rounded-lg text-xs font-black">{filteredProducts.length} itens</span>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-gray-50/20 border-b border-gray-100">
+                            <th className="px-6 py-4.5 font-bold text-slate-400 text-xs uppercase tracking-wider">Item</th>
+                            <th className="px-6 py-4.5 font-bold text-slate-400 text-xs uppercase tracking-wider whitespace-nowrap">Categoria</th>
+                            <th className="px-6 py-4.5 font-bold text-slate-400 text-xs uppercase tracking-wider whitespace-nowrap">Preço</th>
+                            <th className="px-6 py-4.5 font-bold text-slate-400 text-xs uppercase tracking-wider whitespace-nowrap">Estoque</th>
+                            <th className="px-6 py-4.5 font-bold text-slate-400 text-xs uppercase tracking-wider whitespace-nowrap">Status</th>
+                            <th className="px-6 py-4.5 font-bold text-slate-400 text-xs uppercase tracking-wider text-right whitespace-nowrap">Ações</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {filteredProducts.length === 0 ? (
+                            <tr>
+                              <td colSpan={6} className="px-6 py-12 text-center text-slate-400 font-medium">Nenhum produto cadastrado nesta categoria.</td>
+                            </tr>
+                          ) : (
+                            filteredProducts.map(p => (
+                              <tr key={p.id} className="hover:bg-slate-50/40 transition-colors group">
+                                <td className="px-6 py-5">
+                                  <div className="flex items-center gap-4">
+                                    <div className="relative overflow-hidden w-12 h-12 md:w-14 md:h-14 rounded-2xl border border-slate-100 shadow-sm flex-shrink-0">
+                                      <img src={p.image_url} alt={p.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                                    </div>
+                                    <div className="min-w-0">
+                                      <div className="font-extrabold text-slate-800 text-sm tracking-tight">{p.name}</div>
+                                      <div className="text-slate-500 text-xs truncate max-w-xs md:max-w-md lg:max-w-lg mt-0.5">{p.description}</div>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-5 text-xs font-black text-slate-500 uppercase whitespace-nowrap">
+                                  {p.category?.name || categories.find(c => c.id === p.category_id)?.name || 'Sem Categoria'}
+                                </td>
+                                <td className="px-6 py-5 font-extrabold text-slate-800 text-sm whitespace-nowrap">
+                                  {formatCurrency(p.price)}
+                                </td>
+                                <td className="px-6 py-5 text-sm font-semibold whitespace-nowrap">
+                                  {p.stock_quantity !== null ? (
+                                    <span className={`px-2.5 py-1 rounded-lg font-bold text-xs ${p.stock_quantity <= 5 ? 'bg-rose-50 text-rose-600 border border-rose-100' : 'bg-slate-100 text-slate-700'}`}>
+                                      {p.stock_quantity} un
+                                    </span>
+                                  ) : (
+                                    <span className="text-slate-400 font-medium text-xs">Ilimitado</span>
+                                  )}
+                                </td>
+                                <td className="px-6 py-5 whitespace-nowrap">
+                                  <button 
+                                    onClick={() => handleToggleAvailability(p)}
+                                    className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-colors ${
+                                      p.is_available 
+                                        ? 'bg-sabor-light text-sabor-dark hover:bg-emerald-100/90' 
+                                        : 'bg-rose-50 text-rose-600 hover:bg-rose-100/90 border border-rose-100'
+                                    }`}
+                                  >
+                                    {p.is_available ? 'Disponível' : 'Indisponível'}
+                                  </button>
+                                </td>
+                                <td className="px-6 py-5 text-right whitespace-nowrap">
+                                  <div className="flex items-center justify-end gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                                    <button onClick={() => handleEditProduct(p)} title="Editar Produto" className="p-2 hover:bg-slate-100 rounded-xl text-slate-500 hover:text-slate-800 transition-colors">
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                    </button>
+                                    <button onClick={() => handleDeleteProduct(p.id)} title="Excluir Produto" className="p-2 hover:bg-rose-50 rounded-xl text-rose-500 hover:text-rose-700 transition-colors">
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            )}
           </div>
         )}
 
@@ -1052,61 +1219,88 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* List of Tables */}
-            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                <h3 className="font-extrabold text-gray-900">Mesas Cadastradas</h3>
-                <span className="bg-sabor-light text-sabor-dark px-2.5 py-1 rounded-md text-xs font-black">{tables.length} mesas</span>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-gray-50/20 border-b border-gray-100">
-                      <th className="p-4 font-bold text-gray-500 text-xs uppercase tracking-wider">Identificador</th>
-                      <th className="p-4 font-bold text-gray-500 text-xs uppercase tracking-wider">Número</th>
-                      <th className="p-4 font-bold text-gray-500 text-xs uppercase tracking-wider">Capacidade</th>
-                      <th className="p-4 font-bold text-gray-500 text-xs uppercase tracking-wider">Status Operacional</th>
-                      <th className="p-4 font-bold text-gray-500 text-xs uppercase tracking-wider text-right">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {tables.map(t => (
-                      <tr key={t.id} className="hover:bg-gray-50/50 transition-colors">
-                        <td className="p-4 font-bold text-gray-500">Mesa #{t.id}</td>
-                        <td className="p-4">
-                          <span className="w-8 h-8 rounded-full bg-sabor-light text-sabor-dark font-extrabold text-sm flex items-center justify-center">
+            {/* Grid de Cards de Mesas */}
+            {tablesLoading && tables.length === 0 ? (
+              <TablesSkeleton />
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+                {tables.map(t => (
+                  <div 
+                    key={t.id} 
+                    className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between relative overflow-hidden group/table"
+                  >
+                    {/* Status Gradient Bar */}
+                    <div className={`absolute top-0 left-0 right-0 h-1.5 ${
+                      t.status === 'Livre' ? 'bg-emerald-500' :
+                      t.status === 'Ocupada' ? 'bg-blue-500' :
+                      t.status === 'Reservada' ? 'bg-amber-500' :
+                      t.status === 'Fechamento' ? 'bg-indigo-500' :
+                      'bg-slate-300'
+                    }`} />
+                    
+                    <div>
+                      <div className="flex justify-between items-start mb-5">
+                        <div className="flex items-center gap-3">
+                          <span className={`w-12 h-12 rounded-2xl font-black text-lg flex items-center justify-center shadow-inner ${
+                            t.status === 'Livre' ? 'bg-emerald-50 text-emerald-700' :
+                            t.status === 'Ocupada' ? 'bg-blue-50 text-blue-700' :
+                            t.status === 'Reservada' ? 'bg-amber-50 text-amber-700' :
+                            t.status === 'Fechamento' ? 'bg-indigo-50 text-indigo-700' :
+                            'bg-slate-100 text-slate-700'
+                          }`}>
                             {t.number}
                           </span>
-                        </td>
-                        <td className="p-4 font-semibold text-gray-700">{t.capacity} pessoas</td>
-                        <td className="p-4">
-                          <span className={`px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider ${
-                            t.status === 'Livre' ? 'bg-sabor-light text-sabor-dark' :
-                            t.status === 'Ocupada' ? 'bg-blue-50 text-blue-600' :
-                            t.status === 'Reservada' ? 'bg-amber-50 text-amber-600' :
-                            t.status === 'Fechamento' ? 'bg-indigo-50 text-indigo-600' :
-                            'bg-gray-100 text-gray-500'
-                          }`}>
-                            {t.status}
-                          </span>
-                        </td>
-                        <td className="p-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <button onClick={() => handleEditTable(t)} title="Editar" className="p-1.5 hover:bg-gray-100 rounded text-slate-500 hover:text-slate-800 transition-colors">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                            </button>
-                            <button onClick={() => handleDeleteTable(t.id)} disabled={t.status !== 'Livre'} title="Excluir" className="p-1.5 hover:bg-gray-100 rounded text-rose-500 hover:text-rose-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                            </button>
+                          <div>
+                            <span className="text-slate-400 font-bold text-[10px] uppercase tracking-wider block">Identificador</span>
+                            <span className="text-slate-700 font-extrabold text-sm block">Mesa #{t.id}</span>
                           </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                        </div>
+
+                        {/* Custom status pill */}
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                          t.status === 'Livre' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
+                          t.status === 'Ocupada' ? 'bg-blue-50 text-blue-700 border border-blue-100' :
+                          t.status === 'Reservada' ? 'bg-amber-50 text-amber-700 border border-amber-100' :
+                          t.status === 'Fechamento' ? 'bg-indigo-50 text-indigo-700 border border-indigo-100' :
+                          'bg-slate-100 text-slate-600 border border-slate-200'
+                        }`}>
+                          {t.status}
+                        </span>
+                      </div>
+
+                      <div className="bg-slate-50/50 border border-slate-100 rounded-2xl p-4 flex items-center gap-2.5 mb-6">
+                        <span className="text-lg">👥</span>
+                        <div>
+                          <span className="text-slate-400 font-bold text-[9px] uppercase tracking-wider block">Capacidade</span>
+                          <span className="text-slate-700 font-bold text-xs block">{t.capacity} pessoas</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                      <span className="text-slate-400 text-[10px] font-bold">Ações Gerenciais</span>
+                      <div className="flex items-center gap-1">
+                        <button 
+                          onClick={() => handleEditTable(t)} 
+                          title="Editar Mesa" 
+                          className="p-2 hover:bg-slate-100 rounded-xl text-slate-500 hover:text-slate-800 transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteTable(t.id)} 
+                          disabled={t.status !== 'Livre'} 
+                          title={t.status !== 'Livre' ? 'Não é possível excluir mesas ocupadas/reservadas' : 'Excluir Mesa'} 
+                          className="p-2 hover:bg-rose-50 rounded-xl text-rose-500 hover:text-rose-700 transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
+            )}
           </div>
         )}
 
@@ -1140,100 +1334,141 @@ export default function Dashboard() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              
-              {/* Form to Register Collaborator */}
-              <div className="lg:col-span-1">
-                <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-                  <h2 className="text-lg font-bold text-gray-900 mb-4">Adicionar Colaborador</h2>
-                  <form onSubmit={handleCreateUserSubmit} className="space-y-4">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Nome Completo</label>
-                      <input type="text" required value={newUserName} onChange={e => setNewUserName(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-sabor-primary focus:border-sabor-primary sm:text-sm" placeholder="Ex: Lucas Nazaré" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">E-mail Corporativo</label>
-                      <input type="email" required value={newUserEmail} onChange={e => setNewUserEmail(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-sabor-primary focus:border-sabor-primary sm:text-sm" placeholder="lucas@saborexpress.com" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Senha Provisória</label>
-                      <input type="password" required minLength={6} value={newUserPassword} onChange={e => setNewUserPassword(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-sabor-primary focus:border-sabor-primary sm:text-sm" placeholder="Mínimo 6 caracteres" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Cargo / Perfil</label>
-                      <select value={newUserRole} onChange={e => setNewUserRole(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-sabor-primary focus:border-sabor-primary sm:text-sm bg-white font-bold text-gray-700">
-                        <option value="waiter">Garçom</option>
-                        <option value="kitchen">Cozinha</option>
-                        <option value="cashier">Caixa</option>
-                        <option value="delivery">Entregador</option>
-                        <option value="administrator">Administrador</option>
-                      </select>
-                    </div>
-                    <button type="submit" disabled={isCreatingUser} className="w-full py-3 bg-sabor-primary hover:bg-sabor-dark text-white rounded-xl font-extrabold text-sm transition-all shadow-md mt-2">
-                      {isCreatingUser ? 'Salvando...' : 'Salvar Novo Membro'}
-                    </button>
-                  </form>
-                </div>
-              </div>
-
-              {/* Members List */}
-              <div className="lg:col-span-2">
-                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-                  <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                    <h3 className="font-extrabold text-gray-900">Membros da Equipe</h3>
-                    <span className="bg-sabor-light text-sabor-dark px-2.5 py-1 rounded-md text-xs font-black">{users.length} ativos</span>
+            {teamLoading && users.length === 0 ? (
+              <TeamSkeleton />
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                
+                {/* Form to Register Collaborator */}
+                <div className="lg:col-span-1">
+                  <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
+                    <h2 className="text-lg font-black text-slate-800 mb-5 tracking-tight">Adicionar Colaborador</h2>
+                    <form onSubmit={handleCreateUserSubmit} className="space-y-5">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Nome Completo</label>
+                        <input type="text" required value={newUserName} onChange={e => setNewUserName(e.target.value)} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-sabor-primary focus:border-sabor-primary sm:text-sm placeholder-slate-300 font-semibold" placeholder="Ex: Lucas Nazaré" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">E-mail Corporativo</label>
+                        <input type="email" required value={newUserEmail} onChange={e => setNewUserEmail(e.target.value)} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-sabor-primary focus:border-sabor-primary sm:text-sm placeholder-slate-300 font-semibold" placeholder="lucas@saborexpress.com" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Senha Provisória</label>
+                        <input type="password" required minLength={6} value={newUserPassword} onChange={e => setNewUserPassword(e.target.value)} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-sabor-primary focus:border-sabor-primary sm:text-sm placeholder-slate-300 font-semibold" placeholder="Mínimo 6 caracteres" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Cargo / Perfil</label>
+                        <select value={newUserRole} onChange={e => setNewUserRole(e.target.value)} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-sabor-primary focus:border-sabor-primary sm:text-sm bg-white font-extrabold text-slate-700">
+                          <option value="waiter">Garçom</option>
+                          <option value="kitchen">Cozinha</option>
+                          <option value="cashier">Caixa</option>
+                          <option value="delivery">Entregador</option>
+                          <option value="administrator">Administrador</option>
+                        </select>
+                      </div>
+                      <button type="submit" disabled={isCreatingUser} className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-black text-sm transition-all shadow-md mt-2">
+                        {isCreatingUser ? 'Salvando...' : 'Salvar Novo Membro'}
+                      </button>
+                    </form>
                   </div>
+                </div>
 
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="bg-gray-50/20 border-b border-gray-100">
-                          <th className="p-4 font-bold text-gray-500 text-xs uppercase tracking-wider">Nome</th>
-                          <th className="p-4 font-bold text-gray-500 text-xs uppercase tracking-wider">Email</th>
-                          <th className="p-4 font-bold text-gray-500 text-xs uppercase tracking-wider">Cargo</th>
-                          <th className="p-4 font-bold text-gray-500 text-xs uppercase tracking-wider">Status</th>
-                          <th className="p-4 font-bold text-gray-500 text-xs uppercase tracking-wider text-right">Ações</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100">
-                        {users.map(u => (
-                          <tr key={u.id} className="hover:bg-gray-50/50 transition-colors">
-                            <td className="p-4 font-bold text-gray-900 text-sm">{u.name}</td>
-                            <td className="p-4 text-xs font-medium text-gray-600">{u.email}</td>
-                            <td className="p-4">
-                              <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider">
-                                {u.role}
-                              </span>
-                            </td>
-                            <td className="p-4">
-                              <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
-                                u.is_active ? 'bg-sabor-light text-sabor-dark' : 'bg-red-50 text-red-600'
-                              }`}>
-                                {u.is_active ? 'Ativo' : 'Inativo'}
-                              </span>
-                            </td>
-                            <td className="p-4 text-right">
-                              <div className="flex items-center justify-end gap-2">
-                                <button onClick={() => setEditingUser(u)} title="Alterar Senha" className="p-1 hover:bg-gray-100 rounded text-slate-500 hover:text-slate-800 transition-colors">
-                                  🔑
-                                </button>
-                                <button onClick={() => handleToggleUserStatus(u)} title={u.is_active ? "Inativar" : "Ativar"} className={`p-1 hover:bg-gray-100 rounded transition-colors ${u.is_active ? 'text-amber-500' : 'text-emerald-500'}`}>
-                                  {u.is_active ? '🚫' : '✅'}
-                                </button>
-                                <button onClick={() => handleDeleteUser(u)} title="Excluir Conta" className="p-1 hover:bg-gray-100 rounded text-rose-500 hover:text-rose-700 transition-colors">
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                </button>
-                              </div>
-                            </td>
+                {/* Members List */}
+                <div className="lg:col-span-2">
+                  <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="p-6 md:p-8 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                      <h3 className="font-extrabold text-slate-800 text-lg tracking-tight">Membros da Equipe</h3>
+                      <span className="bg-sabor-light text-sabor-dark px-3 py-1 rounded-lg text-xs font-black">{users.length} ativos</span>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-gray-50/20 border-b border-gray-100">
+                            <th className="px-6 py-4.5 font-bold text-slate-400 text-xs uppercase tracking-wider">Nome</th>
+                            <th className="px-6 py-4.5 font-bold text-slate-400 text-xs uppercase tracking-wider">Email</th>
+                            <th className="px-6 py-4.5 font-bold text-slate-400 text-xs uppercase tracking-wider whitespace-nowrap">Cargo</th>
+                            <th className="px-6 py-4.5 font-bold text-slate-400 text-xs uppercase tracking-wider whitespace-nowrap">Status</th>
+                            <th className="px-6 py-4.5 font-bold text-slate-400 text-xs uppercase tracking-wider text-right whitespace-nowrap">Ações</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {users.map(u => {
+                            const initials = u.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                            const getRoleDetails = (role: string) => {
+                              switch (role) {
+                                case 'administrator':
+                                  return { label: 'Administrador', bg: 'bg-slate-800 text-white' };
+                                case 'waiter':
+                                  return { label: 'Garçom', bg: 'bg-emerald-500 text-white' };
+                                case 'kitchen':
+                                  return { label: 'Cozinha', bg: 'bg-orange-500 text-white' };
+                                case 'cashier':
+                                  return { label: 'Caixa', bg: 'bg-indigo-500 text-white' };
+                                case 'delivery':
+                                  return { label: 'Entregador', bg: 'bg-cyan-500 text-white' };
+                                default:
+                                  return { label: role, bg: 'bg-slate-500 text-white' };
+                              }
+                            };
+                            const roleInfo = getRoleDetails(u.role);
+                            
+                            return (
+                              <tr key={u.id} className="hover:bg-slate-50/40 transition-colors group">
+                                <td className="px-6 py-5">
+                                  <div className="flex items-center gap-4">
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs uppercase tracking-wider shadow-sm flex-shrink-0 ${roleInfo.bg}`}>
+                                      {initials}
+                                    </div>
+                                    <div>
+                                      <div className="font-extrabold text-slate-800 text-sm tracking-tight">{u.name}</div>
+                                      <div className="text-slate-400 text-[10px] font-bold uppercase tracking-wider lg:hidden mt-0.5">{roleInfo.label}</div>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-5 text-xs font-semibold text-slate-600">{u.email}</td>
+                                <td className="px-6 py-5 whitespace-nowrap">
+                                  <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${
+                                    u.role === 'administrator' ? 'bg-slate-100 text-slate-800' :
+                                    u.role === 'waiter' ? 'bg-emerald-50 text-emerald-700' :
+                                    u.role === 'kitchen' ? 'bg-orange-50 text-orange-700' :
+                                    u.role === 'cashier' ? 'bg-indigo-50 text-indigo-700' :
+                                    'bg-cyan-50 text-cyan-700'
+                                  }`}>
+                                    {roleInfo.label}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-5 whitespace-nowrap">
+                                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider whitespace-nowrap ${
+                                    u.is_active ? 'bg-sabor-light text-sabor-dark' : 'bg-rose-50 text-rose-600 border border-rose-100'
+                                  }`}>
+                                    {u.is_active ? 'Ativo' : 'Inativo'}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-5 text-right whitespace-nowrap">
+                                  <div className="flex items-center justify-end gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                                    <button onClick={() => setEditingUser(u)} title="Alterar Senha" className="p-2 hover:bg-slate-100 rounded-xl text-slate-500 hover:text-slate-800 transition-colors">
+                                      🔑
+                                    </button>
+                                    <button onClick={() => handleToggleUserStatus(u)} title={u.is_active ? "Inativar Conta" : "Ativar Conta"} className={`p-2 hover:bg-slate-100 rounded-xl transition-colors ${u.is_active ? 'text-amber-500 hover:text-amber-700' : 'text-emerald-500 hover:text-emerald-700'}`}>
+                                      {u.is_active ? '🚫' : '✅'}
+                                    </button>
+                                    <button onClick={() => handleDeleteUser(u)} title="Excluir Conta Permanentemente" className="p-2 hover:bg-rose-50 rounded-xl text-rose-500 hover:text-rose-700 transition-colors">
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-            </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -1247,131 +1482,137 @@ export default function Dashboard() {
               <p className="text-gray-500 font-medium mt-1">Acompanhamento e histórico de ações críticas realizadas por usuários.</p>
             </div>
 
-            {/* Filter Panel */}
-            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 mb-8">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Evento</label>
-                  <input type="text" value={auditFilterEvent} onChange={e => setAuditFilterEvent(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Ex: CategoryCreated" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">ID do Usuário</label>
-                  <input type="number" value={auditFilterUser} onChange={e => setAuditFilterUser(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Ex: 1" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">De (Data)</label>
-                  <input type="date" value={auditDateFrom} onChange={e => setAuditDateFrom(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Até (Data)</label>
-                  <input type="date" value={auditDateTo} onChange={e => setAuditDateTo(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
-                </div>
-              </div>
-              <div className="flex gap-3 justify-end mt-4 pt-4 border-t border-gray-100">
-                <button 
-                  onClick={() => {
-                    setAuditFilterEvent('');
-                    setAuditFilterUser('');
-                    setAuditDateFrom('');
-                    setAuditDateTo('');
-                    setAuditPage(1);
-                  }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors"
-                >
-                  Limpar Filtros
-                </button>
-                <button 
-                  onClick={() => {
-                    setAuditPage(1);
-                    fetchAuditData();
-                  }}
-                  className="px-6 py-2 bg-sabor-primary text-sabor-dark font-extrabold rounded-lg text-sm hover:bg-sabor-primary/90 transition-colors"
-                >
-                  🔍 Filtrar Logs
-                </button>
-              </div>
-            </div>
-
-            {/* Events Log Table */}
-            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                <h3 className="font-extrabold text-gray-900">Eventos Auditados</h3>
-                <span className="bg-sabor-light text-sabor-dark px-2.5 py-1 rounded-md text-xs font-black">{auditEvents.length} listados</span>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-gray-50/20 border-b border-gray-100">
-                      <th className="p-4 font-bold text-gray-500 text-xs uppercase tracking-wider">Timestamp</th>
-                      <th className="p-4 font-bold text-gray-500 text-xs uppercase tracking-wider">Evento</th>
-                      <th className="p-4 font-bold text-gray-500 text-xs uppercase tracking-wider">Usuário</th>
-                      <th className="p-4 font-bold text-gray-500 text-xs uppercase tracking-wider">Descrição / Ação</th>
-                      <th className="p-4 font-bold text-gray-500 text-xs uppercase tracking-wider">Recurso ID</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 text-sm">
-                    {auditEvents.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="p-8 text-center text-gray-400 font-medium">Nenhum evento registrado com os filtros informados.</td>
-                      </tr>
-                    ) : (
-                      auditEvents.map(ev => (
-                        <tr key={ev.id} className="hover:bg-gray-50/50 transition-colors">
-                          <td className="p-4 text-xs text-gray-500 font-medium whitespace-nowrap">
-                            {new Date(ev.created_at).toLocaleString('pt-BR')}
-                          </td>
-                          <td className="p-4 font-bold text-emerald-700 text-xs">
-                            {ev.event}
-                          </td>
-                          <td className="p-4">
-                            {ev.user ? (
-                              <div>
-                                <span className="font-bold text-gray-900 block text-xs">{ev.user.name}</span>
-                                <span className="text-gray-400 text-[10px] block font-medium">{ev.user.email}</span>
-                              </div>
-                            ) : (
-                              <span className="text-gray-400 font-medium text-xs">Sistema / Anônimo</span>
-                            )}
-                          </td>
-                          <td className="p-4 text-gray-600 font-medium text-xs leading-relaxed">
-                            {ev.description || 'Nenhuma descrição fornecida.'}
-                          </td>
-                          <td className="p-4">
-                            <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-mono text-xs">
-                              {ev.auditable_type.split('\\').pop()}:{ev.auditable_id}
-                            </span>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Pagination controls */}
-              {auditPagination && auditPagination.last_page > 1 && (
-                <div className="p-6 border-t border-gray-100 flex items-center justify-between bg-gray-50/20">
-                  <span className="text-xs text-gray-500 font-medium">Página {auditPage} de {auditPagination.last_page}</span>
-                  <div className="flex gap-2">
+            {auditLoading && auditEvents.length === 0 ? (
+              <AuditSkeleton />
+            ) : (
+              <>
+                {/* Filter Panel */}
+                <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 mb-8">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Evento</label>
+                      <input type="text" value={auditFilterEvent} onChange={e => setAuditFilterEvent(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Ex: CategoryCreated" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">ID do Usuário</label>
+                      <input type="number" value={auditFilterUser} onChange={e => setAuditFilterUser(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Ex: 1" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">De (Data)</label>
+                      <input type="date" value={auditDateFrom} onChange={e => setAuditDateFrom(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Até (Data)</label>
+                      <input type="date" value={auditDateTo} onChange={e => setAuditDateTo(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                    </div>
+                  </div>
+                  <div className="flex gap-3 justify-end mt-4 pt-4 border-t border-gray-100">
                     <button 
-                      onClick={() => setAuditPage(prev => Math.max(1, prev - 1))}
-                      disabled={auditPage === 1}
-                      className="px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      onClick={() => {
+                        setAuditFilterEvent('');
+                        setAuditFilterUser('');
+                        setAuditDateFrom('');
+                        setAuditDateTo('');
+                        setAuditPage(1);
+                      }}
+                      className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors"
                     >
-                      Anterior
+                      Limpar Filtros
                     </button>
                     <button 
-                      onClick={() => setAuditPage(prev => Math.min(auditPagination.last_page, prev + 1))}
-                      disabled={auditPage === auditPagination.last_page}
-                      className="px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      onClick={() => {
+                        setAuditPage(1);
+                        fetchAuditData();
+                      }}
+                      className="px-6 py-2 bg-sabor-primary text-sabor-dark font-extrabold rounded-lg text-sm hover:bg-sabor-primary/90 transition-colors"
                     >
-                      Próxima
+                      🔍 Filtrar Logs
                     </button>
                   </div>
                 </div>
-              )}
-            </div>
+
+                {/* Events Log Table */}
+                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                  <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                    <h3 className="font-extrabold text-gray-900">Eventos Auditados</h3>
+                    <span className="bg-sabor-light text-sabor-dark px-2.5 py-1 rounded-md text-xs font-black">{auditEvents.length} listados</span>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-gray-50/20 border-b border-gray-100">
+                          <th className="p-4 font-bold text-gray-500 text-xs uppercase tracking-wider">Timestamp</th>
+                          <th className="p-4 font-bold text-gray-500 text-xs uppercase tracking-wider">Evento</th>
+                          <th className="p-4 font-bold text-gray-500 text-xs uppercase tracking-wider">Usuário</th>
+                          <th className="p-4 font-bold text-gray-500 text-xs uppercase tracking-wider">Descrição / Ação</th>
+                          <th className="p-4 font-bold text-gray-500 text-xs uppercase tracking-wider">Recurso ID</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 text-sm">
+                        {auditEvents.length === 0 ? (
+                          <tr>
+                            <td colSpan={5} className="p-8 text-center text-gray-400 font-medium">Nenhum evento registrado com os filtros informados.</td>
+                          </tr>
+                        ) : (
+                          auditEvents.map(ev => (
+                            <tr key={ev.id} className="hover:bg-gray-50/50 transition-colors">
+                              <td className="p-4 text-xs text-gray-500 font-medium whitespace-nowrap">
+                                {new Date(ev.created_at).toLocaleString('pt-BR')}
+                              </td>
+                              <td className="p-4 font-bold text-emerald-700 text-xs">
+                                {ev.event}
+                              </td>
+                              <td className="p-4">
+                                {ev.user ? (
+                                  <div>
+                                    <span className="font-bold text-gray-900 block text-xs">{ev.user.name}</span>
+                                    <span className="text-gray-400 text-[10px] block font-medium">{ev.user.email}</span>
+                                  </div>
+                                ) : (
+                                  <span className="text-gray-400 font-medium text-xs">Sistema / Anônimo</span>
+                                )}
+                              </td>
+                              <td className="p-4 text-gray-600 font-medium text-xs leading-relaxed">
+                                {ev.description || 'Nenhuma descrição fornecida.'}
+                              </td>
+                              <td className="p-4">
+                                <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-mono text-xs">
+                                  {ev.auditable_type.split('\\').pop()}:{ev.auditable_id}
+                                </span>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Pagination controls */}
+                  {auditPagination && auditPagination.last_page > 1 && (
+                    <div className="p-6 border-t border-gray-100 flex items-center justify-between bg-gray-50/20">
+                      <span className="text-xs text-gray-500 font-medium">Página {auditPage} de {auditPagination.last_page}</span>
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => setAuditPage(prev => Math.max(1, prev - 1))}
+                          disabled={auditPage === 1}
+                          className="px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                          Anterior
+                        </button>
+                        <button 
+                          onClick={() => setAuditPage(prev => Math.min(auditPagination.last_page, prev + 1))}
+                          disabled={auditPage === auditPagination.last_page}
+                          className="px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                          Próxima
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         )}
 
