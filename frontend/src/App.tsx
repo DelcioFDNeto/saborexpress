@@ -96,6 +96,9 @@ function App() {
 
               <Route element={<ProtectedRoute allowedRoles={['administrator', 'kitchen']} />}>
                 <Route path="/cozinha" element={<Kitchen />} />
+              </Route>
+
+              <Route element={<ProtectedRoute allowedRoles={['administrator', 'kitchen', 'delivery']} />}>
                 <Route path="/entregas" element={<DeliveryPanel />} />
               </Route>
 
