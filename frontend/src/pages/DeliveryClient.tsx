@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
-import type { FormEvent } from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import { api } from '../lib/api';
+import { toast } from 'sonner';
 
 interface Category {
   id: number;
@@ -14,6 +15,7 @@ interface Product {
   price: string;
   category_id: number;
   is_available: boolean;
+  image_url?: string | null;
 }
 
 interface CartItem {
@@ -26,30 +28,74 @@ export default function DeliveryClient() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
+  const [menuLoading, setMenuLoading] = useState(true);
   
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCheckout, setIsCheckout] = useState(false);
   
+  // Form State
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
-  const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [cep, setCep] = useState('');
+  const [street, setStreet] = useState('');
+  const [number, setNumber] = useState('');
+  const [neighborhood, setNeighborhood] = useState('');
+  const [reference, setReference] = useState('');
+  const [addressLoading, setAddressLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  useEffect(() => {
-    const fetchMenu = async () => {
-      try {
-        const [catRes, prodRes] = await Promise.all([
-          api.get('/categories'),
-          api.get('/products')
-        ]);
-        setCategories(catRes.data.data || catRes.data || []);
-        setProducts(prodRes.data.data || prodRes.data || []);
-      } catch (err) {
-        console.error('Failed to fetch menu', err);
+  const handleCepBlur = async () => {
+    const cleanCep = cep.replace(/\D/g, '');
+    if (cleanCep.length !== 8) return;
+    
+    setAddressLoading(true);
+    try {
+      const res = await axios.get(`https://viacep.com.br/ws/${cleanCep}/json/`);
+      if (res.data && !res.data.erro) {
+        setStreet(res.data.logradouro);
+        setNeighborhood(res.data.bairro);
+        toast.success('Endereço encontrado!');
+      } else {
+        toast.error('CEP não encontrado.');
       }
-    };
-    fetchMenu();
+    } catch (err) {
+      toast.error('Erro ao buscar CEP.');
+    } finally {
+      setAddressLoading(false);
+    }
+  };
+
+  useEffect(() => {    
+    // 1. Try to load cached data for instant render
+    const cachedCategories = localStorage.getItem('saborexpress_categories');
+    const cachedProducts = localStorage.getItem('saborexpress_products');
+    
+    if (cachedCategories && cachedProducts) {
+      setCategories(JSON.parse(cachedCategories));
+      setProducts(JSON.parse(cachedProducts));
+      setMenuLoading(false);
+    }
+
+    // 2. Fetch fresh data in the background (SWR pattern)
+    Promise.all([
+      api.get(`/categories`),
+      api.get(`/products`)
+    ]).then(([catRes, prodRes]) => {
+      const freshCategories = catRes.data.data || catRes.data || [];
+      const freshProducts = prodRes.data.data || prodRes.data || [];
+      
+      setCategories(freshCategories);
+      setProducts(freshProducts);
+      setMenuLoading(false);
+      
+      // Update cache
+      localStorage.setItem('saborexpress_categories', JSON.stringify(freshCategories));
+      localStorage.setItem('saborexpress_products', JSON.stringify(freshProducts));
+    }).catch(err => {
+      console.error('Failed to fetch menu', err);
+      setMenuLoading(false);
+    });
   }, []);
 
   const addToCart = (product: Product) => {
@@ -58,6 +104,7 @@ export default function DeliveryClient() {
       setCart(cart.map(item => item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item));
     } else {
       setCart([...cart, { product, quantity: 1, notes: '' }]);
+      toast.success(`${product.name} adicionado Ã  sacola`);
     }
   };
 
@@ -70,14 +117,13 @@ export default function DeliveryClient() {
     setCart(cart.map(item => item.product.id === productId ? { ...item, quantity: q } : item));
   };
 
-  const submitOrder = async (e: FormEvent) => {
+  const submitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    try {
-      await api.post('/orders/delivery', {
+    try {      await api.post(`/orders/delivery`, {
         customer_name: customerName,
         customer_phone: customerPhone,
-        delivery_address: deliveryAddress,
+        delivery_address: `${street}, ${number} - ${neighborhood} (${reference}) CEP: ${cep}`,
         items: cart.map(item => ({
           product_id: item.product.id,
           quantity: item.quantity,
@@ -88,7 +134,7 @@ export default function DeliveryClient() {
       setCart([]);
     } catch (err) {
       console.error(err);
-      alert('Erro ao processar pedido. Verifique os dados e tente novamente.');
+      toast.error('Erro ao processar pedido. Verifique os dados e tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -102,16 +148,16 @@ export default function DeliveryClient() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-emerald-50 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-sabor-light flex items-center justify-center p-6">
         <div className="bg-white p-10 rounded-3xl shadow-xl text-center max-w-md w-full">
-          <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="w-20 h-20 bg-sabor-light text-sabor-primary rounded-full flex items-center justify-center mx-auto mb-6">
             <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
           </div>
           <h2 className="text-3xl font-black text-gray-900 mb-2">Pedido Recebido!</h2>
           <p className="text-gray-600 mb-8">Seu pedido foi enviado para o restaurante. Aguarde nossa confirmação.</p>
           <button 
             onClick={() => { setSuccess(false); setIsCheckout(false); }}
-            className="w-full py-4 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-colors"
+            className="w-full py-4 bg-sabor-primary text-white rounded-xl font-bold hover:bg-sabor-dark transition-colors"
           >
             Fazer Novo Pedido
           </button>
@@ -125,52 +171,115 @@ export default function DeliveryClient() {
       {/* Left Area: Menu */}
       <div className="flex-1 p-6 md:p-10 max-h-screen overflow-y-auto">
         <div className="mb-8">
-          <h1 className="text-4xl font-black text-gray-900 tracking-tight">SaborExpress <span className="text-emerald-600">Delivery</span></h1>
+          <div className="flex items-center justify-center gap-3">
+            <img src="/logo-horizontal.png" alt="SaborExpress" className="h-16 md:h-20 object-contain" />
+            <h1 className="text-4xl font-black text-sabor-primary tracking-tight">Delivery</h1>
+          </div>
           <p className="text-gray-500 font-medium mt-2">Os melhores pratos diretamente na sua casa.</p>
         </div>
 
         {/* Categories */}
         <div className="flex gap-3 mb-8 overflow-x-auto pb-2 shrink-0 custom-scrollbar">
-          <button 
-            onClick={() => setActiveCategory(null)}
-            className={`whitespace-nowrap px-5 py-2.5 rounded-full font-bold transition-all ${activeCategory === null ? 'bg-gray-900 text-white shadow-lg' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 hover:shadow'}`}
-          >
-            Todos
-          </button>
-          {categories.map(cat => (
-            <button
-              key={cat.id}
-              onClick={() => setActiveCategory(cat.id)}
-              className={`whitespace-nowrap px-5 py-2.5 rounded-full font-bold transition-all ${activeCategory === cat.id ? 'bg-gray-900 text-white shadow-lg' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 hover:shadow'}`}
-            >
-              {cat.name}
-            </button>
-          ))}
+          {menuLoading && categories.length === 0 ? (
+            <>
+              <div className="h-10 w-20 bg-gray-200 rounded-full animate-pulse shrink-0"></div>
+              <div className="h-10 w-28 bg-gray-200 rounded-full animate-pulse shrink-0"></div>
+              <div className="h-10 w-32 bg-gray-200 rounded-full animate-pulse shrink-0"></div>
+              <div className="h-10 w-24 bg-gray-200 rounded-full animate-pulse shrink-0"></div>
+            </>
+          ) : (
+            <>
+              <button 
+                onClick={() => setActiveCategory(null)}
+                className={`whitespace-nowrap px-5 py-2.5 rounded-full font-bold transition-all ${
+                  activeCategory === null 
+                    ? 'bg-sabor-primary text-sabor-dark shadow-lg shadow-sabor-primary/10' 
+                    : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                }`}
+              >
+                Todos
+              </button>
+              {categories.map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveCategory(cat.id)}
+                  className={`whitespace-nowrap px-5 py-2.5 rounded-full font-bold transition-all ${
+                    activeCategory === cat.id 
+                      ? 'bg-sabor-primary text-sabor-dark shadow-lg shadow-sabor-primary/10' 
+                      : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </>
+          )}
         </div>
 
         {/* Products Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 pb-24 md:pb-0">
-          {filteredProducts.map(product => (
-            <div key={product.id} className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm hover:shadow-xl transition-all flex flex-col h-full group">
-              <div className="flex-1">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-bold text-lg text-gray-900 leading-tight group-hover:text-emerald-600 transition-colors">{product.name}</h3>
+        {menuLoading && products.length === 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 pb-24 md:pb-0">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm flex flex-col h-[340px]">
+                <div className="h-40 bg-gray-200 animate-pulse w-full"></div>
+                <div className="p-5 flex-1 flex flex-col justify-between">
+                  <div>
+                    <div className="h-6 bg-gray-200 rounded animate-pulse w-2/3 mb-3"></div>
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-full mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-5/6"></div>
+                  </div>
+                  <div className="h-10 bg-gray-200 rounded-xl animate-pulse w-full mt-4"></div>
                 </div>
-                <p className="text-gray-500 text-sm mb-4 line-clamp-3">{product.description}</p>
               </div>
-              <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
-                <span className="font-black text-xl text-gray-900">R$ {Number(product.price).toFixed(2)}</span>
-                <button 
-                  onClick={() => addToCart(product)}
-                  disabled={!product.is_available}
-                  className="w-10 h-10 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center font-bold hover:bg-emerald-600 hover:text-white transition-all shadow-sm hover:shadow-md disabled:opacity-50"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 4v16m8-8H4"></path></svg>
-                </button>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 pb-24 md:pb-0">
+            {filteredProducts.map(product => (
+              <div key={product.id} className="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full group">
+                <div className="h-40 bg-gray-50 w-full overflow-hidden flex items-center justify-center relative">
+                  {product.image_url ? (
+                    <img 
+                      src={product.image_url} 
+                      alt={product.name} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="text-sabor-primary bg-sabor-light w-full h-full flex items-center justify-center">
+                      <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                      </svg>
+                    </div>
+                  )}
+                  {!product.is_available && (
+                    <div className="absolute inset-0 bg-white/80 backdrop-blur-xs flex items-center justify-center">
+                      <span className="bg-rose-100 text-rose-700 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm">
+                        Esgotado
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="p-5 flex-1 flex flex-col justify-between">
+                  <div>
+                    <h3 className="font-extrabold text-base text-gray-900 leading-snug group-hover:text-sabor-dark transition-colors mb-2">{product.name}</h3>
+                    <p className="text-gray-500 text-xs mb-4 line-clamp-2 leading-relaxed">{product.description || 'Sem descrição cadastrada.'}</p>
+                  </div>
+                  <div className="flex justify-between items-center pt-3 border-t border-gray-100">
+                    <span className="font-black text-lg text-sabor-dark">R$ {Number(product.price).toFixed(2)}</span>
+                    <button 
+                      onClick={() => addToCart(product)}
+                      disabled={!product.is_available}
+                      className="w-10 h-10 bg-sabor-light text-sabor-dark rounded-full flex items-center justify-center font-bold hover:bg-sabor-primary hover:text-white transition-all shadow-sm hover:shadow-md disabled:opacity-40"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 4v16m8-8H4"></path></svg>
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Right Area: Cart & Checkout */}
@@ -182,7 +291,7 @@ export default function DeliveryClient() {
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
             Seu Pedido
           </h2>
-          <span className="bg-emerald-500 text-white px-3 py-1 rounded-full text-sm font-black">{cart.length} itens</span>
+          <span className="bg-sabor-primary text-white px-3 py-1 rounded-full text-sm font-black">{cart.length} itens</span>
         </div>
 
         {/* Cart Body */}
@@ -209,7 +318,7 @@ export default function DeliveryClient() {
                       <span className="font-bold text-sm w-4 text-center">{item.quantity}</span>
                       <button onClick={() => updateQuantity(item.product.id, item.quantity + 1)} className="w-7 h-7 flex items-center justify-center bg-white text-gray-600 rounded shadow-sm hover:bg-gray-50">+</button>
                     </div>
-                    <span className="font-black text-emerald-600">R$ {(Number(item.product.price) * item.quantity).toFixed(2)}</span>
+                    <span className="font-black text-sabor-primary">R$ {(Number(item.product.price) * item.quantity).toFixed(2)}</span>
                   </div>
                 </div>
               ))}
@@ -233,24 +342,48 @@ export default function DeliveryClient() {
                   type="text" 
                   placeholder="Nome Completo" 
                   value={customerName} onChange={e => setCustomerName(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
+                  className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-sabor-primary focus:outline-none transition-all"
                 />
                 <input 
                   required
                   type="tel" 
                   placeholder="Telefone (WhatsApp)" 
                   value={customerPhone} onChange={e => setCustomerPhone(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
+                  className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-sabor-primary focus:outline-none transition-all"
                 />
-                <textarea 
-                  required
-                  placeholder="Endereço Completo (Rua, Número, Bairro, Ref)" 
-                  value={deliveryAddress} onChange={e => setDeliveryAddress(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all h-24 resize-none"
+                <div className="grid grid-cols-2 gap-3">
+                  <input 
+                    required type="text" placeholder="CEP" 
+                    value={cep} onChange={e => setCep(e.target.value)} onBlur={handleCepBlur}
+                    className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-sabor-primary focus:outline-none transition-all"
+                  />
+                  {addressLoading && <div className="text-sm text-sabor-primary font-bold flex items-center">Buscando...</div>}
+                </div>
+                <input 
+                  required type="text" placeholder="Rua" 
+                  value={street} onChange={e => setStreet(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-sabor-primary focus:outline-none transition-all"
+                />
+                <div className="grid grid-cols-3 gap-3">
+                  <input 
+                    required type="text" placeholder="Número" 
+                    value={number} onChange={e => setNumber(e.target.value)}
+                    className="col-span-1 w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-sabor-primary focus:outline-none transition-all"
+                  />
+                  <input 
+                    required type="text" placeholder="Bairro" 
+                    value={neighborhood} onChange={e => setNeighborhood(e.target.value)}
+                    className="col-span-2 w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-sabor-primary focus:outline-none transition-all"
+                  />
+                </div>
+                <input 
+                  type="text" placeholder="Complemento / Ponto de Referência" 
+                  value={reference} onChange={e => setReference(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-sabor-primary focus:outline-none transition-all"
                 />
                 <div className="flex gap-3 pt-2">
                   <button type="button" onClick={() => setIsCheckout(false)} className="px-6 py-4 rounded-xl font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 transition-colors">Voltar</button>
-                  <button type="submit" disabled={loading} className="flex-1 py-4 bg-emerald-600 text-white rounded-xl font-black text-lg shadow-lg shadow-emerald-600/30 hover:bg-emerald-700 hover:shadow-xl hover:-translate-y-1 transition-all disabled:opacity-50">
+                  <button type="submit" disabled={loading} className="flex-1 py-4 bg-sabor-primary text-white rounded-xl font-black text-lg shadow-lg shadow-sabor-primary/30 hover:bg-sabor-dark hover:shadow-xl hover:-translate-y-1 transition-all disabled:opacity-50">
                     {loading ? 'Enviando...' : 'Confirmar Pedido'}
                   </button>
                 </div>
@@ -258,7 +391,7 @@ export default function DeliveryClient() {
             ) : (
               <button 
                 onClick={() => setIsCheckout(true)}
-                className="w-full py-4 bg-emerald-600 text-white rounded-xl font-black text-lg shadow-lg shadow-emerald-600/30 hover:bg-emerald-700 hover:shadow-xl hover:-translate-y-1 transition-all"
+                className="w-full py-4 bg-sabor-primary text-white rounded-xl font-black text-lg shadow-lg shadow-sabor-primary/30 hover:bg-sabor-dark hover:shadow-xl hover:-translate-y-1 transition-all"
               >
                 Avançar para Entrega
               </button>
@@ -269,3 +402,4 @@ export default function DeliveryClient() {
     </div>
   );
 }
+

@@ -23,7 +23,7 @@ class AddOrderItemAction
 
     public function execute(Order $order, array $data): Order
     {
-        return DB::transaction(function () use ($order, $data) {
+        $result = DB::transaction(function () use ($order, $data) {
             $lockedOrder = $this->orders->lockById($order->id);
 
             if (! in_array($lockedOrder->status, OrderStatus::itemEditableValues(), true)) {
@@ -52,5 +52,9 @@ class AddOrderItemAction
 
             return $this->recalculateOrderTotal->execute($lockedOrder);
         });
+        
+        event(new \App\Events\OrderUpdated());
+        
+        return $result;
     }
 }

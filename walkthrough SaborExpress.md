@@ -163,7 +163,35 @@ Com a implantação da divisão de contas, KDS logístico e pré-fechamento, o f
 > [!IMPORTANT]
 > **Conclusão Geral:** O **SaborExpress** agora é um ecossistema full-stack fechado. Ele abrange perfeitamente desde o Delivery e o Salão de Mesas, passando pela tela KDS da Cozinha, controle rigoroso financeiro no Caixa, painel logístico do Entregador, até o Dashboard Gerencial!
 
-## 7. Refinamento de Engenharia (Bug Bash Final)
+## 6. Painel Gerencial & Relatórios Visuais (M06)
+
+O módulo gerencial do SaborExpress foi construído para entregar Inteligência de Negócio (BI) de forma imersiva e reativa ao administrador.
+
+### Lógica de Agregação e Filtros (Backend)
+- **Filtros Temporais Inteligentes:** O `DashboardController` aceita parâmetros na query string (`?period=`) como *Hoje*, *7 Dias*, *30 Dias* e *Tudo*. O backend intercepta as requisições para agregar dados exatos baseados na coluna `created_at` (do banco de dados).
+- **Faturamento no Tempo:** Implementamos um agrupamento (`GROUP BY DATE(created_at)`) que mapeia os ganhos financeiros diários para alimentação direta de visualização cronológica.
+
+### Interface Gráfica e BI (Frontend)
+- Adicionada a dependência **Recharts** para construção de componentes visuais (SVG) reativos e amigáveis.
+- **Gráfico de Faturamento (AreaChart):** Uma representação no tempo da evolução de vendas do período selecionado, destacando fluxos de receita através de preenchimentos e delineamentos em verde esmeralda.
+- **Gráfico de Curva ABC (BarChart):** Ranqueamento volumétrico cruzado, provando quais são os 10 produtos de maior escoamento (Volume) e maior peso financeiro (Receita). As 3 barras principais (Campeões de Venda) recebem uma coloração âmbar exclusiva em destaque.
+- **Micro-Interações e UX:** Todos os gráficos e cards de KPI possuem *Tooltips* formatadas dinamicamente para a moeda local (R$), atualizando em tempo real com o uso do seletor de Período.
+
+---
+
+## 7. Tempo Real e Micro-interações (M08)
+Foi implementado o **Laravel Reverb** (WebSockets) juntamente com o **Laravel Echo**.
+Sempre que um Garçom (no tablet) ou o Delivery (cliente final) envia um novo pedido, ou adiciona itens, o evento `OrderUpdated` é disparado. A tela KDS da Cozinha, que está "ouvindo" esse canal, se atualiza instantaneamente e toca um aviso sonoro (sino). A mesma reatividade acontece no Caixa.
+Além disso, foram adicionados Toasts (`sonner`) para feedback visual, Skeleton Loaders para carregamentos e o ViaCEP no Delivery.
+
+### 🚀 Deploy do Reverb (Produção)
+Ao mover a aplicação para Go-Live (como na AWS, Forge, Render, ou VPS), o **Reverb** requer considerações especiais:
+1. O servidor Reverb deve rodar como um **Daemon** contínuo. Em uma VPS (Ubuntu), utiliza-se o `Supervisor` para garantir que o processo `php artisan reverb:start` permaneça rodando em background.
+2. Certificados SSL (`wss://`) precisam ser mapeados nos parâmetros de inicialização do Reverb ou via proxy reverso (Nginx) roteando as portas. Em plataformas PaaS (Heroku/Render), pode ser mais viável trocar o `.env` de Reverb nativo para a API externa do **Pusher**.
+
+---
+
+## 8. Refinamento de Engenharia (Bug Bash Final)
 Para assegurar a perfeição deste projeto, foi conduzida uma bateria final de testes sistêmicos, prevenindo cenários de falha na integração entre os módulos:
 - **Resiliência da Cozinha (M03 x M04):** A tela da Cozinha (`Kitchen.tsx`) foi protegida contra exceções de tela branca (*null pointer*) ao receber pedidos do Delivery (que não possuem vínculo com a tabela de Mesas). Uma renderização dinâmica exibe uma tag vibrante de **"DELIVERY"** no KDS de forma elegante.
 - **Roteamento Logístico Correto:** Foi desenhada no backend uma rota exclusiva para manipulação de status de Entregador (`PUT /api/orders/{order}/delivery-status`). Isso impede que o painel do motoqueiro dispare conflitos ao acessar a controladora central financeira do Caixa.

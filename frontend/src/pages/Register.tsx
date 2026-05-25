@@ -47,9 +47,9 @@ export default function Register() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-4xl font-black text-emerald-600 tracking-tight">
-          SaborExpress
-        </h2>
+        <div className="mt-6 flex justify-center">
+          <img src="/logo.png" alt="SaborExpress" className="h-24 w-auto object-contain" />
+        </div>
         <p className="mt-2 text-center text-sm text-gray-600 font-medium">
           Crie sua conta para pedir nossas delícias
         </p>
@@ -71,7 +71,7 @@ export default function Register() {
               <input
                 type="text"
                 required
-                className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm font-medium"
+                className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-sabor-primary focus:border-sabor-primary sm:text-sm font-medium"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Ex: João Silva"
@@ -85,7 +85,7 @@ export default function Register() {
               <input
                 type="email"
                 required
-                className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm font-medium"
+                className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-sabor-primary focus:border-sabor-primary sm:text-sm font-medium"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="nome@saborexpress.com"
@@ -99,7 +99,7 @@ export default function Register() {
               <input
                 type="password"
                 required
-                className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm font-medium"
+                className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-sabor-primary focus:border-sabor-primary sm:text-sm font-medium"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Mínimo 6 caracteres"
@@ -110,14 +110,14 @@ export default function Register() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors"
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-sabor-primary hover:bg-sabor-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sabor-primary transition-colors"
               >
                 {loading ? 'Cadastrando...' : 'Criar Conta'}
               </button>
             </div>
             
             <div className="text-center mt-4 border-t border-gray-100 pt-6">
-              <Link to="/login" className="text-sm font-medium text-emerald-600 hover:text-emerald-500">
+              <Link to="/login" className="text-sm font-medium text-sabor-primary hover:text-sabor-primary">
                 Já tem uma conta? Faça Login
               </Link>
             </div>
@@ -127,3 +127,4 @@ export default function Register() {
     </div>
   );
 }
+

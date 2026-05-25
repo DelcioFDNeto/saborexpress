@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { api } from '../lib/api';
+import { toast } from 'sonner';
 
 interface Product {
   id: number;
@@ -32,9 +33,8 @@ export default function Kitchen() {
   const [loading, setLoading] = useState(true);
 
   const fetchItems = async () => {
-    try {
-      const res = await api.get('/kitchen/order-items');
-      setItems(res.data.data || res.data);
+    try {      const res = await api.get(`/order-items`);
+      setItems(res.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -44,29 +44,50 @@ export default function Kitchen() {
 
   useEffect(() => {
     fetchItems();
-    const interval = setInterval(fetchItems, 10000);
-    return () => clearInterval(interval);
+    
+    // WebSockets via Laravel Echo
+    const channel = window.Echo.channel('orders');
+    channel.listen('.OrderUpdated', () => {
+      fetchItems();
+      const audio = new Audio('/sounds/sino.mp3');
+      audio.play().catch(e => console.log('Audio autoplay blocked', e));
+      toast.success('Novo pedido ou atualização na cozinha!');
+    });
+
+    return () => {
+      channel.stopListening('.OrderUpdated');
+    };
   }, []);
 
   const updateStatus = async (id: number, newStatus: string) => {
-    try {
-      if (newStatus === 'Entregue') {
-        await api.patch(`/kitchen/order-items/${id}/deliver`);
-      } else {
-        const endpoint = newStatus === 'Em Preparo' ? 'start' : 'mark-ready';
-        await api.patch(`/kitchen/order-items/${id}/${endpoint}`);
-      }
+    try {      await api.put(`/order-items/${id}`, { status: newStatus });
       fetchItems();
+      toast.success(`Status atualizado para ${newStatus}`);
     } catch (err) {
       console.error('Failed to update status', err);
-      alert('Erro ao atualizar status');
+      toast.error('Erro ao atualizar status');
     }
   };
 
   if (loading && items.length === 0) {
     return (
-      <div className="flex justify-center items-center h-screen bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+      <div className="min-h-screen bg-gray-100 p-6 md:p-10">
+        <div className="mb-8 flex justify-between items-center">
+          <div className="space-y-3">
+            <div className="h-8 bg-gray-300 rounded w-64 animate-pulse"></div>
+            <div className="h-4 bg-gray-300 rounded w-48 animate-pulse"></div>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[calc(100vh-160px)]">
+          {[1, 2, 3].map(col => (
+            <div key={col} className="bg-gray-200/50 rounded-3xl p-4 flex flex-col gap-4">
+              <div className="h-6 bg-gray-300 rounded w-1/3 animate-pulse"></div>
+              {[1, 2, 3].map(item => (
+                <div key={item} className="h-32 bg-white/50 rounded-2xl animate-pulse"></div>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -92,7 +113,7 @@ export default function Kitchen() {
               </span>
             )}
             <span className={`text-xs font-bold ${minutesWaiting > 15 ? 'text-rose-500' : 'text-gray-500'}`}>
-              Tempo: {minutesWaiting} min
+              â± {minutesWaiting} min
             </span>
           </div>
           <span className="text-xl font-black text-gray-400">#{item.id}</span>
@@ -100,12 +121,12 @@ export default function Kitchen() {
         
         <div>
           <h3 className="font-bold text-lg text-gray-800 leading-tight">
-            <span className="text-emerald-600 mr-2">{item.quantity}x</span> 
+            <span className="text-sabor-primary mr-2">{item.quantity}x</span> 
             {item.product.name}
           </h3>
           {item.notes && (
             <div className="mt-2 bg-amber-50 border border-amber-100 text-amber-800 text-sm px-3 py-2 rounded-lg font-medium">
-              Aviso: {item.notes}
+              âš ï¸ {item.notes}
             </div>
           )}
         </div>
@@ -125,7 +146,10 @@ export default function Kitchen() {
       <div className="mb-8 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-black text-gray-900">KDS: Visão da Cozinha</h1>
-          <p className="text-gray-500 font-medium">Atualização automática a cada 10 segundos.</p>
+          <p className="text-sabor-primary font-medium flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-sabor-primary animate-pulse"></span>
+            Sincronização em Tempo Real (WebSockets)
+          </p>
         </div>
       </div>
 
@@ -176,10 +200,10 @@ export default function Kitchen() {
         </div>
 
         {/* Column 3: Pronto (Aguardando Retirada) */}
-        <div className="flex flex-col bg-emerald-100/50 rounded-3xl p-4 overflow-hidden border border-emerald-200">
+        <div className="flex flex-col bg-sabor-light/50 rounded-3xl p-4 overflow-hidden border border-sabor-primary">
           <div className="flex justify-between items-center mb-4 px-2">
-            <h2 className="font-bold text-emerald-800 uppercase tracking-wider text-sm">3. Pronto (Balcão)</h2>
-            <span className="bg-emerald-200 text-emerald-800 font-bold px-2 py-0.5 rounded-full text-xs">{prontos.length}</span>
+            <h2 className="font-bold text-sabor-dark uppercase tracking-wider text-sm">3. Pronto (Balcão)</h2>
+            <span className="bg-sabor-primary text-sabor-dark font-bold px-2 py-0.5 rounded-full text-xs">{prontos.length}</span>
           </div>
           <div className="flex-1 overflow-y-auto space-y-4 pr-1 custom-scrollbar">
             {prontos.map(item => (
@@ -188,14 +212,15 @@ export default function Kitchen() {
                 item={item} 
                 actionText="Entregue ao Garçom" 
                 nextStatus="Entregue"
-                colorClass="border-emerald-500"
-                actionClass="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200"
+                colorClass="border-sabor-primary"
+                actionClass="bg-sabor-light text-sabor-dark hover:bg-sabor-light border border-sabor-primary"
               />
             ))}
-            {prontos.length === 0 && <p className="text-center text-emerald-600/50 mt-10 text-sm font-medium">Balcão vazio.</p>}
+            {prontos.length === 0 && <p className="text-center text-sabor-primary/50 mt-10 text-sm font-medium">Balcão vazio.</p>}
           </div>
         </div>
       </div>
     </div>
   );
 }
+

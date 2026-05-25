@@ -13,6 +13,7 @@ import DeliveryPanel from './pages/DeliveryPanel';
 import Dashboard from './pages/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider, AuthContext } from './contexts/AuthContext';
+import { Toaster } from 'sonner';
 
 function Navigation() {
   const { user, isAuthenticated, logout } = useContext(AuthContext);
@@ -24,39 +25,45 @@ function Navigation() {
   };
 
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-10">
-      <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-        <Link to="/" className="text-2xl font-black text-emerald-600 tracking-tight">SaborExpress</Link>
-        <nav className="flex items-center gap-6">
-          <Link to="/cardapio" className="text-gray-600 font-medium hover:text-emerald-600 transition-colors">Cardápio</Link>
+    <header className="bg-white sticky top-0 z-[100] shadow-md border-b border-gray-200">
+      <div className="max-w-7xl mx-auto px-4 py-4 md:py-5 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="flex justify-between items-center w-full sm:w-auto">
+          <Link to="/" className="flex items-center shrink-0">
+            <img src="/logo-horizontal.png" alt="SaborExpress" className="h-12 sm:h-14 md:h-16 object-contain" />
+          </Link>
+        </div>
+        <nav className="flex items-center gap-5 md:gap-8 overflow-x-auto max-w-full pb-2 sm:pb-0 scrollbar-none w-full sm:w-auto justify-start sm:justify-end">
+          <Link to="/cardapio" className="text-gray-700 font-bold text-sm md:text-base hover:text-sabor-primary transition-colors shrink-0">Cardápio</Link>
           
           {isAuthenticated && (user?.role === 'administrator' || user?.role === 'waiter' || user?.role === 'cashier') && (
-            <Link to="/mesas" className="text-gray-600 font-medium hover:text-emerald-600 transition-colors">Mesas</Link>
+            <Link to="/mesas" className="text-gray-700 font-bold text-sm md:text-base hover:text-sabor-primary transition-colors shrink-0">Mesas</Link>
           )}
 
           {isAuthenticated && (user?.role === 'administrator' || user?.role === 'kitchen') && (
-            <Link to="/cozinha" className="text-gray-600 font-medium hover:text-emerald-600 transition-colors">Cozinha</Link>
+            <Link to="/cozinha" className="text-gray-700 font-bold text-sm md:text-base hover:text-sabor-primary transition-colors shrink-0">Cozinha</Link>
           )}
 
           {isAuthenticated && (user?.role === 'administrator' || user?.role === 'cashier') && (
-            <Link to="/caixa" className="text-gray-600 font-medium hover:text-emerald-600 transition-colors">Caixa</Link>
+            <Link to="/caixa" className="text-gray-700 font-bold text-sm md:text-base hover:text-sabor-primary transition-colors shrink-0">Caixa</Link>
           )}
 
           {isAuthenticated && (user?.role === 'administrator' || user?.role === 'kitchen' || user?.role === 'delivery') && (
-            <Link to="/entregas" className="text-gray-600 font-medium hover:text-emerald-600 transition-colors">Entregas</Link>
+            <Link to="/entregas" className="text-gray-700 font-bold text-sm md:text-base hover:text-sabor-primary transition-colors shrink-0">Entregas</Link>
           )}
 
           {isAuthenticated && user?.role === 'administrator' && (
-            <Link to="/dashboard" className="text-amber-600 font-bold hover:text-amber-700 transition-colors bg-amber-50 px-3 py-1 rounded-lg">Painel</Link>
+            <Link to="/dashboard" className="text-amber-700 font-extrabold text-xs md:text-sm hover:text-amber-800 transition-colors bg-amber-100 px-3 py-1.5 rounded-lg shrink-0">Painel</Link>
           )}
 
           {isAuthenticated ? (
-            <div className="flex items-center gap-4 ml-4 pl-4 border-l">
-              <span className="text-sm text-gray-500 font-medium">{user?.name}</span>
-              <button onClick={handleLogout} className="text-sm font-medium text-rose-500 hover:text-rose-600">Sair</button>
+            <div className="flex items-center gap-4 ml-2 pl-2 md:ml-4 md:pl-4 border-l border-gray-200 shrink-0">
+              <span className="text-sm md:text-base text-gray-600 font-bold truncate max-w-[150px]">{user?.name}</span>
+              <button onClick={handleLogout} className="text-sm md:text-base font-bold text-rose-500 hover:text-rose-600 bg-rose-50 px-3 py-1.5 rounded-lg transition-colors">Sair</button>
             </div>
           ) : (
-            <Link to="/login" className="ml-4 px-4 py-2 bg-emerald-50 text-emerald-600 font-medium rounded-lg hover:bg-emerald-100 transition-colors">Acesso Restrito</Link>
+            <Link to="/login" className="px-6 py-2.5 bg-sabor-primary text-sabor-dark font-extrabold text-sm md:text-base rounded-xl hover:bg-sabor-primary/90 shadow-md hover:shadow-lg transition-all shrink-0">
+              Login / Cadastro
+            </Link>
           )}
         </nav>
       </div>
@@ -70,6 +77,7 @@ function App() {
       <Router>
         <div className="min-h-screen bg-gray-50 flex flex-col">
           <Navigation />
+          <Toaster richColors position="top-right" />
 
           {/* Main Content */}
           <main className="flex-1">
@@ -108,3 +116,4 @@ function App() {
 }
 
 export default App;
+

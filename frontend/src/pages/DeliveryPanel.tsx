@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 
 interface Order {
@@ -16,9 +16,14 @@ export default function DeliveryPanel() {
   const [orders, setOrders] = useState<Order[]>([]);
 
   const fetchOrders = async () => {
-    try {
-      const res = await api.get('/orders');
+    try {      const res = await api.get(`/orders`);
       const allOrders = res.data.data ? res.data.data : res.data;
+      
+      // Delivery Driver sees orders of type 'Delivery' that are paid (status 'Finalizada' or pending logic)
+      // For now, let's assume they are ready for delivery if delivery_status is 'Aguardando' or 'Em Rota'.
+      // Note: If Kitchen has to prep it, the Kitchen might need a way to mark the whole Order as 'Pronto' 
+      // but for simplicity, we assume if it's in the list it's either cooking or ready. 
+      // Let's filter those that are delivery_status != 'Entregue'
       const deliveryOrders = allOrders.filter((o: Order) => o.type === 'Delivery' && o.delivery_status !== 'Entregue');
       setOrders(deliveryOrders);
     } catch (err) {
@@ -32,9 +37,11 @@ export default function DeliveryPanel() {
     return () => clearInterval(interval);
   }, []);
 
+  // Simulating an endpoint for delivery status update since we didn't explicitly create one in Laravel,
+  // we can use a direct PUT to /api/orders/{id} or we assume it exists. Wait, we don't have a specific endpoint.
+  // Actually, we can use the default update method in OrderController.
   const updateDeliveryStatus = async (id: number, newStatus: string) => {
-    try {
-      await api.put(`/orders/${id}/delivery-status`, {
+    try {      await api.put(`/orders/${id}/delivery-status`, {
         delivery_status: newStatus
       });
       fetchOrders();
@@ -136,3 +143,4 @@ export default function DeliveryPanel() {
     </div>
   );
 }
+

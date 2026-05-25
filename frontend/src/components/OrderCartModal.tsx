@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react';
-import { isAxiosError } from 'axios';
+import React, { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 
 interface Category {
@@ -31,19 +30,15 @@ export default function OrderCartModal({ orderId, isOpen, onClose, onItemAdded }
   
   const [loading, setLoading] = useState(false);
   const [addingProductId, setAddingProductId] = useState<number | null>(null);
-  const [expandedProductId, setExpandedProductId] = useState<number | null>(null);
-  const [currentNote, setCurrentNote] = useState('');
-  const [currentQuantity, setCurrentQuantity] = useState(1);
 
   useEffect(() => {
     if (!isOpen) return;
 
     const fetchMenu = async () => {
       setLoading(true);
-      try {
-        const [catRes, prodRes] = await Promise.all([
-          api.get('/categories'),
-          api.get('/products')
+      try {        const [catRes, prodRes] = await Promise.all([
+          api.get(`/categories`),
+          api.get(`/products`)
         ]);
         setCategories(catRes.data.data || catRes.data || []);
         setProducts(prodRes.data.data || prodRes.data || []);
@@ -58,6 +53,10 @@ export default function OrderCartModal({ orderId, isOpen, onClose, onItemAdded }
 
   if (!isOpen) return null;
 
+  const [expandedProductId, setExpandedProductId] = useState<number | null>(null);
+  const [currentNote, setCurrentNote] = useState('');
+  const [currentQuantity, setCurrentQuantity] = useState(1);
+
   const handleExpand = (productId: number) => {
     if (expandedProductId === productId) {
       setExpandedProductId(null);
@@ -70,18 +69,16 @@ export default function OrderCartModal({ orderId, isOpen, onClose, onItemAdded }
 
   const handleAddItem = async (productId: number) => {
     setAddingProductId(productId);
-    try {
-      await api.post(`/orders/${orderId}/items`, {
+    try {      await api.post(`/orders/${orderId}/items`, {
         product_id: productId,
         quantity: currentQuantity,
         notes: currentNote
       });
       onItemAdded();
       setExpandedProductId(null);
-    } catch (err: unknown) {
+    } catch (err: any) {
       console.error('Failed to add item', err);
-      const message = isAxiosError<{ message?: string }>(err) ? err.response?.data.message : null;
-      alert(message || 'Erro ao adicionar produto');
+      alert(err.response?.data?.message || 'Erro ao adicionar produto');
     } finally {
       setAddingProductId(null);
     }
@@ -106,7 +103,7 @@ export default function OrderCartModal({ orderId, isOpen, onClose, onItemAdded }
         <div className="flex-1 overflow-y-auto p-6 bg-gray-50 flex flex-col">
           {loading ? (
             <div className="flex-1 flex justify-center items-center">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600"></div>
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-sabor-primary"></div>
             </div>
           ) : (
             <>
@@ -114,7 +111,7 @@ export default function OrderCartModal({ orderId, isOpen, onClose, onItemAdded }
               <div className="flex gap-3 mb-6 overflow-x-auto pb-2 shrink-0">
                 <button 
                   onClick={() => setActiveCategory(null)}
-                  className={`whitespace-nowrap px-4 py-2 rounded-xl font-medium transition-colors ${activeCategory === null ? 'bg-emerald-600 text-white shadow-md shadow-emerald-200' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+                  className={`whitespace-nowrap px-4 py-2 rounded-xl font-medium transition-colors ${activeCategory === null ? 'bg-sabor-primary text-white shadow-md shadow-sabor-primary' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
                 >
                   Todos
                 </button>
@@ -122,7 +119,7 @@ export default function OrderCartModal({ orderId, isOpen, onClose, onItemAdded }
                   <button
                     key={cat.id}
                     onClick={() => setActiveCategory(cat.id)}
-                    className={`whitespace-nowrap px-4 py-2 rounded-xl font-medium transition-colors ${activeCategory === cat.id ? 'bg-emerald-600 text-white shadow-md shadow-emerald-200' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+                    className={`whitespace-nowrap px-4 py-2 rounded-xl font-medium transition-colors ${activeCategory === cat.id ? 'bg-sabor-primary text-white shadow-md shadow-sabor-primary' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
                   >
                     {cat.name}
                   </button>
@@ -132,7 +129,7 @@ export default function OrderCartModal({ orderId, isOpen, onClose, onItemAdded }
               {/* Product List */}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {filteredProducts.map(product => (
-                  <div key={product.id} className={`bg-white rounded-2xl border ${expandedProductId === product.id ? 'border-emerald-500 shadow-md ring-2 ring-emerald-50' : 'border-gray-100 shadow-sm'} p-4 flex flex-col justify-between transition-all`}>
+                  <div key={product.id} className={`bg-white rounded-2xl border ${expandedProductId === product.id ? 'border-sabor-primary shadow-md ring-2 ring-sabor-light' : 'border-gray-100 shadow-sm'} p-4 flex flex-col justify-between transition-all`}>
                     <div>
                       <div className="flex justify-between items-start mb-1">
                         <h3 className="font-bold text-gray-800 leading-tight">{product.name}</h3>
@@ -156,7 +153,7 @@ export default function OrderCartModal({ orderId, isOpen, onClose, onItemAdded }
                             placeholder="Ex: Sem cebola, bem passado..." 
                             value={currentNote}
                             onChange={e => setCurrentNote(e.target.value)}
-                            className="w-full text-sm border-gray-300 rounded-lg px-3 py-2 bg-gray-50 focus:bg-white focus:ring-1 focus:ring-emerald-500 outline-none transition-all"
+                            className="w-full text-sm border-gray-300 rounded-lg px-3 py-2 bg-gray-50 focus:bg-white focus:ring-1 focus:ring-sabor-primary outline-none transition-all"
                           />
                         </div>
                         <div className="flex gap-2 mt-2">
@@ -169,7 +166,7 @@ export default function OrderCartModal({ orderId, isOpen, onClose, onItemAdded }
                           <button 
                             disabled={addingProductId === product.id}
                             onClick={() => handleAddItem(product.id)}
-                            className="flex-1 py-2 rounded-xl text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+                            className="flex-1 py-2 rounded-xl text-sm font-bold text-white bg-sabor-primary hover:bg-sabor-dark transition-colors flex items-center justify-center gap-2"
                           >
                             {addingProductId === product.id ? (
                                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
@@ -179,11 +176,11 @@ export default function OrderCartModal({ orderId, isOpen, onClose, onItemAdded }
                       </div>
                     ) : (
                       <div className="flex justify-between items-center mt-auto">
-                        <span className="font-black text-emerald-700">R$ {Number(product.price).toFixed(2)}</span>
+                        <span className="font-black text-sabor-dark">R$ {Number(product.price).toFixed(2)}</span>
                         <button 
                           disabled={!product.is_available}
                           onClick={() => handleExpand(product.id)}
-                          className="px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl text-sm font-bold hover:bg-emerald-100 disabled:opacity-50 transition-colors flex items-center gap-2"
+                          className="px-4 py-2 bg-sabor-light text-sabor-dark rounded-xl text-sm font-bold hover:bg-sabor-light disabled:opacity-50 transition-colors flex items-center gap-2"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
                           Add
@@ -204,3 +201,4 @@ export default function OrderCartModal({ orderId, isOpen, onClose, onItemAdded }
     </div>
   );
 }
+

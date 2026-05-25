@@ -19,7 +19,7 @@ class StartOrderItemPreparationAction
 
     public function execute(OrderItem $orderItem): OrderItem
     {
-        return DB::transaction(function () use ($orderItem) {
+        $result = DB::transaction(function () use ($orderItem) {
             $lockedItem = $this->orderItems->lockById($orderItem->id);
             $order = $this->orders->lockById($lockedItem->order_id);
 
@@ -37,5 +37,9 @@ class StartOrderItemPreparationAction
 
             return $this->orderItems->loadProduct($item)->load('order.table');
         });
+        
+        event(new \App\Events\OrderUpdated());
+        
+        return $result;
     }
 }

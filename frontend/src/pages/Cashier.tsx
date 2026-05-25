@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { api } from '../lib/api';
+import { toast } from 'sonner';
 
 interface OrderItem {
   id: number;
@@ -20,26 +21,22 @@ interface Order {
   items: OrderItem[];
 }
 
-interface SplitSimulation {
-  message?: string;
-  installments?: number[];
-}
-
 export default function Cashier() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   
+  // Payment Simulation State
   const [splitType, setSplitType] = useState<'integral' | 'equal' | 'items'>('integral');
   const [numPeople, setNumPeople] = useState(1);
   const [selectedItemIds, setSelectedItemIds] = useState<number[]>([]);
-  const [simulation, setSimulation] = useState<SplitSimulation | null>(null);
+  const [simulation, setSimulation] = useState<any>(null);
+  const [paidTotal, setPaidTotal] = useState(0);
 
   const fetchOrders = async () => {
-    try {
-      const res = await api.get('/orders');
+    try {      const res = await api.get(`/orders`);
       const actionable = res.data.data ? res.data.data : res.data;
       const filtered = actionable.filter((o: Order) => 
-        (o.type === 'Mesa' && o.status === 'Fechamento') ||
+        (o.type === 'Mesa' && o.status === 'Fechada') || 
         (o.type === 'Delivery' && o.status === 'Aberta')
       );
       setOrders(filtered);
@@ -56,22 +53,30 @@ export default function Cashier() {
 
   useEffect(() => {
     fetchOrders();
-    const interval = setInterval(fetchOrders, 10000);
-    return () => clearInterval(interval);
+    
+    // WebSockets via Laravel Echo
+    const channel = window.Echo.channel('orders');
+    channel.listen('.OrderUpdated', () => {
+      fetchOrders();
+    });
+
+    return () => {
+      channel.stopListening('.OrderUpdated');
+    };
   }, []);
 
   useEffect(() => {
     if (!selectedOrder) return;
     
+    // Simulate Split
     const simulateSplit = async () => {
-      try {
-        const res = await api.post(`/orders/${selectedOrder.id}/split`, {
+      try {        const res = await api.post(`/orders/${selectedOrder.id}/split`, {
           split_type: splitType,
           num_people: numPeople,
           item_ids: selectedItemIds
         });
         setSimulation(res.data);
-      } catch (err: unknown) {
+      } catch (err: any) {
         console.error(err);
         setSimulation(null);
       }
@@ -81,18 +86,21 @@ export default function Cashier() {
   }, [selectedOrder, splitType, numPeople, selectedItemIds]);
 
   const handlePay = async (amount: number, method: string) => {
-    try {
-      await api.post(`/orders/${selectedOrder?.id}/pay`, {
+    try {      await api.post(`/orders/${selectedOrder?.id}/pay`, {
         amount,
         method
       });
-      alert('Pagamento registrado com sucesso!');
+      
+      const audio = new Audio('/sounds/caixa.mp3');
+      audio.play().catch(e => console.log('Audio autoplay blocked', e));
+      toast.success('Pagamento registrado com sucesso!');
+      
       fetchOrders();
       setSplitType('integral');
       setSelectedItemIds([]);
     } catch (err) {
       console.error(err);
-      alert('Erro ao registrar pagamento.');
+      toast.error('Erro ao registrar pagamento.');
     }
   };
 
@@ -101,12 +109,12 @@ export default function Cashier() {
       
       {/* Sidebar: Orders List */}
       <div className="w-full md:w-96 bg-white border-r border-gray-200 flex flex-col h-screen z-10 shadow-xl">
-        <div className="p-6 bg-emerald-900 text-white">
+        <div className="p-6 bg-sabor-dark text-white">
           <h1 className="text-2xl font-black mb-1 flex items-center gap-2">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             Caixa
           </h1>
-          <p className="text-emerald-100 text-sm font-medium">Contas aguardando recebimento</p>
+          <p className="text-sabor-light text-sm font-medium">Contas aguardando recebimento</p>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -114,12 +122,12 @@ export default function Cashier() {
             <div 
               key={order.id} 
               onClick={() => setSelectedOrder(order)}
-              className={`p-4 rounded-2xl border-2 transition-all cursor-pointer shadow-sm hover:shadow-md ${selectedOrder?.id === order.id ? 'border-emerald-500 bg-emerald-50' : 'border-gray-100 bg-white hover:border-gray-200'}`}
+              className={`p-4 rounded-2xl border-2 transition-all cursor-pointer shadow-sm hover:shadow-md ${selectedOrder?.id === order.id ? 'border-sabor-primary bg-sabor-light' : 'border-gray-100 bg-white hover:border-gray-200'}`}
             >
               <div className="flex justify-between items-start mb-2">
                 <div>
                   <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded ${order.type === 'Mesa' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
-                    {order.type} {order.table ? `* Mesa ${order.table.number}` : ''}
+                    {order.type} {order.table ? `â€¢ Mesa ${order.table.number}` : ''}
                   </span>
                   <h3 className="font-bold text-gray-900 mt-1">Comanda #{order.id}</h3>
                 </div>
@@ -182,12 +190,12 @@ export default function Cashier() {
               <h2 className="text-2xl font-black text-gray-900 mb-6">Recebimento</h2>
               
               {simulation?.message === 'Conta já está paga.' ? (
-                <div className="bg-emerald-50 text-emerald-700 p-6 rounded-2xl flex flex-col items-center justify-center flex-1 text-center border border-emerald-100">
-                  <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
+                <div className="bg-sabor-light text-sabor-dark p-6 rounded-2xl flex flex-col items-center justify-center flex-1 text-center border border-sabor-light">
+                  <div className="w-16 h-16 bg-sabor-light rounded-full flex items-center justify-center mb-4">
                     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
                   </div>
                   <h3 className="text-xl font-bold">Conta Quitada</h3>
-                  <p className="mt-2 text-emerald-600/80 font-medium">Todos os recebimentos foram registrados. A comanda será finalizada.</p>
+                  <p className="mt-2 text-sabor-primary/80 font-medium">Todos os recebimentos foram registrados. A comanda será finalizada.</p>
                 </div>
               ) : (
                 <>
@@ -233,7 +241,7 @@ export default function Cashier() {
                           <label key={item.id} className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-emerald-300 transition-colors">
                             <input 
                               type="checkbox" 
-                              className="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500"
+                              className="w-5 h-5 text-sabor-primary rounded focus:ring-sabor-primary"
                               checked={selectedItemIds.includes(item.id)}
                               onChange={(e) => {
                                 if (e.target.checked) {
@@ -267,8 +275,8 @@ export default function Cashier() {
                             <span className="font-black text-gray-900 text-lg">R$ {amount.toFixed(2)}</span>
                           </div>
                           <div className="flex gap-2">
-                            <button onClick={() => handlePay(amount, 'PIX')} className="px-3 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 rounded-lg transition-colors">PIX</button>
-                            <button onClick={() => handlePay(amount, 'Cartao')} className="px-3 py-1.5 text-xs font-bold text-indigo-700 bg-indigo-100 hover:bg-indigo-200 rounded-lg transition-colors">Cartão</button>
+                            <button onClick={() => handlePay(amount, 'PIX')} className="px-3 py-1.5 text-xs font-bold text-sabor-dark bg-sabor-light hover:bg-sabor-primary rounded-lg transition-colors">PIX</button>
+                            <button onClick={() => handlePay(amount, 'Cartão')} className="px-3 py-1.5 text-xs font-bold text-indigo-700 bg-indigo-100 hover:bg-indigo-200 rounded-lg transition-colors">Cartão</button>
                             <button onClick={() => handlePay(amount, 'Dinheiro')} className="px-3 py-1.5 text-xs font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 rounded-lg transition-colors">Dinheiro</button>
                           </div>
                         </div>
@@ -284,3 +292,4 @@ export default function Cashier() {
     </div>
   );
 }
+

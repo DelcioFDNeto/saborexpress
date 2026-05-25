@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+﻿import { useContext } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
 
@@ -10,7 +10,7 @@ export default function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
   const { isAuthenticated, user, isLoading } = useContext(AuthContext);
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-screen"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div></div>;
+    return <div className="flex justify-center items-center h-screen"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sabor-primary"></div></div>;
   }
 
   if (!isAuthenticated || !user) {
@@ -24,3 +24,4 @@ export default function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
 
   return <Outlet />;
 }
+
