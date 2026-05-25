@@ -19,6 +19,7 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
 Route::apiResource('products', ProductController::class)->only(['index', 'show']);
 Route::post('orders/delivery', [OrderController::class, 'storeDelivery']);
+Route::post('orders/takeout', [OrderController::class, 'storeTakeout']);
 Route::put('orders/{order}/delivery-status', [OrderController::class, 'updateDeliveryStatus']);
 
 Route::middleware('auth:sanctum')->group(function () {

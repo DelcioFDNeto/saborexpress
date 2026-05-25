@@ -72,6 +72,41 @@ class OrderController extends Controller
         return (new OrderResource($this->orders->loadDetails($order)))->response()->setStatusCode(201);
     }
 
+    public function storeTakeout(Request $request, AddOrderItemAction $addOrderItem)
+    {
+        $validated = $request->validate([
+            'customer_name' => ['required', 'string', 'max:255'],
+            'customer_phone' => ['required', 'string', 'max:30'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.product_id' => ['required', 'exists:products,id'],
+            'items.*.quantity' => ['required', 'integer', 'min:1'],
+            'items.*.notes' => ['nullable', 'string'],
+        ]);
+
+        $order = DB::transaction(function () use ($validated, $addOrderItem) {
+            $order = $this->orders->create([
+                'type' => 'Takeout',
+                'status' => OrderStatus::Open->value,
+                'delivery_status' => 'Aguardando Retirada',
+                'customer_name' => $validated['customer_name'],
+                'customer_phone' => $validated['customer_phone'],
+                'delivery_address' => 'Retirada no Estabelecimento',
+            ]);
+
+            foreach ($validated['items'] as $itemData) {
+                $order = $addOrderItem->execute($order, [
+                    'product_id' => $itemData['product_id'],
+                    'quantity' => $itemData['quantity'],
+                    'notes' => $itemData['notes'] ?? null,
+                ]);
+            }
+
+            return $order;
+        });
+
+        return (new OrderResource($this->orders->loadDetails($order)))->response()->setStatusCode(201);
+    }
+
     public function activeForTable(Table $table)
     {
         $order = $this->orders->findActiveForTable($table);

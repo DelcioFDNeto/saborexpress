@@ -32,6 +32,7 @@ export default function DeliveryClient() {
   
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCheckout, setIsCheckout] = useState(false);
+  const [orderType, setOrderType] = useState<'delivery' | 'takeout'>('delivery');
   
   // Form State
   const [customerName, setCustomerName] = useState('');
@@ -46,6 +47,7 @@ export default function DeliveryClient() {
   const [success, setSuccess] = useState(false);
 
   const handleCepBlur = async () => {
+    if (orderType === 'takeout') return;
     const cleanCep = cep.replace(/\D/g, '');
     if (cleanCep.length !== 8) return;
     
@@ -104,7 +106,7 @@ export default function DeliveryClient() {
       setCart(cart.map(item => item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item));
     } else {
       setCart([...cart, { product, quantity: 1, notes: '' }]);
-      toast.success(`${product.name} adicionado Ã  sacola`);
+      toast.success(`${product.name} adicionado à sacola`);
     }
   };
 
@@ -120,16 +122,29 @@ export default function DeliveryClient() {
   const submitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    try {      await api.post(`/orders/delivery`, {
-        customer_name: customerName,
-        customer_phone: customerPhone,
-        delivery_address: `${street}, ${number} - ${neighborhood} (${reference}) CEP: ${cep}`,
-        items: cart.map(item => ({
-          product_id: item.product.id,
-          quantity: item.quantity,
-          notes: item.notes
-        }))
-      });
+    try {
+      if (orderType === 'takeout') {
+        await api.post(`/orders/takeout`, {
+          customer_name: customerName,
+          customer_phone: customerPhone,
+          items: cart.map(item => ({
+            product_id: item.product.id,
+            quantity: item.quantity,
+            notes: item.notes
+          }))
+        });
+      } else {
+        await api.post(`/orders/delivery`, {
+          customer_name: customerName,
+          customer_phone: customerPhone,
+          delivery_address: `${street}, ${number} - ${neighborhood} (${reference}) CEP: ${cep}`,
+          items: cart.map(item => ({
+            product_id: item.product.id,
+            quantity: item.quantity,
+            notes: item.notes
+          }))
+        });
+      }
       setSuccess(true);
       setCart([]);
     } catch (err) {
@@ -154,7 +169,11 @@ export default function DeliveryClient() {
             <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
           </div>
           <h2 className="text-3xl font-black text-gray-900 mb-2">Pedido Recebido!</h2>
-          <p className="text-gray-600 mb-8">Seu pedido foi enviado para o restaurante. Aguarde nossa confirmação.</p>
+          <p className="text-gray-600 mb-8">
+            {orderType === 'takeout' 
+              ? 'Seu pedido de retirada foi enviado para a nossa cozinha. Aguarde nossa notificação para vir buscar.' 
+              : 'Seu pedido de entrega expressa foi enviado para o restaurante. Aguarde nossa confirmação.'}
+          </p>
           <button 
             onClick={() => { setSuccess(false); setIsCheckout(false); }}
             className="w-full py-4 bg-sabor-primary text-white rounded-xl font-bold hover:bg-sabor-dark transition-colors"
@@ -167,15 +186,16 @@ export default function DeliveryClient() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
+    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row font-sans">
+      
       {/* Left Area: Menu */}
       <div className="flex-1 p-6 md:p-10 max-h-screen overflow-y-auto">
         <div className="mb-8">
           <div className="flex items-center justify-center gap-3">
             <img src="/logo-horizontal.png" alt="SaborExpress" className="h-16 md:h-20 object-contain" />
-            <h1 className="text-4xl font-black text-sabor-primary tracking-tight">Delivery</h1>
+            <h1 className="text-4xl font-black text-sabor-primary tracking-tight">Faça seu Pedido</h1>
           </div>
-          <p className="text-gray-500 font-medium mt-2">Os melhores pratos diretamente na sua casa.</p>
+          <p className="text-gray-500 font-medium mt-2 text-center">Peça para receber em casa ou retire fresquinho no nosso balcão!</p>
         </div>
 
         {/* Categories */}
@@ -336,7 +356,37 @@ export default function DeliveryClient() {
 
             {isCheckout ? (
               <form onSubmit={submitOrder} className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                <h3 className="font-bold text-gray-900 border-b pb-2">Dados de Entrega</h3>
+                
+                {/* Checkout Mode Toggle */}
+                <div className="grid grid-cols-2 p-1 bg-gray-100 rounded-xl border border-gray-200">
+                  <button 
+                    type="button"
+                    onClick={() => setOrderType('delivery')}
+                    className={`py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${
+                      orderType === 'delivery' 
+                        ? 'bg-white text-sabor-dark shadow-sm' 
+                        : 'text-gray-500 hover:text-gray-800'
+                    }`}
+                  >
+                    🚚 Entrega
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setOrderType('takeout')}
+                    className={`py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${
+                      orderType === 'takeout' 
+                        ? 'bg-white text-sabor-dark shadow-sm' 
+                        : 'text-gray-500 hover:text-gray-800'
+                    }`}
+                  >
+                    🛍️ Retirada
+                  </button>
+                </div>
+
+                <h3 className="font-bold text-gray-900 border-b pb-2">
+                  {orderType === 'takeout' ? 'Dados para Retirada' : 'Dados de Entrega'}
+                </h3>
+                
                 <input 
                   required
                   type="text" 
@@ -344,6 +394,7 @@ export default function DeliveryClient() {
                   value={customerName} onChange={e => setCustomerName(e.target.value)}
                   className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-sabor-primary focus:outline-none transition-all"
                 />
+                
                 <input 
                   required
                   type="tel" 
@@ -351,36 +402,59 @@ export default function DeliveryClient() {
                   value={customerPhone} onChange={e => setCustomerPhone(e.target.value)}
                   className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-sabor-primary focus:outline-none transition-all"
                 />
-                <div className="grid grid-cols-2 gap-3">
-                  <input 
-                    required type="text" placeholder="CEP" 
-                    value={cep} onChange={e => setCep(e.target.value)} onBlur={handleCepBlur}
-                    className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-sabor-primary focus:outline-none transition-all"
-                  />
-                  {addressLoading && <div className="text-sm text-sabor-primary font-bold flex items-center">Buscando...</div>}
-                </div>
-                <input 
-                  required type="text" placeholder="Rua" 
-                  value={street} onChange={e => setStreet(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-sabor-primary focus:outline-none transition-all"
-                />
-                <div className="grid grid-cols-3 gap-3">
-                  <input 
-                    required type="text" placeholder="Número" 
-                    value={number} onChange={e => setNumber(e.target.value)}
-                    className="col-span-1 w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-sabor-primary focus:outline-none transition-all"
-                  />
-                  <input 
-                    required type="text" placeholder="Bairro" 
-                    value={neighborhood} onChange={e => setNeighborhood(e.target.value)}
-                    className="col-span-2 w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-sabor-primary focus:outline-none transition-all"
-                  />
-                </div>
-                <input 
-                  type="text" placeholder="Complemento / Ponto de Referência" 
-                  value={reference} onChange={e => setReference(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-sabor-primary focus:outline-none transition-all"
-                />
+
+                {/* Conditional Fields: Render only for Delivery */}
+                {orderType === 'delivery' && (
+                  <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="grid grid-cols-2 gap-3">
+                      <input 
+                        required={orderType === 'delivery'}
+                        type="text" 
+                        placeholder="CEP" 
+                        value={cep} onChange={e => setCep(e.target.value)} onBlur={handleCepBlur}
+                        className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-sabor-primary focus:outline-none transition-all"
+                      />
+                      {addressLoading && <div className="text-sm text-sabor-primary font-bold flex items-center">Buscando...</div>}
+                    </div>
+                    <input 
+                      required={orderType === 'delivery'}
+                      type="text" 
+                      placeholder="Rua" 
+                      value={street} onChange={e => setStreet(e.target.value)}
+                      className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-sabor-primary focus:outline-none transition-all"
+                    />
+                    <div className="grid grid-cols-3 gap-3">
+                      <input 
+                        required={orderType === 'delivery'}
+                        type="text" 
+                        placeholder="Número" 
+                        value={number} onChange={e => setNumber(e.target.value)}
+                        className="col-span-1 w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-sabor-primary focus:outline-none transition-all"
+                      />
+                      <input 
+                        required={orderType === 'delivery'}
+                        type="text" 
+                        placeholder="Bairro" 
+                        value={neighborhood} onChange={e => setNeighborhood(e.target.value)}
+                        className="col-span-2 w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-sabor-primary focus:outline-none transition-all"
+                      />
+                    </div>
+                    <input 
+                      type="text" 
+                      placeholder="Complemento / Ponto de Referência" 
+                      value={reference} onChange={e => setReference(e.target.value)}
+                      className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-sabor-primary focus:outline-none transition-all"
+                    />
+                  </div>
+                )}
+
+                {orderType === 'takeout' && (
+                  <div className="p-4 bg-sabor-light text-sabor-dark border border-sabor-primary/20 rounded-2xl text-xs font-bold leading-relaxed space-y-1">
+                    <p>📍 Retirada grátis no Balcão!</p>
+                    <p className="text-gray-600 font-normal">Av. Nazaré, 452 - Nazaré. Seu pedido estará pronto em 25-35 min.</p>
+                  </div>
+                )}
+
                 <div className="flex gap-3 pt-2">
                   <button type="button" onClick={() => setIsCheckout(false)} className="px-6 py-4 rounded-xl font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 transition-colors">Voltar</button>
                   <button type="submit" disabled={loading} className="flex-1 py-4 bg-sabor-primary text-white rounded-xl font-black text-lg shadow-lg shadow-sabor-primary/30 hover:bg-sabor-dark hover:shadow-xl hover:-translate-y-1 transition-all disabled:opacity-50">
@@ -393,7 +467,7 @@ export default function DeliveryClient() {
                 onClick={() => setIsCheckout(true)}
                 className="w-full py-4 bg-sabor-primary text-white rounded-xl font-black text-lg shadow-lg shadow-sabor-primary/30 hover:bg-sabor-dark hover:shadow-xl hover:-translate-y-1 transition-all"
               >
-                Avançar para Entrega
+                Avançar para Checkout
               </button>
             )}
           </div>
@@ -402,4 +476,3 @@ export default function DeliveryClient() {
     </div>
   );
 }
-
