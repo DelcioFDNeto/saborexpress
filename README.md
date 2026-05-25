@@ -1,87 +1,193 @@
-# SaborExpress ERP 🍔
+# SaborExpress
 
-Bem-vindo ao **SaborExpress**, uma plataforma ERP de ponta a ponta construída como projeto acadêmico para gestão integral de restaurantes, abrangendo desde o autoatendimento e controle de mesas até a expedição na cozinha, logística de delivery e dashboard financeiro.
+SaborExpress é um sistema acadêmico para gestão de restaurantes. O projeto contempla cardápio, controle de mesas, autenticação por perfil e a base de comandas para registrar itens consumidos em uma mesa.
 
-## 🚀 Arquitetura Tecnológica
-O SaborExpress foi construído utilizando as mais modernas práticas de engenharia de software:
+O objetivo principal é demonstrar uma arquitetura desacoplada, com backend responsável pelas regras de negócio e pela persistência dos dados, enquanto o frontend consome a API e apresenta as telas operacionais.
 
-- **Backend (API RESTful):** Laravel 11.x (PHP 8.2+)
-- **Frontend (SPA):** React 18 + TypeScript + Vite
-- **Estilização:** TailwindCSS (Design System customizado e responsivo)
-- **Banco de Dados:** PostgreSQL hospedado nativamente (Suporte a Neon Serverless)
-- **Autenticação:** Laravel Sanctum (Stateful JWT via Bearer Token)
-- **Controle de Acesso:** Sistema rigoroso de RBAC (Role-Based Access Control)
+## Arquitetura
 
-## 📦 Módulos do Sistema (Escopo 100% Concluído)
+O projeto segue uma arquitetura cliente-servidor em formato de monorepo.
 
-O projeto foi rigorosamente desenhado para atender aos 6 fluxos essenciais da gestão de restaurantes:
+O backend é uma API REST construída com Laravel. Ele concentra autenticação, autorização, validações, regras de negócio, transações, migrations, seeders e acesso ao banco de dados.
 
-### M01: Cardápio Digital Público
-Catálogo dinâmico, dividido por categorias (Entradas, Pratos Principais, Sobremesas, Bebidas) com interface limpa voltada à conversão.
+O frontend é uma aplicação React com Vite. Ele consome a API HTTP, mantém estado de interface e apresenta as telas de cardápio, login e mapa de mesas.
 
-### M02: Gestão de Mesas e Salão (Garçom)
-Controle visual das mesas em tempo real. Permite abertura, lançamento de produtos, fechamento, transferência e agrupamento inteligente de mesas.
+```text
+saborexpress/
+  backend/        API Laravel
+  frontend/       Aplicação React com Vite
+  docs/           Documentação técnica e acompanhamento do projeto
+  docker-compose.yml
+  package.json    Scripts de apoio do monorepo
+```
 
-### M03: Kitchen Display System - KDS (Cozinheiro)
-Painel de expedição automatizado. A cozinha recebe os pedidos vindos tanto das Mesas quanto do Delivery em tempo real, mudando o status para *Em Preparo* e *Pronto*, controlando o fluxo de gargalos através do tempo de espera.
+## Monorepo
 
-### M04: Logística de Delivery (Motoqueiro)
-Portal do cliente para inserção de pedidos no carrinho sem fricção de login. Os pedidos despachados caem no painel do Entregador, que assume a rota e confirma a entrega no smartphone.
+Este repositório mantém backend e frontend no mesmo projeto, mesmo usando tecnologias diferentes. Cada aplicação preserva suas próprias dependências, comandos e arquivos de configuração, enquanto a raiz centraliza tarefas comuns de desenvolvimento.
 
-### M05: Motor de Divisão de Contas (Caixa)
-O "cérebro" financeiro do fechamento. Permite dividir a conta de três formas precisas:
-- **Integral:** Um cliente paga tudo.
-- **Divisão Igualitária:** O sistema calcula dízimas e divide por X pessoas na mesa.
-- **Divisão Por Item:** Calculadora dinâmica onde o cliente escolhe pagar apenas os itens específicos (Ex: "Só a minha bebida e a minha pizza").
+Essa organização facilita:
 
-### M06: Painel Gerencial de BI (Administrador)
-Dashboard executivo exibindo indicadores-chave em tempo real:
-- Faturamento Bruto (Agregado em pagamentos reais).
-- Ticket Médio e Volume de Contas.
-- **Curva ABC Automatizada:** Ranqueamento cruzado matemático que lista quais produtos têm maior saída volumétrica e peso financeiro na receita.
+- executar comandos a partir da raiz;
+- manter documentação única do projeto;
+- versionar backend e frontend de forma coordenada;
+- compartilhar infraestrutura local, como o banco PostgreSQL via Docker Compose;
+- acompanhar a evolução dos módulos em um único fluxo.
 
-## 🔐 Contas de Acesso (Cargos)
-O sistema possui 5 níveis hierárquicos invioláveis, controlados por ContextAPI no frontend e Middleware no backend.
+## Tecnologias
 
-1. **administrator:** Acesso total (Inclui Painel Gerencial e Gerenciamento de Equipe).
-2. **cashier:** Acesso ao módulo financeiro (Recebimentos).
-3. **waiter:** Acesso restrito ao mapa de mesas e comandas.
-4. **kitchen:** Acesso exclusivo ao balcão de expedição (KDS).
-5. **delivery_driver:** Acesso ao rastreio de entregas e expedição na rua.
-6. **client:** Acesso ao Cardápio e Delivery (Criado pelo cadastro público).
+### Backend
 
-*Atenção: Apenas Administradores podem criar contas para a equipe (via Painel Gerencial).*
+- PHP 8.2 ou superior
+- Laravel 12
+- Laravel Sanctum
+- PostgreSQL
+- Eloquent ORM
+- Repository pattern
+- Form Requests
+- API Resources
+- Docker para deploy e ambiente local auxiliar
 
-### 🔑 Credenciais de Teste (Seeders)
-Para facilitar os testes, o banco de dados já nasce com as seguintes contas pré-configuradas (A senha padrão para todas é **`password`**):
-- **Admin:** `admin@saborexpress.com`
-- **Garçom:** `waiter@saborexpress.com`
-- **Cozinha:** `kitchen@saborexpress.com`
-- **Caixa:** `cashier@saborexpress.com`
-- **Entregador:** `delivery@saborexpress.com`
-- **Cliente:** `client@saborexpress.com`
+### Frontend
 
-## ⚙️ Como Testar Localmente (Desenvolvimento)
+- Node.js 22 ou superior
+- React 19
+- Vite
+- TypeScript
+- Tailwind CSS 4
+- Axios
+- React Router
 
-### 1. Iniciar o Banco e Backend
+## Funcionalidades atuais
+
+- Autenticação via Laravel Sanctum.
+- Perfis de usuário: administrador, garçom, cozinha, caixa, entrega e cliente.
+- Controle de acesso por perfil no backend.
+- CRUD administrativo de usuários, troca de senha, ativação e desativação.
+- Tratamento global de erros da API com payload padronizado.
+- Auditoria e histórico operacional com eventos consultáveis pelo administrador.
+- Cardápio público para leitura de categorias e produtos.
+- Operações protegidas para criação, edição e remoção de categorias e produtos.
+- Busca, filtros, disponibilidade e estoque simples de produtos.
+- Cadastro e consulta de mesas.
+- Abertura de mesa com criação transacional de comanda.
+- Reserva, cancelamento de reserva, transferência, junção e fluxo de limpeza de mesas.
+- Módulo backend de comandas, com inclusão, atualização e remoção de itens.
+- Snapshot de preço no item da comanda.
+- Recálculo do total da comanda no backend.
+- Fluxo de cozinha para listar itens pendentes, agrupar por comanda, iniciar preparo, marcar item como pronto e cancelar item.
+- Entrega de item pronto na mesa.
+- Solicitação de fechamento da comanda.
+- Cancelamento de comanda aberta.
+- Registro de pagamento da comanda.
+- Liberação de mesa após pagamento.
+- Seeders de usuários, mesas, categorias e produtos para ambiente local ou Docker.
+- Telas frontend de cardápio, login e mapa de mesas.
+
+## Requisitos
+
+- Node.js 22 ou superior
+- npm 10 ou superior
+- PHP 8.2 ou superior
+- Composer
+- Docker, caso deseje usar o PostgreSQL local via Docker Compose
+
+## Executando o projeto
+
+### Banco de dados local
+
+Na raiz do projeto, execute:
+
+```bash
+npm run dev:db
+```
+
+Esse comando sobe um PostgreSQL local com as seguintes credenciais:
+
+```env
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=saborexpress
+DB_USERNAME=saborexpress
+DB_PASSWORD=saborexpress
+```
+
+### Backend
+
 ```bash
 cd backend
-cp .env.example .env
-# Configure sua string de conexão Neon ou Postgres local no .env
 composer install
+cp .env.example .env
 php artisan key:generate
 php artisan migrate:fresh --seed
 php artisan serve
-# O Laravel rodará em http://127.0.0.1:8000
 ```
 
-### 2. Iniciar o Frontend
+No Windows PowerShell, use:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+### Frontend
+
 ```bash
 cd frontend
 npm install
+cp .env.example .env
 npm run dev
-# O React rodará em http://localhost:5173
 ```
 
----
-*Projeto acadêmico desenvolvido com foco em Clean Code, escalabilidade de microsserviços monolíticos e UX premium.*
+No Windows PowerShell, use:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Por padrão, o frontend espera a API em:
+
+```env
+VITE_API_URL=http://localhost:8000
+```
+
+## Scripts da raiz
+
+```bash
+npm run dev          # executa backend e frontend em paralelo
+npm run dev:backend  # executa php artisan serve em backend/
+npm run dev:frontend # executa Vite em frontend/
+npm run dev:db       # sobe o PostgreSQL local
+npm run build        # gera build do frontend
+npm run lint         # executa lint do frontend
+npm run migrate      # executa migrations do Laravel
+npm run seed         # executa seeders do Laravel
+npm run fresh        # recria o banco e executa seeders
+npm run api:routes   # lista rotas da API
+```
+
+## Documentação
+
+- [API atual](docs/API.md)
+- [Kanban do projeto](docs/kanban.md)
+
+A API também possui uma especificação OpenAPI em `backend/public/openapi.yaml`. Com o backend em execução, a documentação interativa pode ser acessada em:
+
+```text
+http://localhost:8000/docs/api
+```
+
+## Dados Iniciais
+
+Ao executar `php artisan migrate:fresh --seed`, o backend cria dados básicos para desenvolvimento:
+
+- usuários por perfil operacional;
+- mesas numeradas;
+- categorias de cardápio;
+- produtos de demonstração com preços e estoque inicial quando aplicável.
+
+Esses dados permitem testar autenticação, cardápio, abertura de mesa, comanda, cozinha, entrega na mesa, fechamento e pagamento sem cadastro manual inicial.
+
+## Observações
+
+O projeto ainda está em desenvolvimento. O backend já possui base operacional para autenticação, usuários, cardápio, mesas, comandas, cozinha, entrega na mesa, fechamento, pagamento integral, auditoria e tratamento global de erros. Ainda faltam evoluções como pagamento parcial, divisão de conta, relatórios, fluxo completo de delivery/retirada, caixa completo e integração dessas novas rotas no frontend.
+
+Como houve padronização de enums em migrations existentes, bancos locais criados anteriormente podem precisar ser recriados com `php artisan migrate:fresh --seed`.

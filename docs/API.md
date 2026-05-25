@@ -1,6 +1,6 @@
 # API atual
 
-Esta pagina documenta apenas as rotas registradas hoje em `backend/routes/api.php`. Ela nao descreve o produto final planejado.
+Esta página documenta as rotas registradas no backend Laravel em `backend/routes/api.php`.
 
 Base local esperada:
 
@@ -8,262 +8,217 @@ Base local esperada:
 http://localhost:8000/api
 ```
 
-Também existe uma especificação OpenAPI em:
-
-```text
-backend/public/openapi.yaml
-```
-
-Com o backend em execução, a visualização interativa com Scalar fica disponível em:
+Com o backend em execução, a documentação interativa com Scalar fica disponível em:
 
 ```text
 http://localhost:8000/docs/api
 ```
 
-## Autenticacao
+## Formato de erros
 
-### `POST /login`
-
-Faz login e retorna um token do Laravel Sanctum.
-
-Body:
+As respostas de erro da API seguem o formato:
 
 ```json
 {
-  "email": "admin@saborexpress.com",
-  "password": "password"
-}
-```
-
-Resposta esperada:
-
-```json
-{
-  "access_token": "...",
-  "token_type": "Bearer",
-  "user": {
-    "id": 1,
-    "name": "Administrator User",
-    "email": "admin@saborexpress.com",
-    "role": "administrator"
+  "message": "Mensagem do erro.",
+  "error": {
+    "type": "validation_error",
+    "status": 422
+  },
+  "errors": {
+    "field": ["Mensagem de validação."]
   }
 }
 ```
 
-## Rotas publicas
+Os tipos principais são `validation_error`, `unauthenticated`, `forbidden`, `not_found`, `method_not_allowed`, `conflict`, `unprocessable_entity` e `internal_server_error`.
 
-### Categorias
+## Autenticação
 
-- `GET /categories`
-- `GET /categories/{category}`
-
-Observacao: a listagem usa paginacao e carrega produtos junto da categoria.
-
-### Produtos
-
-- `GET /products`
-- `GET /products/{product}`
-
-Filtros existentes na listagem:
-
-- `category_id`
-- `is_available`
-
-Observacao: a listagem usa paginacao e retorna `ProductResource`.
-
-## Rotas autenticadas
-
-As rotas abaixo estao dentro do middleware `auth:sanctum` e exigem header:
-
-```http
-Authorization: Bearer <token>
-Accept: application/json
-```
-
-### Usuario atual
-
+- `POST /login`
 - `GET /user`
 - `GET /me`
 - `POST /logout`
 
-### Categorias protegidas
+O login retorna token Sanctum e usuário serializado. Usuários inativos não conseguem fazer login nem acessar rotas protegidas.
+
+## Usuários
 
 Exigem papel `administrator`.
+
+- `GET /users`
+- `POST /users`
+- `GET /users/{user}`
+- `PUT|PATCH /users/{user}`
+- `DELETE /users/{user}`
+- `PATCH /users/{user}/password`
+- `PATCH /users/{user}/activate`
+- `PATCH /users/{user}/deactivate`
+
+Filtros de listagem:
+
+- `role`
+- `is_active`
+- `search`
+- `per_page`
+
+## Categorias
+
+Leitura pública:
+
+- `GET /categories`
+- `GET /categories/{category}`
+
+Escrita exige `administrator`:
 
 - `POST /categories`
-- `PUT/PATCH /categories/{category}`
+- `PUT|PATCH /categories/{category}`
 - `DELETE /categories/{category}`
 
-### Produtos protegidos
+## Produtos
 
-Exigem papel `administrator`.
+Leitura pública:
+
+- `GET /products`
+- `GET /products/{product}`
+
+Filtros de listagem:
+
+- `search`
+- `category_id`
+- `is_available`
+- `min_price`
+- `max_price`
+- `in_stock`
+- `per_page`
+
+Escrita exige `administrator`:
 
 - `POST /products`
-- `PUT/PATCH /products/{product}`
+- `PUT|PATCH /products/{product}`
+- `PATCH /products/{product}/availability`
 - `DELETE /products/{product}`
 
-### Mesas
+Produtos possuem `stock_quantity` opcional. Quando o valor é `null`, o produto não tem controle de estoque. Quando é numérico, o backend bloqueia inclusão acima do estoque e ajusta estoque ao adicionar, alterar, remover ou cancelar item de comanda.
 
-Leitura e abertura exigem papel `administrator`, `waiter` ou `cashier`.
+## Mesas
+
+Leitura e operações de salão exigem `administrator`, `waiter` ou `cashier`.
 
 - `GET /tables`
 - `GET /tables/{table}`
 - `POST /tables/{table}/open`
+- `PATCH /tables/{table}/reserve`
+- `PATCH /tables/{table}/cancel-reservation`
 - `POST /tables/{table}/release`
+- `PATCH /tables/{table}/mark-free`
+- `POST /tables/{table}/transfer-order`
+- `POST /tables/{table}/merge-order`
+- `GET /tables/{table}/active-order`
 
-Body aceito por `open`:
-
-```json
-{
-  "customer_name": "Joao Silva",
-  "customer_phone": "(00) 00000-0000"
-}
-```
-
-Criacao, atualizacao e exclusao exigem papel `administrator`.
+Criação, atualização e exclusão exigem `administrator`.
 
 - `POST /tables`
-- `PUT/PATCH /tables/{table}`
+- `PUT|PATCH /tables/{table}`
 - `DELETE /tables/{table}`
 
-## M03 Comandas
+Status de mesa:
 
-### Comandas
+- `Livre`
+- `Ocupada`
+- `Reservada`
+- `Fechamento`
+- `Limpeza`
 
-As rotas abaixo exigem papel `administrator`, `waiter` ou `cashier`.
+`release` coloca a mesa em `Limpeza` quando não há comanda ativa. `mark-free` conclui a limpeza e devolve a mesa para `Livre`.
+
+`reserve` aceita `reservation_name`, `reservation_phone` e `reserved_at`. Esses campos são limpos ao cancelar a reserva ou abrir a mesa.
+
+## Comandas
+
+Exigem `administrator`, `waiter` ou `cashier`.
 
 - `GET /orders`
 - `GET /orders/{order}`
-- `PATCH|PUT /orders/{order}`
+- `PUT|PATCH /orders/{order}`
 - `POST /orders/{order}/request-closing`
 - `POST /orders/{order}/cancel`
-- `GET /tables/{table}/active-order`
 - `POST /orders/{order}/items`
 
-Body de `PATCH|PUT /orders/{order}`:
+Transição oficial:
 
-```json
-{
-  "status": "Fechamento"
-}
-```
+- `Aberta`
+- `Fechamento`
+- `Paga`
+- `Cancelada`
 
-Transição oficial da comanda:
+O fechamento é bloqueado enquanto houver itens `Pendente`, `Em Preparo` ou `Pronto`.
 
-- `Aberta`: aceita inclusão, alteração e remoção de itens.
-- `Fechamento`: conta solicitada; itens não podem mais ser alterados.
-- `Paga`: pagamento integral registrado.
-- `Cancelada`: comanda encerrada sem pagamento.
+## Itens de Comanda
 
-Use `POST /orders/{order}/request-closing` para solicitar fechamento e `POST /orders/{order}/cancel` para cancelar. O status `Paga` deve ser alcançado pelo fluxo de pagamento.
-
-Body de `POST /orders/{order}/items`:
-
-```json
-{
-  "product_id": 1,
-  "quantity": 2,
-  "notes": "Sem cebola"
-}
-```
-
-Ao adicionar um item, o backend consulta o preco atual do produto e grava o snapshot em `order_items.unit_price`. O total da comanda e recalculado no backend.
-
-Itens só podem ser adicionados, alterados ou removidos enquanto a comanda estiver `Aberta`.
-
-### Itens de comanda
-
-As rotas abaixo exigem papel `administrator`, `waiter` ou `cashier`.
+Exigem `administrator`, `waiter` ou `cashier`.
 
 - `GET /order-items`
 - `GET /order-items/{orderItem}`
-- `PATCH /order-items/{orderItem}`
+- `PUT|PATCH /order-items/{orderItem}`
+- `PATCH /order-items/{orderItem}/deliver`
+- `PATCH /order-items/{orderItem}/cancel`
 - `DELETE /order-items/{orderItem}`
 
-Body de `PATCH /order-items/{orderItem}`:
-
-```json
-{
-  "quantity": 3,
-  "notes": "Sem cebola",
-  "status": "Pendente"
-}
-```
-
-Campos aceitos no update:
-
-- `quantity`
-- `notes`
-- `status`
-
-Status aceitos para item:
+Status de item:
 
 - `Pendente`
 - `Em Preparo`
 - `Pronto`
 - `Entregue`
+- `Cancelado`
+
+Itens cancelados não entram no total da comanda. A operação dedicada de cancelamento também devolve estoque quando o produto é controlado por estoque.
 
 ## Cozinha
 
-As rotas abaixo exigem papel `administrator` ou `kitchen`.
+Exigem `administrator` ou `kitchen`.
 
+- `GET /kitchen/orders`
 - `GET /kitchen/order-items`
 - `PATCH /kitchen/order-items/{orderItem}/start`
 - `PATCH /kitchen/order-items/{orderItem}/mark-ready`
+- `PATCH /kitchen/order-items/{orderItem}/cancel`
 
-Filtros aceitos em `GET /kitchen/order-items`:
+`GET /kitchen/orders` agrupa a fila por comanda. `mark-ready` dispara o evento Laravel `OrderItemMarkedReady`, que pode ser usado depois para notificações em tempo real.
 
-- `status`: `Pendente`, `Em Preparo` ou `Pronto`
-- `order_id`
-- `per_page`
+## Pagamentos
 
-Transições controladas pela cozinha:
-
-- `PATCH /kitchen/order-items/{orderItem}/start`: muda de `Pendente` para `Em Preparo`.
-- `PATCH /kitchen/order-items/{orderItem}/mark-ready`: muda de `Em Preparo` para `Pronto`.
-
-A comanda precisa estar `Aberta` para receber atualizações da cozinha. O fechamento da comanda é bloqueado quando ainda existem itens `Pendente` ou `Em Preparo`.
-
-## M04 Pagamentos e caixa inicial
-
-### Pagamentos
-
-As rotas abaixo exigem papel `administrator` ou `cashier`.
+Exigem `administrator` ou `cashier`.
 
 - `GET /payments`
 - `GET /payments/{payment}`
 - `POST /orders/{order}/payments`
 
-Body de `POST /orders/{order}/payments`:
+Regra atual: pagamento integral. A comanda precisa estar em `Fechamento` e o valor informado deve bater com `total_amount`.
 
-```json
-{
-  "method": "Pix",
-  "amount": 84.5,
-  "notes": "Pagamento integral"
-}
-```
+## Auditoria e Histórico
 
-Métodos aceitos:
+Exigem papel `administrator`.
 
-- `Pix`
-- `Cartao`
-- `Dinheiro`
+- `GET /audit-events`
+- `GET /audit-events/{auditEvent}`
 
-Regra atual: o pagamento é integral. A comanda precisa estar em `Fechamento` e o valor informado deve bater com `total_amount`. Ao registrar o pagamento, a comanda passa para `Paga`.
+Filtros de listagem:
 
-### Liberação de mesa
+- `event`
+- `user_id`
+- `auditable_type`
+- `auditable_id`
+- `date_from`
+- `date_to`
+- `per_page`
 
-Depois que a comanda for paga ou cancelada, a mesa pode ser liberada:
+O backend registra eventos de auditoria para operações administrativas e operacionais, incluindo usuários, categorias, produtos, mesas, comandas, itens de comanda, cozinha e pagamentos. Cada evento guarda o usuário responsável, o tipo do evento, o recurso afetado e metadados úteis para reconstruir o histórico.
 
-- `POST /tables/{table}/release`
+## Ainda pendente
 
-Essa operação falha se ainda houver comanda ativa para a mesa.
-
-## Codigo ainda nao implementado
-
-- Delivery e cliente ainda nao possuem endpoints dedicados.
-- O painel visual da cozinha ainda nao foi implementado no frontend.
-- Pagamento parcial, divisao de conta por valor e divisao por itens ainda nao foram implementados.
-- Ainda nao ha seeders de categorias e produtos.
-- Alteracoes de enums em migrations existentes exigem recriar o banco local ou criar migrations de alteracao caso ja exista banco persistido.
+- Delivery e retirada ainda não possuem endpoints próprios.
+- Pagamento parcial, divisão de conta por valor e divisão por itens ainda não foram implementados.
+- Relatórios e fluxo completo de caixa ainda não foram implementados.
+- O frontend ainda não consome todas as novas rotas do backend.

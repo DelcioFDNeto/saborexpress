@@ -1,82 +1,199 @@
 # Kanban do Projeto
 
-Este documento acompanha o estado atual do SaborExpress. Ele deve ser atualizado conforme novas funcionalidades forem concluídas ou priorizadas.
+Este documento acompanha o estado atual do SaborExpress por módulos.
 
-## Concluído
+## M00 - Base, Arquitetura e Monorepo
 
-- Estrutura inicial em monorepo com `backend/`, `frontend/` e `docs/`.
-- Scripts de apoio na raiz do projeto.
-- Docker Compose para PostgreSQL local.
-- Backend Laravel configurado com PostgreSQL.
+### Concluído
+
+- Monorepo com `backend/`, `frontend/`, `docs/` e Docker Compose.
+- Backend Laravel com Sanctum, PostgreSQL, Eloquent, Actions, Repositories, Resources, Form Requests e Enums.
 - Frontend React com Vite, TypeScript e Tailwind CSS.
-- Autenticação com Laravel Sanctum.
-- Seeders de usuários por perfil.
-- Seeders de mesas.
-- Middleware de autorização por perfil.
-- Cardápio público para leitura de categorias e produtos.
-- Proteção de escrita de categorias e produtos para administrador.
-- CRUD backend de categorias.
-- CRUD backend de produtos.
-- CRUD backend de mesas.
-- Padronização dos enums de mesas e pedidos.
-- Abertura transacional de mesa com criação de comanda.
-- Prevenção de comanda ativa duplicada para a mesma mesa.
-- Backend do módulo de comandas.
-- Especificação OpenAPI da API atual.
-- Visualização da documentação com Scalar.
-- Inclusão de item em comanda com snapshot de preço.
-- Atualização de quantidade, observação e status de item.
-- Remoção de item da comanda.
-- Recálculo do total da comanda no backend.
-- Solicitação de fechamento de comanda.
-- Cancelamento de comanda antes do pagamento.
-- Registro de pagamento integral da comanda.
-- Transição oficial de comanda: `Aberta -> Fechamento -> Paga` ou `Cancelada`.
-- Bloqueio de alteração de itens após solicitação de fechamento.
-- Fila backend da cozinha para itens `Pendente`, `Em Preparo` e `Pronto`.
-- Transição de item da cozinha de `Pendente` para `Em Preparo`.
-- Transição de item da cozinha de `Em Preparo` para `Pronto`.
-- Bloqueio de fechamento de comanda com itens pendentes ou em preparo.
-- Liberação de mesa após pagamento ou cancelamento.
-- Repositories, Action, Resource e Form Request para pagamentos.
-- API Resources para categorias, produtos, comandas e itens de comanda.
-- Form Requests para operações de comanda.
-- Actions Laravel para regras de negócio de comandas.
-- Repositories para usuários, categorias, produtos, mesas, comandas e itens de comanda.
-- Cliente HTTP centralizado no frontend.
-- Tela de login.
-- Tela de cardápio.
-- Tela de mapa de mesas.
-- Guia local `module-guidelines-laravel.md` ignorado pelo Git.
+- Guia local `.ignore/module-guidelines-laravel.md` ignorado pelo Git.
+- Documentação principal no `README.md`.
 
-## Em andamento
+### Pendente
 
-- Consolidação da documentação técnica.
-- Separação clara entre funcionalidades implementadas e funcionalidades planejadas.
-- Validação do fluxo backend de comandas antes de iniciar novas telas no frontend.
-- Validação funcional do fluxo de pagamento com dados reais.
+- Definir estratégia de deploy.
+- Criar configuração de produção.
+- Criar pipeline de CI/CD.
 
-## A fazer
+## M01 - Autenticação, RBAC e Usuários
 
-- Criar seeders de categorias e produtos.
-- Implementar tela frontend de comanda por mesa.
-- Permitir que o garçom adicione produtos à comanda pelo frontend.
-- Criar painel da cozinha.
-- Implementar pagamento parcial.
-- Implementar divisão de conta por valor.
-- Implementar divisão de conta por itens.
-- Criar fluxo de caixa completo.
-- Criar fluxo de delivery.
+### Concluído
+
+- Login, logout, usuário atual e token Sanctum.
+- Middleware `role` com bloqueio de usuário inativo.
+- Payload global de erros para validação, autenticação, autorização, conflito, 404, 405 e erro interno.
+- CRUD administrativo de usuários.
+- Troca administrativa de senha.
+- Ativação e desativação de usuários.
+- Filtros de usuários por papel, status ativo e busca textual.
+- `UserResource` sem vazamento de senha ou token.
+
+### Pendente
+
+- Avaliar Policies quando houver regras por recurso.
+- Criar tela administrativa de usuários no frontend.
+
+## M02 - Cardápio, Categorias e Produtos
+
+### Concluído
+
+- CRUD backend de categorias e produtos.
+- Cardápio público para leitura.
+- Escrita restrita ao perfil `administrator`.
+- Busca textual de produtos.
+- Filtros por categoria, disponibilidade, faixa de preço e estoque.
+- Atualização dedicada de disponibilidade.
+- Estoque simples opcional por `stock_quantity`.
+- Ajuste automático de estoque ao adicionar, alterar, remover ou cancelar item de comanda.
+- Seeders de categorias e produtos.
+
+### Pendente
+
 - Criar telas administrativas para categorias e produtos.
-- Criar tela administrativa para mesas.
-- Melhorar tratamento global de erros no frontend.
-- Padronizar mensagens de erro da API.
-- Criar migrations de alteração para bancos persistidos, caso o projeto deixe de usar `migrate:fresh` em desenvolvimento.
-- Adicionar testes automatizados quando o escopo permitir.
+- Definir se haverá estoque avançado com movimentações históricas.
 
-## Bloqueado ou dependente de decisão
+## M03 - Mesas e Salão
 
-- Definir se o cardápio público terá paginação infinita, busca ou filtros avançados.
-- Definir se o caixa poderá alterar itens da comanda ou apenas fechar pagamento.
-- Definir se cozinha será baseada em itens individuais ou em pedidos agrupados.
-- Definir se delivery será tratado como pedido sem mesa ou como módulo separado.
+### Concluído
+
+- CRUD backend de mesas.
+- Abertura transacional de mesa com criação de comanda.
+- Prevenção de comanda ativa duplicada.
+- Consulta de comanda ativa por mesa.
+- Reserva com nome, telefone e horário reservado.
+- Cancelamento de reserva com limpeza dos dados de reserva.
+- Liberação para limpeza após pagamento ou cancelamento.
+- Conclusão de limpeza, retornando a mesa para `Livre`.
+- Transferência de comanda entre mesas.
+- Junção de comandas entre mesas abertas.
+- Status de mesa: `Livre`, `Ocupada`, `Reservada`, `Fechamento`, `Limpeza`.
+
+### Pendente
+
+- Criar tela administrativa de mesas.
+- Definir histórico de movimentações de mesa, se o escopo exigir auditoria operacional.
+ 
+## M04 - Auditoria e Histórico
+
+### Concluído
+
+- Migration `audit_events`.
+- Model `AuditEvent`.
+- Enum `AuditEventType`.
+- Repository de auditoria.
+- Action `RecordAuditEventAction`.
+- Resource `AuditEventResource`.
+- Controller `AuditEventController`.
+- Rotas administrativas `GET /api/audit-events` e `GET /api/audit-events/{auditEvent}`.
+- Filtros por evento, usuário, recurso auditado, período e paginação.
+- Registro automático de eventos nos fluxos de usuários, categorias, produtos, mesas, comandas, itens, cozinha e pagamentos.
+
+### Pendente
+
+- Criar tela administrativa de auditoria no frontend.
+- Definir retenção de histórico, se o projeto precisar de política de expurgo.
+
+## M05 - Comandas e Itens
+
+### Concluído
+
+- Listagem e consulta de comandas.
+- Inclusão, alteração, remoção, entrega e cancelamento de itens.
+- Snapshot de preço em `order_items.unit_price`.
+- Recálculo automático do total.
+- Itens cancelados não entram no total.
+- Bloqueio de fechamento enquanto houver item `Pendente`, `Em Preparo` ou `Pronto`.
+- Transição oficial da comanda: `Aberta -> Fechamento -> Paga` ou `Cancelada`.
+
+### Pendente
+
+- Conectar o frontend ao fluxo completo de comanda por mesa.
+
+## M06 - Cozinha
+
+### Concluído
+
+- Fila por item para `Pendente`, `Em Preparo` e `Pronto`.
+- Filtros por status, comanda e paginação.
+- Fila agrupada por comanda em `GET /api/kitchen/orders`.
+- Início de preparo.
+- Marcação de item como pronto.
+- Cancelamento de item antes da entrega.
+- Evento Laravel `OrderItemMarkedReady` ao marcar item como pronto.
+
+### Pendente
+
+- Criar painel da cozinha no frontend.
+- Adicionar listener real para notificação em tempo real, caso o projeto use WebSocket ou broadcast.
+
+## M07 - Pagamentos e Caixa
+
+### Concluído
+
+- Registro de pagamento integral.
+- Listagem e consulta de pagamentos.
+- Comanda muda para `Paga` após pagamento integral.
+- Mesa pode ser liberada para limpeza após pagamento.
+
+### Pendente
+
+- Pagamento parcial.
+- Divisão de conta por valor.
+- Divisão de conta por itens.
+- Abertura e fechamento de caixa.
+- Sangria, suprimento, estorno e relatórios financeiros.
+
+## M08 - Delivery e Retirada
+
+### Concluído
+
+- Enum `OrderType` já prevê `Delivery` e `Takeout`.
+- A tabela `orders` já possui campos básicos para pedido sem mesa.
+
+### Pendente
+
+- Endpoints próprios para delivery e retirada.
+- Endereço estruturado.
+- Atribuição de entregador.
+- Status de entrega.
+- Acompanhamento pelo cliente.
+
+## M09 - Documentação
+
+### Concluído
+
+- `README.md` com visão geral do projeto.
+- `docs/API.md` atualizado com as rotas atuais.
+- Scalar disponível em `/docs/api`.
+- OpenAPI em `backend/public/openapi.yaml` com schemas e endpoints de auditoria.
+
+### Pendente
+
+- Expandir OpenAPI para cobrir todos os endpoints novos de usuários, mesas, cozinha e cardápio.
+- Documentar exemplos completos de fluxo ponta a ponta.
+
+## M10 - Qualidade Técnica
+
+### Concluído
+
+- Padronização global de erros.
+- Auditoria operacional com histórico consultável.
+- Validações manuais com lint PHP, listagem de rotas, migrations e seeders.
+- Uso de transações e `lockForUpdate()` nos fluxos críticos.
+
+### Pendente
+
+- Criar testes automatizados.
+- Criar factories específicas para os módulos principais.
+- Criar testes de integração para o fluxo presencial completo.
+
+## Próximas Prioridades
+
+1. Implementar pagamento parcial e divisão de conta.
+2. Implementar delivery e retirada.
+3. Criar fluxo completo de caixa.
+4. Conectar o frontend às rotas já existentes do backend.
+5. Expandir a especificação OpenAPI para todos os endpoints novos.

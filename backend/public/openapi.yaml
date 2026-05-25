@@ -29,6 +29,8 @@ tags:
     description: Fila operacional da cozinha.
   - name: Payments
     description: Pagamentos e fechamento financeiro.
+  - name: Audit
+    description: Auditoria e histórico operacional.
 security:
   - bearerAuth: []
 paths:
@@ -999,6 +1001,88 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+  /audit-events:
+    get:
+      tags:
+        - Audit
+      summary: Lista eventos de auditoria.
+      operationId: listAuditEvents
+      description: Exige perfil `administrator`. Registra histórico de operações administrativas e operacionais.
+      parameters:
+        - name: event
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/AuditEventType'
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: auditable_type
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: auditable_id
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: date_from
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: date_to
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: per_page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Lista paginada de eventos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAuditEvents'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /audit-events/{auditEvent}:
+    parameters:
+      - $ref: '#/components/parameters/AuditEventId'
+    get:
+      tags:
+        - Audit
+      summary: Exibe um evento de auditoria.
+      operationId: showAuditEvent
+      description: Exige perfil `administrator`.
+      responses:
+        '200':
+          description: Evento encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditEventResourceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /payments:
     get:
       tags:
@@ -1082,6 +1166,12 @@ components:
       required: true
       schema:
         type: integer
+    AuditEventId:
+      name: auditEvent
+      in: path
+      required: true
+      schema:
+        type: integer
   responses:
     Unauthenticated:
       description: Usuário não autenticado.
@@ -1147,6 +1237,7 @@ components:
         - name
         - email
         - role
+        - is_active
       properties:
         id:
           type: integer
@@ -1164,6 +1255,8 @@ components:
             - cashier
             - delivery
             - client
+        is_active:
+          type: boolean
     Category:
       type: object
       required:
@@ -1243,6 +1336,11 @@ components:
           example: '42.90'
         is_available:
           type: boolean
+        stock_quantity:
+          type:
+            - integer
+            - 'null'
+          minimum: 0
         category:
           $ref: '#/components/schemas/Category'
         created_at:
@@ -1282,6 +1380,11 @@ components:
           minimum: 0
         is_available:
           type: boolean
+        stock_quantity:
+          type:
+            - integer
+            - 'null'
+          minimum: 0
     ProductUpdate:
       type: object
       properties:
@@ -1360,6 +1463,7 @@ components:
         - Ocupada
         - Reservada
         - Fechamento
+        - Limpeza
     TableShowResponse:
       type: object
       required:
@@ -1524,6 +1628,7 @@ components:
         - Em Preparo
         - Pronto
         - Entregue
+        - Cancelado
     KitchenOrderItemStatus:
       type: string
       enum:
@@ -1589,6 +1694,81 @@ components:
         - Pago
         - Cancelado
         - Estornado
+    AuditEvent:
+      type: object
+      required:
+        - id
+        - event
+      properties:
+        id:
+          type: integer
+        user_id:
+          type:
+            - integer
+            - 'null'
+        event:
+          $ref: '#/components/schemas/AuditEventType'
+        auditable_type:
+          type:
+            - string
+            - 'null'
+        auditable_id:
+          type:
+            - integer
+            - 'null'
+        metadata:
+          type:
+            - object
+            - 'null'
+          additionalProperties: true
+        user:
+          $ref: '#/components/schemas/User'
+        created_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        updated_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+    AuditEventType:
+      type: string
+      enum:
+        - user.created
+        - user.updated
+        - user.password_changed
+        - user.activated
+        - user.deactivated
+        - user.deleted
+        - category.created
+        - category.updated
+        - category.deleted
+        - product.created
+        - product.updated
+        - product.availability_updated
+        - product.deleted
+        - table.created
+        - table.updated
+        - table.deleted
+        - table.opened
+        - table.reserved
+        - table.reservation_canceled
+        - table.released
+        - table.marked_free
+        - table.order_transferred
+        - table.orders_merged
+        - order_item.added
+        - order_item.updated
+        - order_item.removed
+        - order_item.canceled
+        - order_item.delivered
+        - kitchen.item_started
+        - kitchen.item_ready
+        - order.closing_requested
+        - order.canceled
+        - payment.registered
     AddOrderItemRequest:
       type: object
       required:
@@ -1694,6 +1874,13 @@ components:
       properties:
         data:
           $ref: '#/components/schemas/Payment'
+    AuditEventResourceResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/AuditEvent'
     PaginationLinks:
       type: object
       additionalProperties: true
@@ -1751,6 +1938,17 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Payment'
+        links:
+          $ref: '#/components/schemas/PaginationLinks'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+    PaginatedAuditEvents:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditEvent'
         links:
           $ref: '#/components/schemas/PaginationLinks'
         meta:
