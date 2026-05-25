@@ -11,14 +11,14 @@ class EloquentOrderRepository implements OrderRepositoryInterface
 {
     public function paginateWithDetails(int $perPage = 15): LengthAwarePaginator
     {
-        return Order::with(['table', 'items.product.category', 'payments.user'])
+        return Order::with(['table', 'items.product.category', 'payments.user', 'deliveryDriver'])
             ->latest()
             ->paginate($perPage);
     }
 
     public function loadDetails(Order $order): Order
     {
-        return $order->load(['table', 'items.product.category', 'payments.user']);
+        return $order->load(['table', 'items.product.category', 'payments.user', 'deliveryDriver']);
     }
 
     public function findActiveForTable(Table $table): ?Order

@@ -62,4 +62,41 @@ class CashMovementController extends Controller
 
         return response()->json($movement->load('user'), 201);
     }
+
+    public function report(Request $request)
+    {
+        $today = Carbon::today();
+        $movements = CashMovement::whereDate('created_at', $today)->get();
+
+        $sales = (float) $movements->where('type', 'Sale')->sum('amount');
+        $suprimentos = (float) $movements->where('type', 'Suprimento')->sum('amount');
+        $sangrias = (float) $movements->where('type', 'Sangria')->sum('amount');
+        $refunds = (float) $movements->where('type', 'Refund')->sum('amount');
+
+        $pixSales = (float) $movements->where('type', 'Sale')->where('method', 'Pix')->sum('amount');
+        $cardSales = (float) $movements->where('type', 'Sale')->filter(fn($m) => in_array($m->method, ['Cartao', 'Cartão']))->sum('amount');
+        $cashSales = (float) $movements->where('type', 'Sale')->where('method', 'Dinheiro')->sum('amount');
+
+        $totalIn = $sales + $suprimentos;
+        $totalOut = $sangrias + $refunds;
+        
+        $cashRefunds = $movements->where('type', 'Refund')->where('method', 'Dinheiro')->sum('amount');
+        $cashBalance = $suprimentos + $cashSales - $sangrias - $cashRefunds;
+
+        return response()->json([
+            'date' => $today->toDateString(),
+            'sales' => round($sales, 2),
+            'suprimentos' => round($suprimentos, 2),
+            'sangrias' => round($sangrias, 2),
+            'refunds' => round($refunds, 2),
+            'methods' => [
+                'pix' => round($pixSales, 2),
+                'card' => round($cardSales, 2),
+                'cash' => round($cashSales, 2),
+            ],
+            'total_in' => round($totalIn, 2),
+            'total_out' => round($totalOut, 2),
+            'drawer_cash_balance' => round(max(0, $cashBalance), 2),
+        ]);
+    }
 }

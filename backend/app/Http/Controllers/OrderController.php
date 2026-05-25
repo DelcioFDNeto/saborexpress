@@ -175,6 +175,38 @@ class OrderController extends Controller
         $order->delivery_status = $validated['delivery_status'];
         $order->save();
 
+        // Broadcast Reverb Update!
+        event(new \App\Events\OrderUpdated());
+
+        return new OrderResource($this->orders->loadDetails($order));
+    }
+
+    public function assignDriver(Request $request, Order $order)
+    {
+        if ($order->type !== 'Delivery') {
+            abort(400, 'This order is not a delivery order.');
+        }
+
+        $user = $request->user();
+        if ($user->role !== 'delivery' && $user->role !== 'administrator') {
+            abort(403, 'Only delivery drivers and administrators can assign drivers.');
+        }
+
+        $driverId = $user->role === 'administrator' && $request->has('driver_id')
+            ? $request->input('driver_id')
+            : $user->id;
+
+        $driver = \App\Models\User::findOrFail($driverId);
+        if ($driver->role !== 'delivery' && $driver->role !== 'administrator') {
+            abort(422, 'The assigned user must be a delivery driver.');
+        }
+
+        $order->delivery_driver_id = $driver->id;
+        $order->save();
+
+        // Broadcast Reverb Update!
+        event(new \App\Events\OrderUpdated());
+
         return new OrderResource($this->orders->loadDetails($order));
     }
 

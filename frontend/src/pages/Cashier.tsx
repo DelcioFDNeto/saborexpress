@@ -32,11 +32,27 @@ export default function Cashier() {
   const [movementDesc, setMovementDesc] = useState('');
   
   // Payment Simulation State
-  const [splitType, setSplitType] = useState<'integral' | 'equal' | 'items'>('integral');
+  const [splitType, setSplitType] = useState<'integral' | 'equal' | 'items' | 'custom'>('integral');
   const [numPeople, setNumPeople] = useState(1);
   const [selectedItemIds, setSelectedItemIds] = useState<number[]>([]);
   const [simulation, setSimulation] = useState<any>(null);
   const [paidTotal, setPaidTotal] = useState(0);
+  const [customAmount, setCustomAmount] = useState('');
+
+  // Fechamento de Caixa State
+  const [isReportOpen, setIsReportOpen] = useState(false);
+  const [reportData, setReportData] = useState<any>(null);
+
+  const fetchReport = async () => {
+    try {
+      const res = await api.get('/cash/report');
+      setReportData(res.data);
+      setIsReportOpen(true);
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro ao carregar relatório financeiro.');
+    }
+  };
 
   const fetchOrders = async () => {
     try {      const res = await api.get(`/orders`);
@@ -85,6 +101,14 @@ export default function Cashier() {
   useEffect(() => {
     if (!selectedOrder) return;
     
+    if (splitType === 'custom') {
+      setSimulation({
+        type: 'custom',
+        installments: []
+      });
+      return;
+    }
+
     // Simulate Split
     const simulateSplit = async () => {
       try {        const res = await api.post(`/orders/${selectedOrder.id}/split`, {
@@ -194,12 +218,18 @@ export default function Cashier() {
           )}
         </div>
 
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-gray-200 space-y-2">
           <button 
             onClick={() => setIsDrawerOpen(true)}
             className="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold rounded-xl transition-colors border border-gray-300"
           >
-            Abrir Gaveta / Histórico
+            📂 Abrir Gaveta / Histórico
+          </button>
+          <button 
+            onClick={fetchReport}
+            className="w-full py-3 bg-sabor-primary text-sabor-dark font-black rounded-xl hover:bg-sabor-primary/90 transition-all shadow-sm"
+          >
+            📊 Resumo do Turno (Fechamento)
           </button>
         </div>
       </div>
@@ -261,24 +291,30 @@ export default function Cashier() {
                   {/* Division Engine */}
                   <div className="mb-8">
                     <label className="block text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Como o cliente vai pagar?</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-4 gap-2">
                       <button 
                         onClick={() => setSplitType('integral')}
-                        className={`py-3 px-2 rounded-xl font-bold text-sm transition-all border ${splitType === 'integral' ? 'bg-gray-900 text-white border-gray-900 shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+                        className={`py-3 px-1 rounded-xl font-bold text-xs transition-all border ${splitType === 'integral' ? 'bg-gray-900 text-white border-gray-900 shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
                       >
                         Integral
                       </button>
                       <button 
                         onClick={() => setSplitType('equal')}
-                        className={`py-3 px-2 rounded-xl font-bold text-sm transition-all border ${splitType === 'equal' ? 'bg-gray-900 text-white border-gray-900 shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+                        className={`py-3 px-1 rounded-xl font-bold text-xs transition-all border ${splitType === 'equal' ? 'bg-gray-900 text-white border-gray-900 shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
                       >
-                        Dividir Igual
+                        Igual
                       </button>
                       <button 
                         onClick={() => setSplitType('items')}
-                        className={`py-3 px-2 rounded-xl font-bold text-sm transition-all border ${splitType === 'items' ? 'bg-gray-900 text-white border-gray-900 shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+                        className={`py-3 px-1 rounded-xl font-bold text-xs transition-all border ${splitType === 'items' ? 'bg-gray-900 text-white border-gray-900 shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
                       >
                         Por Item
+                      </button>
+                      <button 
+                        onClick={() => setSplitType('custom')}
+                        className={`py-3 px-1 rounded-xl font-bold text-xs transition-all border ${splitType === 'custom' ? 'bg-gray-900 text-white border-gray-900 shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+                      >
+                        Avulso
                       </button>
                     </div>
 
@@ -323,8 +359,60 @@ export default function Cashier() {
                     )}
                   </div>
 
+                  {/* Custom / Partial Payment */}
+                  {splitType === 'custom' && (
+                    <div className="mt-4 p-5 bg-amber-50 border border-amber-100 rounded-2xl space-y-4 mb-8">
+                      <div>
+                        <label className="block text-xs font-bold text-amber-800 uppercase tracking-wider mb-2">Quantia a Receber (R$)</label>
+                        <input 
+                          type="number"
+                          step="0.01"
+                          value={customAmount}
+                          onChange={(e) => setCustomAmount(e.target.value)}
+                          className="w-full px-4 py-3 bg-white border border-amber-200 rounded-xl focus:ring-sabor-primary focus:border-sabor-primary text-base font-extrabold text-gray-900"
+                          placeholder="Ex: 50.00"
+                        />
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        <button 
+                          onClick={() => {
+                            const amt = parseFloat(customAmount);
+                            if (isNaN(amt) || amt <= 0) return toast.error('Insira uma quantia válida.');
+                            handlePay(amt, 'PIX');
+                            setCustomAmount('');
+                          }}
+                          className="py-3 bg-sabor-light text-sabor-dark hover:bg-sabor-primary rounded-xl font-bold text-xs border border-sabor-primary/30 transition-colors"
+                        >
+                          PIX
+                        </button>
+                        <button 
+                          onClick={() => {
+                            const amt = parseFloat(customAmount);
+                            if (isNaN(amt) || amt <= 0) return toast.error('Insira uma quantia válida.');
+                            handlePay(amt, 'Cartão');
+                            setCustomAmount('');
+                          }}
+                          className="py-3 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 rounded-xl font-bold text-xs transition-colors"
+                        >
+                          Cartão
+                        </button>
+                        <button 
+                          onClick={() => {
+                            const amt = parseFloat(customAmount);
+                            if (isNaN(amt) || amt <= 0) return toast.error('Insira uma quantia válida.');
+                            handlePay(amt, 'Dinheiro');
+                            setCustomAmount('');
+                          }}
+                          className="py-3 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 rounded-xl font-bold text-xs transition-colors"
+                        >
+                          Dinheiro
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Parcelas (Simulation) */}
-                  {simulation && simulation.installments && (
+                  {splitType !== 'custom' && simulation && simulation.installments && (
                     <div className="space-y-3 mb-8">
                       <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Parcelas a Cobrar</h4>
                       {simulation.installments.map((amount: number, index: number) => (
@@ -446,6 +534,85 @@ export default function Cashier() {
                 className={`flex-1 py-2 text-white rounded-xl font-bold transition-colors ${movementModal === 'Sangria' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}
               >
                 Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Fechamento / Resumo de Caixa */}
+      {isReportOpen && reportData && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl p-8 w-full max-w-lg shadow-2xl relative animate-fade-in max-h-[90vh] overflow-y-auto">
+            <button onClick={() => setIsReportOpen(false)} className="absolute top-6 right-6 text-gray-400 hover:text-gray-800 font-bold text-lg">✕</button>
+            
+            <header className="mb-6 border-b pb-4">
+              <span className="text-xs font-bold text-sabor-primary bg-sabor-light border border-sabor-primary/30 px-3 py-1 rounded-full uppercase">Relatório de Fechamento</span>
+              <h2 className="text-2xl font-black text-gray-900 mt-2">Fechamento Financeiro</h2>
+              <p className="text-gray-500 text-sm font-medium">Data do Turno: {new Date(reportData.date + 'T12:00:00').toLocaleDateString('pt-BR')}</p>
+            </header>
+
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                <span className="text-xs font-bold text-gray-400 uppercase">Faturamento Bruto</span>
+                <p className="text-xl font-black text-emerald-600 mt-1">R$ {reportData.sales.toFixed(2)}</p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                <span className="text-xs font-bold text-gray-400 uppercase">Dinheiro em Caixa</span>
+                <p className="text-xl font-black text-gray-900 mt-1">R$ {reportData.drawer_cash_balance.toFixed(2)}</p>
+              </div>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <h3 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider">Detalhamento por Meio (Vendas)</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center bg-gray-50 px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700">
+                  <span className="flex items-center gap-2">📱 PIX</span>
+                  <span className="font-extrabold">R$ {reportData.methods.pix.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center bg-gray-50 px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700">
+                  <span className="flex items-center gap-2">💳 Cartões</span>
+                  <span className="font-extrabold">R$ {reportData.methods.card.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center bg-gray-50 px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700">
+                  <span className="flex items-center gap-2">💵 Dinheiro</span>
+                  <span className="font-extrabold">R$ {reportData.methods.cash.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4 border-t pt-4">
+              <h3 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider">Ajustes Operacionais</h3>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="bg-blue-50 border border-blue-100 p-3 rounded-xl text-center">
+                  <span className="text-[10px] font-bold text-blue-500 uppercase">Suprimentos</span>
+                  <p className="font-black text-blue-700 text-sm mt-1">+ R$ {reportData.suprimentos.toFixed(2)}</p>
+                </div>
+                <div className="bg-red-50 border border-red-100 p-3 rounded-xl text-center">
+                  <span className="text-[10px] font-bold text-red-500 uppercase">Sangrias</span>
+                  <p className="font-black text-red-700 text-sm mt-1">- R$ {reportData.sangrias.toFixed(2)}</p>
+                </div>
+                <div className="bg-amber-50 border border-amber-100 p-3 rounded-xl text-center">
+                  <span className="text-[10px] font-bold text-amber-600 uppercase">Estornos</span>
+                  <p className="font-black text-amber-700 text-sm mt-1">- R$ {reportData.refunds.toFixed(2)}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-4 mt-8 border-t pt-4">
+              <button 
+                onClick={() => {
+                  window.print();
+                }}
+                className="flex-1 py-3 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 transition-colors flex items-center justify-center gap-1.5"
+              >
+                🖨️ Imprimir
+              </button>
+              <button 
+                onClick={() => setIsReportOpen(false)}
+                className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-colors"
+              >
+                Fechar Painel
               </button>
             </div>
           </div>

@@ -22,7 +22,7 @@ Route::apiResource('categories', CategoryController::class)->only(['index', 'sho
 Route::apiResource('products', ProductController::class)->only(['index', 'show']);
 Route::post('orders/delivery', [OrderController::class, 'storeDelivery']);
 Route::post('orders/takeout', [OrderController::class, 'storeTakeout']);
-Route::put('orders/{order}/delivery-status', [OrderController::class, 'updateDeliveryStatus']);
+Route::get('orders/{order}/track', [OrderController::class, 'show']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
@@ -65,13 +65,20 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('tables/{table}/transfer-order', [TableController::class, 'transferOrder']);
         Route::post('tables/{table}/merge-order', [TableController::class, 'mergeOrder']);
         Route::get('tables/{table}/active-order', [OrderController::class, 'activeForTable']);
-        Route::apiResource('orders', OrderController::class)->only(['index', 'show', 'update']);
+        Route::apiResource('orders', OrderController::class)->only(['update']);
         Route::post('orders/{order}/request-closing', [OrderController::class, 'requestClosing']);
         Route::post('orders/{order}/cancel', [OrderController::class, 'cancel']);
         Route::post('orders/{order}/items', [OrderController::class, 'addItem']);
         Route::apiResource('order-items', OrderItemController::class)->only(['index', 'show', 'update', 'destroy']);
         Route::patch('order-items/{orderItem}/deliver', [OrderItemController::class, 'deliver']);
         Route::patch('order-items/{orderItem}/cancel', [OrderItemController::class, 'cancel']);
+    });
+
+    Route::middleware('role:administrator,waiter,cashier,delivery')->group(function () {
+        Route::get('orders', [OrderController::class, 'index']);
+        Route::get('orders/{order}', [OrderController::class, 'show']);
+        Route::put('orders/{order}/delivery-status', [OrderController::class, 'updateDeliveryStatus']);
+        Route::patch('orders/{order}/assign-driver', [OrderController::class, 'assignDriver']);
     });
 
     Route::middleware('role:administrator,cashier')->group(function () {
@@ -83,6 +90,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('cash/movements', [CashMovementController::class, 'index']);
         Route::post('cash/movements', [CashMovementController::class, 'store']);
+        Route::get('cash/report', [CashMovementController::class, 'report']);
     });
 
     Route::middleware('role:administrator,kitchen')->group(function () {

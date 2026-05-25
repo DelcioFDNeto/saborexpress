@@ -154,15 +154,15 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 - [x] Entrega de item pronto ao salão pela rota `/api/kitchen/order-items/{orderItem}/deliver`.
 - [x] Cancelamento de item antes da entrega.
 - [x] Evento Laravel `OrderItemMarkedReady` ao marcar item como pronto.
-- [ ] Listener real para notificação em tempo real, caso o projeto use WebSocket ou broadcast.
+- [x] Listener real para notificação em tempo real, caso o projeto use WebSocket ou broadcast (Laravel Reverb e Echo).
 
 ### Frontend
 
 - [x] Painel da cozinha conectado às rotas reais.
 - [x] Colunas de pendentes, em preparo e prontos.
 - [x] Atualização automática por polling.
-- [ ] Notificação em tempo real.
-- [ ] Melhorar tratamento visual de erro nas ações da cozinha.
+- [x] Notificação em tempo real (conectado via Laravel Echo).
+- [x] Melhorar tratamento visual de erro nas ações da cozinha.
 
 ## M07 - Pagamentos e Caixa
 
@@ -178,7 +178,7 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 - [x] Sangria (com validação de limite).
 - [x] Suprimento.
 - [x] Estorno de pagamento com registro de auditoria e ajuste de saldo.
-- [ ] Relatórios financeiros fechados.
+- [x] Relatórios financeiros fechados (endpoint GET /api/cash/report).
 
 ### Frontend
 
@@ -188,8 +188,8 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 - [x] Histórico de Gaveta com Saldo em tempo real.
 - [x] Modais de Sangria e Suprimento.
 - [x] Funcionalidade visual de estorno de transações do dia.
-- [ ] Fluxo visual completo de pagamentos parciais.
-- [ ] Interface de divisão de conta por pessoas ou itens.
+- [x] Fluxo visual completo de pagamentos parciais (Custom Amount / Valor Avulso).
+- [x] Interface de divisão de conta por pessoas ou itens.
 
 ## M08 - Delivery e Retirada
 
@@ -201,18 +201,18 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 - [x] Endpoint `PUT /api/orders/{order}/delivery-status`.
 - [x] Pedido delivery sem `user_id` obrigatório.
 - [x] Reuso da action de itens para estoque e total no delivery.
-- [ ] Endpoints próprios para retirada.
-- [ ] Endereço estruturado.
-- [ ] Atribuição de entregador.
-- [ ] Acompanhamento pelo cliente.
+- [x] Endpoints próprios para retirada (orders/takeout).
+- [x] Endereço estruturado (rua, número, bairro, CEP, referência na migration e banco).
+- [x] Atribuição de entregador (auto-assumir entrega na API e painel).
+- [x] Acompanhamento pelo cliente (endpoint público orders/{order}/track).
 
 ### Frontend
 
 - [x] Tela pública de pedido delivery.
 - [x] Painel de entregas.
-- [ ] Corrigir acesso do perfil `delivery` ao painel de entregas.
-- [ ] Tela de acompanhamento pelo cliente.
-- [ ] Tela ou fluxo de retirada.
+- [x] Corrigir acesso do perfil `delivery` ao painel de entregas (RBAC configurado no frontend e backend).
+- [x] Tela de acompanhamento pelo cliente (OrderTracking timeline em tempo real).
+- [x] Tela ou fluxo de retirada (Timeline com destaque de retirada no balcão).
 
 ## M09 - Dashboard e Relatórios Operacionais
 
@@ -222,14 +222,14 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 - [x] Indicadores básicos de comandas.
 - [x] Contagem por status compatível com os enums atuais.
 - [x] Curva ABC baseada em pedidos pagos.
-- [ ] Relatórios financeiros avançados.
-- [ ] Indicadores por período, operador, forma de pagamento e canal.
+- [x] Relatórios financeiros avançados (daily curves, channels, payment methods, operators).
+- [x] Indicadores por período, operador, forma de pagamento e canal.
 
 ### Frontend
 
 - [x] Tela de dashboard administrativo.
-- [ ] Ajustar visualização para métricas reais do MVP.
-- [ ] Criar filtros por período.
+- [x] Ajustar visualização para métricas reais do MVP (AreaChart, BarChart e KPIs).
+- [x] Criar filtros por período (Filtros de hoje, 7 dias, 30 dias e todo o período).
 
 ## M10 - Documentação e OpenAPI
 

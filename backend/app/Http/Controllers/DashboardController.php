@@ -4,22 +4,76 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $faturamentoBruto = DB::table('payments')->sum('amount');
+        $period = $request->query('period', 'all');
+        $operatorId = $request->query('operator_id');
+        $paymentMethod = $request->query('payment_method');
+        $channel = $request->query('channel');
 
-        $totalComandasFinalizadas = DB::table('orders')->where('status', 'Paga')->count();
+        // Base dates for period filtering
+        $startDate = null;
+        $endDate = null;
 
-        $comandasAtivas = DB::table('orders')->whereIn('status', ['Aberta', 'Fechamento'])->count();
+        if ($period === 'today') {
+            $startDate = Carbon::today()->startOfDay();
+            $endDate = Carbon::today()->endOfDay();
+        } elseif ($period === '7d') {
+            $startDate = Carbon::today()->subDays(6)->startOfDay();
+            $endDate = Carbon::today()->endOfDay();
+        } elseif ($period === '30d') {
+            $startDate = Carbon::today()->subDays(29)->startOfDay();
+            $endDate = Carbon::today()->endOfDay();
+        }
+
+        // 1. KPI Queries
+        $paymentsQuery = DB::table('payments')
+            ->where('payments.status', 'Pago')
+            ->join('orders', 'payments.order_id', '=', 'orders.id')
+            ->leftJoin('users', 'payments.user_id', '=', 'users.id');
+
+        if ($startDate && $endDate) {
+            $paymentsQuery->whereBetween('payments.paid_at', [$startDate, $endDate]);
+        }
+        if ($operatorId) {
+            $paymentsQuery->where('payments.user_id', $operatorId);
+        }
+        if ($paymentMethod) {
+            $paymentsQuery->where('payments.method', $paymentMethod);
+        }
+        if ($channel) {
+            $paymentsQuery->where('orders.type', $channel);
+        }
+
+        $faturamentoBruto = (float) $paymentsQuery->sum('payments.amount');
+
+        $ordersQuery = DB::table('orders')
+            ->where('orders.status', 'Paga');
+
+        if ($startDate && $endDate) {
+            $ordersQuery->whereBetween('orders.updated_at', [$startDate, $endDate]);
+        }
+        if ($channel) {
+            $ordersQuery->where('orders.type', $channel);
+        }
+        
+        $totalComandasFinalizadas = $ordersQuery->count();
+
+        $comandasAtivas = DB::table('orders')
+            ->whereIn('status', ['Aberta', 'Fechamento'])
+            ->when($channel, fn($q) => $q->where('type', $channel))
+            ->count();
 
         $ticketMedio = $totalComandasFinalizadas > 0
             ? round($faturamentoBruto / $totalComandasFinalizadas, 2)
             : 0;
 
-        $curvaABC = DB::table('order_items')
+        // 2. Curva ABC (Top Products)
+        $abcQuery = DB::table('order_items')
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
             ->join('products', 'order_items.product_id', '=', 'products.id')
             ->select(
@@ -31,17 +85,111 @@ class DashboardController extends Controller
             ->where('orders.status', 'Paga')
             ->groupBy('products.id', 'products.name')
             ->orderByDesc('total_sold')
-            ->limit(10) // Top 10
+            ->limit(10);
+
+        if ($startDate && $endDate) {
+            $abcQuery->whereBetween('orders.created_at', [$startDate, $endDate]);
+        }
+        if ($channel) {
+            $abcQuery->where('orders.type', $channel);
+        }
+        $curvaABC = $abcQuery->get();
+
+        // 3. Faturamento sobre tempo (Revenue Chart) - Database Agnostic PHP Grouping
+        $chartQuery = clone $paymentsQuery;
+        $rawPayments = $chartQuery->select('payments.paid_at', 'payments.amount')->get();
+        
+        $revenueChart = [];
+        if ($period === 'today') {
+            $grouped = [];
+            foreach ($rawPayments as $payment) {
+                $hour = Carbon::parse($payment->paid_at)->format('H:00');
+                $grouped[$hour] = ($grouped[$hour] ?? 0) + (float) $payment->amount;
+            }
+            
+            for ($h = 0; $h < 24; $h++) {
+                $hourStr = sprintf('%02d:00', $h);
+                if (isset($grouped[$hourStr]) || count($rawPayments) > 0) {
+                    $revenueChart[] = [
+                        'date' => $hourStr,
+                        'revenue' => round($grouped[$hourStr] ?? 0, 2)
+                    ];
+                }
+            }
+        } else {
+            $grouped = [];
+            foreach ($rawPayments as $payment) {
+                $dateStr = Carbon::parse($payment->paid_at)->format('d/m');
+                $grouped[$dateStr] = ($grouped[$dateStr] ?? 0) + (float) $payment->amount;
+            }
+            
+            foreach ($grouped as $date => $rev) {
+                $revenueChart[] = [
+                    'date' => $date,
+                    'revenue' => round($rev, 2)
+                ];
+            }
+            // Sort by date key string
+            usort($revenueChart, fn($a, $b) => strcmp($a['date'], $b['date']));
+        }
+
+        // 4. Payment Methods Breakdown
+        $methodsQuery = clone $paymentsQuery;
+        $rawMethods = $methodsQuery->select('payments.method', DB::raw('SUM(payments.amount) as total'))
+            ->groupBy('payments.method')
             ->get();
+        
+        $paymentMethodsBreakdown = [];
+        foreach ($rawMethods as $row) {
+            $paymentMethodsBreakdown[] = [
+                'method' => $row->method === 'Cartao' ? 'Cartão' : $row->method,
+                'total' => round((float) $row->total, 2),
+            ];
+        }
+
+        // 5. Channels Breakdown
+        $channelsQuery = clone $paymentsQuery;
+        $rawChannels = $channelsQuery->select('orders.type as channel', DB::raw('SUM(payments.amount) as total'))
+            ->groupBy('orders.type')
+            ->get();
+            
+        $channelsBreakdown = [];
+        foreach ($rawChannels as $row) {
+            $channelsBreakdown[] = [
+                'channel' => $row->channel,
+                'total' => round((float) $row->total, 2),
+            ];
+        }
+
+        // 6. Operator Sales Ranking
+        $operatorsQuery = clone $paymentsQuery;
+        $rawOperators = $operatorsQuery->select('users.name as operator', DB::raw('SUM(payments.amount) as total'))
+            ->whereNotNull('users.name')
+            ->groupBy('users.name')
+            ->orderByDesc('total')
+            ->limit(5)
+            ->get();
+
+        $operatorsBreakdown = [];
+        foreach ($rawOperators as $row) {
+            $operatorsBreakdown[] = [
+                'operator' => $row->operator,
+                'total' => round((float) $row->total, 2),
+            ];
+        }
 
         return response()->json([
             'kpis' => [
-                'gross_revenue' => $faturamentoBruto,
-                'average_ticket' => $ticketMedio,
+                'gross_revenue' => round($faturamentoBruto, 2),
+                'average_ticket' => round($ticketMedio, 2),
                 'completed_orders' => $totalComandasFinalizadas,
                 'active_orders' => $comandasAtivas,
             ],
             'abc_curve' => $curvaABC,
+            'revenue_chart' => $revenueChart,
+            'payment_methods' => $paymentMethodsBreakdown,
+            'channels' => $channelsBreakdown,
+            'operators' => $operatorsBreakdown,
         ]);
     }
 }

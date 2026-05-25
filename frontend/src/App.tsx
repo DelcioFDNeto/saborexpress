@@ -12,6 +12,7 @@ import DeliveryClient from './pages/DeliveryClient';
 import DeliveryPanel from './pages/DeliveryPanel';
 import Dashboard from './pages/Dashboard';
 import ClientReservations from './pages/ClientReservations';
+import OrderTracking from './pages/OrderTracking';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider, AuthContext } from './contexts/AuthContext';
 import { Toaster } from 'sonner';
@@ -93,6 +94,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/delivery" element={<DeliveryClient />} />
+              <Route path="/acompanhar-pedido/:id" element={<OrderTracking />} />
 
               {/* Protected Routes */}
               <Route element={<ProtectedRoute allowedRoles={['client']} />}>

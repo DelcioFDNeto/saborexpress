@@ -86,6 +86,9 @@ export default function Dashboard() {
   const [kpis, setKpis] = useState<KPIs | null>(null);
   const [abcCurve, setAbcCurve] = useState<ABCItem[]>([]);
   const [revenueChart, setRevenueChart] = useState<RevenuePoint[]>([]);
+  const [channelsData, setChannelsData] = useState<any[]>([]);
+  const [methodsData, setMethodsData] = useState<any[]>([]);
+  const [operatorsData, setOperatorsData] = useState<any[]>([]);
 
   // Tab 2: Menu (Categories & Products) State
   const [categories, setCategories] = useState<Category[]>([]);
@@ -143,6 +146,9 @@ export default function Dashboard() {
       setKpis(res.data.kpis);
       setAbcCurve(res.data.abc_curve || []);
       setRevenueChart(res.data.revenue_chart || []);
+      setChannelsData(res.data.channels || []);
+      setMethodsData(res.data.payment_methods || []);
+      setOperatorsData(res.data.operators || []);
     } catch (err: any) {
       console.error(err);
       toast.error('Erro ao carregar dados dos indicadores.');
@@ -659,6 +665,94 @@ export default function Dashboard() {
                     ) : (
                       <div className="h-72 flex items-center justify-center text-gray-400 font-medium bg-gray-50 rounded-2xl">Nenhum produto vendido.</div>
                     )}
+                  </div>
+                </div>
+
+                {/* Advanced Breakdown Row */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                  {/* Channels Breakdown */}
+                  <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                    <div>
+                      <h2 className="text-lg font-bold text-gray-900 mb-6">Faturamento por Canal</h2>
+                      <div className="space-y-4">
+                        {channelsData.map((c: any) => {
+                          const totalChannels = channelsData.reduce((acc, curr) => acc + parseFloat(curr.total), 0);
+                          const percent = totalChannels > 0 ? (parseFloat(c.total) / totalChannels) * 100 : 0;
+                          return (
+                            <div key={c.channel}>
+                              <div className="flex justify-between text-sm font-semibold text-gray-700 mb-1.5">
+                                <span className="flex items-center gap-1.5">
+                                  {c.channel === 'Mesa' ? '🍽️' : c.channel === 'Delivery' ? '🚚' : '🛍️'} {c.channel}
+                                </span>
+                                <span>{formatCurrency(c.total)} ({percent.toFixed(0)}%)</span>
+                              </div>
+                              <div className="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden">
+                                <div 
+                                  className={`h-full rounded-full ${
+                                    c.channel === 'Mesa' ? 'bg-blue-500' : c.channel === 'Delivery' ? 'bg-purple-500' : 'bg-amber-500'
+                                  }`}
+                                  style={{ width: `${percent}%` }}
+                                ></div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {channelsData.length === 0 && <p className="text-center text-gray-400 py-6 text-sm">Nenhum canal registrado.</p>}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Payment Methods Breakdown */}
+                  <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                    <div>
+                      <h2 className="text-lg font-bold text-gray-900 mb-6">Meios de Pagamento</h2>
+                      <div className="space-y-4">
+                        {methodsData.map((m: any) => {
+                          const totalMethods = methodsData.reduce((acc, curr) => acc + parseFloat(curr.total), 0);
+                          const percent = totalMethods > 0 ? (parseFloat(m.total) / totalMethods) * 100 : 0;
+                          return (
+                            <div key={m.method}>
+                              <div className="flex justify-between text-sm font-semibold text-gray-700 mb-1.5">
+                                <span className="flex items-center gap-1.5">
+                                  {m.method === 'Pix' ? '📱' : m.method === 'Dinheiro' ? '💵' : '💳'} {m.method}
+                                </span>
+                                <span>{formatCurrency(m.total)} ({percent.toFixed(0)}%)</span>
+                              </div>
+                              <div className="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden">
+                                <div 
+                                  className={`h-full rounded-full ${
+                                    m.method === 'Pix' ? 'bg-emerald-500' : m.method === 'Dinheiro' ? 'bg-amber-500' : 'bg-indigo-500'
+                                  }`}
+                                  style={{ width: `${percent}%` }}
+                                ></div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {methodsData.length === 0 && <p className="text-center text-gray-400 py-6 text-sm">Nenhum pagamento registrado.</p>}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Operator Ranking */}
+                  <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                    <div>
+                      <h2 className="text-lg font-bold text-gray-900 mb-6">Ranking de Operadores</h2>
+                      <div className="space-y-3">
+                        {operatorsData.map((o: any, idx: number) => (
+                          <div key={o.operator} className="flex justify-between items-center p-3 bg-gray-50 rounded-2xl border border-gray-100">
+                            <div className="flex items-center gap-3">
+                              <span className="w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs">
+                                {idx + 1}
+                              </span>
+                              <span className="font-bold text-gray-800 text-sm">{o.operator}</span>
+                            </div>
+                            <span className="font-extrabold text-gray-900 text-sm">{formatCurrency(o.total)}</span>
+                          </div>
+                        ))}
+                        {operatorsData.length === 0 && <p className="text-center text-gray-400 py-6 text-sm">Nenhum operador ativo.</p>}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </>

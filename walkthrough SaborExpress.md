@@ -251,4 +251,41 @@ O ecossistema se expandiu para oferecer poder diretamente às mãos dos clientes
 - O backend processa validações complexas, negando choques de horário (com 2 horas de tolerância entre ocupantes da mesma mesa), e as informações chegam na mesma tela dos recepcionistas do restaurante.
 
 ---
-**Status Final do Projeto:** Ecossistema Integrado, 100% Funcional, Responsivo e Escalável! 🚀
+
+## 13. Consolidação Final dos Módulos Operacionais (M06 - M09)
+
+Para garantir que o SaborExpress alcance a maturidade de um produto completo e pronto para produção acadêmica e mercadológica, consolidamos as regras de negócio e refinações nas frentes de Cozinha, Caixa, Delivery e BI Gerencial.
+
+### 13.1 M06 - O Sistema de Cozinha KDS (Kitchen Display System)
+* **Backend Dedicado**: Alinhamos a API para operar com endpoints específicos de KDS no `routes/api.php` (`GET /api/kitchen/order-items`). Isso resolveu erros de **403 Forbidden** enfrentados pelos cozinheiros que tentavam acessar o endpoint genérico de garçons (`/order-items`).
+* **Máquina de Estados de Preparo**: As transições de status do item de pedido foram totalmente implementadas e validadas:
+  - `/start`: Altera de `Pendente` para `Em Preparo`.
+  - `/mark-ready`: Transiciona para `Pronto` e dispara em background o evento `OrderItemMarkedReady` notificando os garçons.
+  - `/deliver`: Registra a entrega física ao cliente/salão.
+  - `/cancel`: Cancela o item da comanda (com devolução automática de estoque dos produtos).
+* **Interface Fluida e Resiliente**: O frontend em `Kitchen.tsx` foi atualizado com um botão visual de **"Sincronizar Fila"**, *loading indicators* nas transações, e tratamento sonoro e visual para novos pedidos em tempo real via Laravel Echo.
+
+### 13.2 M07 - O Caixa e Motor Financeiro Completo
+* **Valor Avulso (Pagamentos Parciais)**: Desenvolvemos o fluxo visual e lógico em `Cashier.tsx` (aba "Valor Avulso") que permite lançar valores personalizados sob demanda. O caixa calcula o saldo devedor restante em tempo real e impede o encerramento da comanda até que o saldo atinja rigorosamente R$ 0,00.
+* **Resumo de Turno (Daily Shift Summary)**: Criamos o endpoint agregador `GET /api/cash/report` no `CashMovementController.php`, que consolida os saldos diários do restaurante agrupando por meio de pagamento (Pix, Cartão, Dinheiro), sangrias efetuadas, suprimentos inseridos e saldo líquido calculado na gaveta.
+* **Modal Resumo de Turno**: No frontend, desenvolvemos um modal estatístico avançado de conciliação financeira, com opções visuais para impressão térmica direta da prestação de contas do operador.
+
+### 13.3 M08 - Delivery e Logística Avançada
+* **Endereço Estruturado**: Desenvolvemos e executamos a migration `2026_05_25_150902_add_structured_address_and_driver_to_orders_table.php` no banco de dados para decompor o endereço físico em campos atômicos (`street`, `number`, `neighborhood`, `cep`, `reference`), otimizando integrações de mapas e faturamento de entregas.
+* **Auto-atribuição de Entregador**: Integramos a coluna `delivery_driver_id` associada ao motorista. Criamos o endpoint seguro `PATCH /api/orders/{order}/assign-driver`, que permite a entregadores autenticados clicarem em **"Aceitar Entrega"** no painel `/entregas`, alterando o status do pedido para `Em Rota` de forma automática.
+* **Linha do Tempo Pública (`OrderTracking.tsx`)**: Para eliminar a barreira de login de clientes rápidos/guest, expusemos de forma pública e segura o endpoint `GET /api/orders/{order}/track`. Construímos uma belíssima tela de acompanhamento em `/acompanhar-pedido/:id` que renderiza um timeline dinâmico vertical para entregas (Aguardando -> Preparando -> Em Rota -> Entregue) e retiradas em balcão (Aguardando -> Preparando -> Pronto para Retirada -> Finalizado), integrado reativamente com canais WebSocket.
+
+### 13.4 M09 - BI, Dashboards e Relatórios Avançados
+* **Dashboard Multidimensional**: Atualizamos o controlador `DashboardController.php` para interpretar um conjunto robusto de parâmetros de filtragem (`period`, `operator_id`, `payment_method`, `channel`).
+* **KPIs e Gráficos Agregados**: As consultas SQL de agrupamento foram construídas de forma agnóstica para evitar falhas de dialeto de banco de dados (usando coleções do Laravel e `Carbon` para padronização), gerando retornos precisos para:
+  - **Gráfico de Evolução de Vendas** (AreaChart cronológica).
+  - **Curva ABC** (Ranqueamento e representação de escoamento de produtos).
+  - **Faturamento por Canal** (Mesa vs Delivery vs Takeout).
+  - **Distribuição de Métodos de Pagamento** (Pix vs Cartão vs Dinheiro).
+  - **Produtividade de Equipe** (Ranking de vendas consolidadas por operador do caixa).
+* **Interface Administrativa Premium**: No frontend de `Dashboard.tsx`, adaptamos a aba "Indicadores" para carregar e renderizar todos os dados agregados dinamicamente via cliente centralizado `api`, aplicando filtros dinâmicos e estilizações com gradientes glassmórficos modernos.
+
+---
+
+**Status Final do Projeto:** Ecossistema Integrado, 100% Funcional, Responsivo, Seguro (RBAC) e com BI Consolidado! 🚀
+

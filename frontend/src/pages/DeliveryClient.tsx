@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { api } from '../lib/api';
 import { toast } from 'sonner';
@@ -45,6 +46,7 @@ export default function DeliveryClient() {
   const [addressLoading, setAddressLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [createdOrderId, setCreatedOrderId] = useState<number | null>(null);
 
   const handleCepBlur = async () => {
     if (orderType === 'takeout') return;
@@ -123,8 +125,9 @@ export default function DeliveryClient() {
     e.preventDefault();
     setLoading(true);
     try {
+      let res;
       if (orderType === 'takeout') {
-        await api.post(`/orders/takeout`, {
+        res = await api.post(`/orders/takeout`, {
           customer_name: customerName,
           customer_phone: customerPhone,
           items: cart.map(item => ({
@@ -134,7 +137,7 @@ export default function DeliveryClient() {
           }))
         });
       } else {
-        await api.post(`/orders/delivery`, {
+        res = await api.post(`/orders/delivery`, {
           customer_name: customerName,
           customer_phone: customerPhone,
           delivery_address: `${street}, ${number} - ${neighborhood} (${reference}) CEP: ${cep}`,
@@ -145,6 +148,8 @@ export default function DeliveryClient() {
           }))
         });
       }
+      const orderId = res.data.data?.id || res.data.id;
+      setCreatedOrderId(orderId);
       setSuccess(true);
       setCart([]);
     } catch (err) {
@@ -174,9 +179,17 @@ export default function DeliveryClient() {
               ? 'Seu pedido de retirada foi enviado para a nossa cozinha. Aguarde nossa notificação para vir buscar.' 
               : 'Seu pedido de entrega expressa foi enviado para o restaurante. Aguarde nossa confirmação.'}
           </p>
+          {createdOrderId && (
+            <Link 
+              to={`/acompanhar-pedido/${createdOrderId}`}
+              className="w-full py-4 bg-indigo-600 text-white rounded-xl font-black text-sm block mb-3 text-center hover:bg-indigo-700 transition-colors shadow-md hover:shadow-lg"
+            >
+              🛵 Acompanhar em Tempo Real
+            </Link>
+          )}
           <button 
-            onClick={() => { setSuccess(false); setIsCheckout(false); }}
-            className="w-full py-4 bg-sabor-primary text-white rounded-xl font-bold hover:bg-sabor-dark transition-colors"
+            onClick={() => { setSuccess(false); setIsCheckout(false); setCreatedOrderId(null); }}
+            className="w-full py-4 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-colors block text-center"
           >
             Fazer Novo Pedido
           </button>

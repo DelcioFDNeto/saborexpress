@@ -26,6 +26,12 @@ class Order extends Model
         'total_amount',
         'discount',
         'service_fee',
+        'street',
+        'number',
+        'neighborhood',
+        'cep',
+        'reference',
+        'delivery_driver_id',
     ];
 
     protected $casts = [
@@ -42,6 +48,11 @@ class Order extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function deliveryDriver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'delivery_driver_id');
     }
 
     public function items(): HasMany
