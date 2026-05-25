@@ -344,6 +344,36 @@ Para sanar todas as análises e avaliações operacionais pendentes descritas no
 
 ---
 
-**Status Final do Projeto:** Ecossistema Integrado, 100% Funcional, Responsivo, Seguro (RBAC), com BI Consolidado e Cobertura de Testes Automatizada! 🚀
+## 15. Variedade Exótica, Combos e Cardápio Digital (Tablet)
+
+Expandimos o ecossistema do SaborExpress para entregar uma experiência gastronômica imersiva e autônoma, ampliando a variedade do cardápio e integrando novos canais de autoatendimento.
+
+### 15.1 Cardápio Exótico e Criativo (MenuSeeder)
+* **Ampliação do Mix**: Reformulamos e executamos o `MenuSeeder.php` para povoar o banco de dados com pratos, sobremesas e bebidas sofisticadas com nomes inspirados na cultura paraense:
+  - *Tacacá Vulcânico com Camarões Gigantes*, *Pirarucu de Casaca com Néctar de Taperebá*, *Filhote Encantado em Crosta de Castanha* e *Risoto da Tribo com Jambu e Pirarucu*.
+  - *Caipirinha Treme-Treme de Bacuri*, *Elixir da Floresta*, *Lágrimas de Iara (Cacau e Cupuaçu)* e *Sinfonia de Taperebá com Mel de Jataí*.
+  - *O Segredo da Floresta (Mousse Trio)*, *Manjar de Pupunha com Caramelo de Jambu* e *Suspiro de Iara com Creme de Bacuri*.
+
+### 15.2 Novo Módulo: Combos e Promoções com Filtros Dedicados
+* **Combos Especiais**: Lançamos a nova categoria **"Combos e Promoções"** com seleções promocionais de descontos de até 26% (ex: *Combo Pajé Guerreiro*, *Banquete da Tribo*, *Combo Casal Amazônico* e *Promoção Treme e Adoça*).
+* **Filtros e Badges de Destaque**: Adicionamos badges visuais e filtros reativos no cardápio que destacam de forma chamativa os combos em promoção com a tag *"PROMOÇÃO 🔥"*.
+
+### 15.3 Experiência de Visitantes e Sacola de Pedidos Flutuante (Sem Login)
+* **Sacola Reativa de Pedidos**: Redesenhamos o cardápio público ([Menu.tsx](file:///c:/Users/ShinerayADM/Projetos/saborexpress/frontend/src/pages/Menu.tsx)). Quando um usuário visitante/guest (sem login) adiciona pratos ou bebidas do menu, uma **Sacola Regional Flutuante** de alta fidelidade visual surge na parte inferior do navegador, mostrando a contagem física e o valor acumulado em tempo real.
+* **Sincronização de Checkout**: Ao clicar em *"Finalizar Pedido"*, o cliente é redirecionado para a tela pública de checkout ([DeliveryClient.tsx](file:///c:/Projetos/saborexpress/frontend/src/pages/DeliveryClient.tsx)) com o carrinho mantido intacto via `localStorage`, permitindo fechar o pedido de casa (Delivery ou Takeout) sem precisar criar contas ou efetuar login!
+
+### 15.4 Duas Versões de Autoatendimento do Cardápio
+Separamos as frentes de consumo do cardápio em dois grandes fluxos dedicados:
+1. **Versão Cliente (Celular / Home)**: Canal de acesso externo focado na sacola flutuante e checkout público simplificado para entregas ou retirada expressa.
+2. **Função Cardápio Digital (Tablet de Mesa)**:
+   * Desenvolvemos a página autônoma **[DigitalMenu.tsx](file:///c:/Users/ShinerayADM/Projetos/saborexpress/frontend/src/pages/DigitalMenu.tsx)** em `/cardapio-digital` para rodar em tablets fixados sobre as mesas do restaurante.
+   * **Vinculação Direta com a Comanda**: O dispositivo lê o parâmetro de mesa da URL (ex: `/cardapio-digital?table=5`). Se a mesa estiver livre, exibe um painel imersivo para abrir a mesa de forma atômica no salão.
+   * **Lançamentos Diretos**: O cliente pode navegar pelo cardápio, clicar em um produto ou combo e adicioná-lo diretamente à sua mesa via pop-up personalizado de observações. O item é inserido atômica e imediatamente na comanda daquela mesa em background (`POST /orders/{order}/items`), acionando o KDS da cozinha instantaneamente.
+   * **Acompanhamento no Tablet**: O painel lateral direito exibe os itens que já foram consumidos ou estão em preparo naquela mesa, acompanhando os status da cozinha (Pendente, Preparando, Pronto!) e a conta parcial em tempo real com taxa de serviço calculada.
+
+---
+
+**Status Final do Projeto:** Ecossistema Integrado, 100% Funcional, com Cardápio Digital Autônomo para Mesa, Guest checkout dinâmico e Cobertura de Testes Automatizada! 🚀
+
 
 

@@ -31,7 +31,22 @@ export default function DeliveryClient() {
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
   const [menuLoading, setMenuLoading] = useState(true);
   
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    const saved = localStorage.getItem('saborexpress_cart');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return [];
+      }
+    }
+    return [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('saborexpress_cart', JSON.stringify(cart));
+  }, [cart]);
+
   const [isCheckout, setIsCheckout] = useState(false);
   const [orderType, setOrderType] = useState<'delivery' | 'takeout'>('delivery');
   

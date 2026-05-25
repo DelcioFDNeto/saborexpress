@@ -13,6 +13,7 @@ import DeliveryPanel from './pages/DeliveryPanel';
 import Dashboard from './pages/Dashboard';
 import ClientReservations from './pages/ClientReservations';
 import OrderTracking from './pages/OrderTracking';
+import DigitalMenu from './pages/DigitalMenu';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider, AuthContext } from './contexts/AuthContext';
 import { Toaster } from 'sonner';
@@ -36,6 +37,7 @@ function Navigation() {
         </div>
         <nav className="flex items-center gap-5 md:gap-8 overflow-x-auto max-w-full pb-2 sm:pb-0 scrollbar-none w-full sm:w-auto justify-start sm:justify-end">
           <Link to="/cardapio" className="text-gray-700 font-bold text-sm md:text-base hover:text-sabor-primary transition-colors shrink-0">Cardápio</Link>
+          <Link to="/cardapio-digital" className="text-gray-700 font-bold text-sm md:text-base hover:text-sabor-primary transition-colors shrink-0">Digital (Mesa)</Link>
           
           {isAuthenticated && (user?.role === 'administrator' || user?.role === 'waiter' || user?.role === 'cashier') && (
             <Link to="/mesas" className="text-gray-700 font-bold text-sm md:text-base hover:text-sabor-primary transition-colors shrink-0">Mesas</Link>
@@ -94,6 +96,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/delivery" element={<DeliveryClient />} />
+              <Route path="/cardapio-digital" element={<DigitalMenu />} />
               <Route path="/acompanhar-pedido/:id" element={<OrderTracking />} />
 
               {/* Protected Routes */}
