@@ -15,11 +15,6 @@ interface Table {
   status: 'Livre' | 'Ocupada' | 'Reservada' | 'Fechamento';
 }
 
-interface TableResponse {
-  table: Table;
-  active_order: ActiveOrder | null;
-}
-
 export default function Tables() {
   const navigate = useNavigate();
   const [tables, setTables] = useState<Table[]>([]);

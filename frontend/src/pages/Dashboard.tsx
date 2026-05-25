@@ -15,17 +15,38 @@ interface ABCItem {
   total_revenue: number;
 }
 
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+}
+
 export default function Dashboard() {
   const [kpis, setKpis] = useState<KPIs | null>(null);
   const [abcCurve, setAbcCurve] = useState<ABCItem[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // New User Form State
+  const [newUserName, setNewUserName] = useState('');
+  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserPassword, setNewUserPassword] = useState('');
+  const [newUserRole, setNewUserRole] = useState('waiter');
+  const [isCreatingUser, setIsCreatingUser] = useState(false);
 
   const fetchDashboardData = async () => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      const res = await axios.get(`${apiUrl}/api/dashboard`);
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+      
+      const res = await axios.get(`${apiUrl}/api/dashboard`, { headers });
       setKpis(res.data.kpis);
       setAbcCurve(res.data.abc_curve);
+      
+      const usersRes = await axios.get(`${apiUrl}/api/users`, { headers });
+      setUsers(usersRes.data);
     } catch (err) {
       console.error(err);
       alert('Erro ao carregar dados do painel gerencial.');
@@ -136,6 +157,103 @@ export default function Dashboard() {
                     </td>
                   </tr>
                 )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Gerenciamento de Equipe */}
+        <div className="mt-10 bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">Gerenciamento de Equipe</h2>
+              <p className="text-sm text-gray-500 mt-1">Crie e gerencie contas de funcionários do SaborExpress.</p>
+            </div>
+          </div>
+          
+          <div className="p-6 border-b border-gray-100 bg-white">
+            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-4">Adicionar Novo Colaborador</h3>
+            <form 
+              className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setIsCreatingUser(true);
+                try {
+                  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+                  const token = localStorage.getItem('token');
+                  await axios.post(`${apiUrl}/api/users`, {
+                    name: newUserName,
+                    email: newUserEmail,
+                    password: newUserPassword,
+                    role: newUserRole
+                  }, {
+                    headers: { Authorization: `Bearer ${token}` }
+                  });
+                  alert('Usuário criado com sucesso!');
+                  setNewUserName('');
+                  setNewUserEmail('');
+                  setNewUserPassword('');
+                  fetchDashboardData();
+                } catch (err: any) {
+                  alert('Erro ao criar usuário: ' + (err.response?.data?.message || 'Falha na requisição.'));
+                } finally {
+                  setIsCreatingUser(false);
+                }
+              }}
+            >
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Nome</label>
+                <input type="text" required value={newUserName} onChange={e => setNewUserName(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm" placeholder="Ex: João da Silva" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">E-mail</label>
+                <input type="email" required value={newUserEmail} onChange={e => setNewUserEmail(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm" placeholder="joao@sabor.com" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Senha</label>
+                <input type="password" required value={newUserPassword} onChange={e => setNewUserPassword(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm" placeholder="Mínimo 6 chars" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Cargo</label>
+                <select value={newUserRole} onChange={e => setNewUserRole(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm bg-white">
+                  <option value="waiter">Garçom</option>
+                  <option value="kitchen">Cozinheiro</option>
+                  <option value="cashier">Caixa</option>
+                  <option value="delivery">Entregador</option>
+                  <option value="administrator">Administrador</option>
+                </select>
+              </div>
+              <div>
+                <button type="submit" disabled={isCreatingUser} className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-sm transition-colors">
+                  {isCreatingUser ? 'Criando...' : 'Criar Conta'}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50/50">
+                  <th className="p-4 font-bold text-gray-500 text-sm uppercase tracking-wider">ID</th>
+                  <th className="p-4 font-bold text-gray-500 text-sm uppercase tracking-wider">Nome</th>
+                  <th className="p-4 font-bold text-gray-500 text-sm uppercase tracking-wider">E-mail</th>
+                  <th className="p-4 font-bold text-gray-500 text-sm uppercase tracking-wider">Cargo</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {users.map((u) => (
+                  <tr key={u.id} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="p-4 font-bold text-gray-500">#{u.id}</td>
+                    <td className="p-4 font-bold text-gray-900">{u.name}</td>
+                    <td className="p-4 font-medium text-gray-600">{u.email}</td>
+                    <td className="p-4 font-medium">
+                      <span className="bg-emerald-50 text-emerald-700 px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wider">
+                        {u.role === 'client' ? 'Cliente' : u.role}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>

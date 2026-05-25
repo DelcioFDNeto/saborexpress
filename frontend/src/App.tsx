@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { useContext } from 'react';
+import Index from './pages/Index';
 import Menu from './pages/Menu';
 import Tables from './pages/Tables';
 import Login from './pages/Login';
@@ -19,15 +20,15 @@ function Navigation() {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/');
   };
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-10">
       <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-        <h1 className="text-2xl font-black text-emerald-600 tracking-tight">SaborExpress</h1>
+        <Link to="/" className="text-2xl font-black text-emerald-600 tracking-tight">SaborExpress</Link>
         <nav className="flex items-center gap-6">
-          <Link to="/" className="text-gray-600 font-medium hover:text-emerald-600 transition-colors">Cardápio</Link>
+          <Link to="/cardapio" className="text-gray-600 font-medium hover:text-emerald-600 transition-colors">Cardápio</Link>
           
           {isAuthenticated && (user?.role === 'administrator' || user?.role === 'waiter' || user?.role === 'cashier') && (
             <Link to="/mesas" className="text-gray-600 font-medium hover:text-emerald-600 transition-colors">Mesas</Link>
@@ -41,7 +42,7 @@ function Navigation() {
             <Link to="/caixa" className="text-gray-600 font-medium hover:text-emerald-600 transition-colors">Caixa</Link>
           )}
 
-          {isAuthenticated && (user?.role === 'administrator' || user?.role === 'kitchen') && (
+          {isAuthenticated && (user?.role === 'administrator' || user?.role === 'kitchen' || user?.role === 'delivery') && (
             <Link to="/entregas" className="text-gray-600 font-medium hover:text-emerald-600 transition-colors">Entregas</Link>
           )}
 
@@ -74,7 +75,8 @@ function App() {
           <main className="flex-1">
             <Routes>
               {/* Public routes */}
-              <Route path="/" element={<Menu />} />
+              <Route path="/" element={<Index />} />
+              <Route path="/cardapio" element={<Menu />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/delivery" element={<DeliveryClient />} />

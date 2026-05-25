@@ -27,13 +27,12 @@ export default function Login() {
       
       // Redirect based on role
       const role = res.data.user.role;
-      if (role === 'waiter' || role === 'manager') {
-        navigate('/mesas');
-      } else if (role === 'kitchen') {
-        navigate('/kitchen'); // Will be created later
-      } else {
-        navigate('/');
-      }
+      if (role === 'administrator') navigate('/dashboard');
+      else if (role === 'waiter') navigate('/mesas');
+      else if (role === 'kitchen') navigate('/cozinha');
+      else if (role === 'cashier') navigate('/caixa');
+      else if (role === 'delivery') navigate('/entregas');
+      else navigate('/cardapio');
 
     } catch (err: any) {
       if (err.response && err.response.data && err.response.data.errors) {

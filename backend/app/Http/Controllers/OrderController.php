@@ -76,7 +76,7 @@ class OrderController extends Controller
                 $totalAmount += ($product->price * $itemData['quantity']);
             }
 
-            $order->total_amount = $totalAmount;
+            $order->total_amount = number_format($totalAmount, 2, '.', '');
             $order->save();
 
             return $order;
@@ -128,6 +128,22 @@ class OrderController extends Controller
         }
 
         throw new ConflictHttpException('Use dedicated operations to change this order status.');
+    }
+
+    public function updateDeliveryStatus(Request $request, Order $order)
+    {
+        $validated = $request->validate([
+            'delivery_status' => 'required|in:Aguardando,Em Rota,Entregue',
+        ]);
+
+        if ($order->type !== 'Delivery') {
+            abort(400, 'This order is not a delivery order.');
+        }
+
+        $order->delivery_status = $validated['delivery_status'];
+        $order->save();
+
+        return new OrderResource($order);
     }
 
     public function requestClosing(Order $order, RequestOrderClosingAction $requestOrderClosing)

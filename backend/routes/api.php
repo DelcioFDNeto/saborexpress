@@ -9,6 +9,7 @@ use App\Http\Controllers\OrderItemController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\TableController;
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -18,8 +19,9 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
 Route::apiResource('products', ProductController::class)->only(['index', 'show']);
 
-// Delivery (public - external clients)
+// Delivery (Public creation and Status Update)
 Route::post('orders/delivery', [OrderController::class, 'storeDelivery']);
+Route::put('orders/{order}/delivery-status', [OrderController::class, 'updateDeliveryStatus']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
@@ -33,6 +35,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('categories', CategoryController::class)->except(['index', 'show']);
         Route::apiResource('products', ProductController::class)->except(['index', 'show']);
         Route::apiResource('tables', TableController::class)->only(['store', 'update', 'destroy']);
+        Route::apiResource('users', UserController::class)->only(['index', 'store']);
         Route::get('dashboard', [DashboardController::class, 'index']);
     });
 

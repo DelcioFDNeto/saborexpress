@@ -157,7 +157,7 @@ class TableController extends Controller
 
         DB::transaction(function () use ($activeOrder, $table) {
             $this->orders->recalculateTotal($activeOrder);
-            $activeOrder->service_fee = $activeOrder->total_amount * 0.10;
+            $activeOrder->service_fee = number_format((float) $activeOrder->total_amount * 0.10, 2, '.', '');
             $activeOrder->save();
 
             $this->orders->updateStatus($activeOrder, OrderStatus::Closing->value);

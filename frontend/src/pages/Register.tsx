@@ -7,7 +7,6 @@ export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('waiter');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -23,20 +22,14 @@ export default function Register() {
       const res = await axios.post(`${apiUrl}/api/register`, {
         name,
         email,
-        password,
-        role
+        password
       });
       
       const token = res.data.access_token;
       const userData = res.data.user;
       
       login(userData, token);
-      
-      if (userData.role === 'kitchen') navigate('/cozinha');
-      else if (userData.role === 'cashier') navigate('/caixa');
-      else if (userData.role === 'administrator') navigate('/dashboard');
-      else if (userData.role === 'delivery_driver') navigate('/entregas');
-      else navigate('/mesas');
+      navigate('/cardapio');
       
     } catch (err: any) {
       if (err.response && err.response.data.errors) {
@@ -58,7 +51,7 @@ export default function Register() {
           SaborExpress
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600 font-medium">
-          Crie uma nova conta de colaborador
+          Crie sua conta para pedir nossas delícias
         </p>
       </div>
 
@@ -97,23 +90,6 @@ export default function Register() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="nome@saborexpress.com"
               />
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider mb-2">
-                Cargo
-              </label>
-              <select
-                className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm font-medium bg-white"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-              >
-                <option value="waiter">Garçom</option>
-                <option value="cashier">Caixa</option>
-                <option value="kitchen">Cozinheiro</option>
-                <option value="delivery_driver">Entregador</option>
-                <option value="administrator">Administrador</option>
-              </select>
             </div>
 
             <div>

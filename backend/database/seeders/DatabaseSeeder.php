@@ -35,6 +35,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             TableSeeder::class,
+            MenuSeeder::class,
         ]);
     }
 }

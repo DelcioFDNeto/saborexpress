@@ -13,7 +13,8 @@ interface Table {
 
 interface Order {
   id: number;
-  table: Table;
+  type: string;
+  table: Table | null;
 }
 
 interface OrderItem {
@@ -78,9 +79,15 @@ export default function Kitchen() {
       <div className={`bg-white rounded-2xl p-4 shadow-sm border-l-4 ${colorClass} flex flex-col gap-3 relative`}>
         <div className="flex justify-between items-start">
           <div className="flex items-center gap-2">
-            <span className="font-black text-gray-900 bg-gray-100 px-2 py-1 rounded text-sm">
-              Mesa {item.order.table.number}
-            </span>
+            {item.order.type === 'Delivery' ? (
+              <span className="font-black text-purple-900 bg-purple-100 px-2 py-1 rounded text-sm tracking-widest border border-purple-200">
+                DELIVERY
+              </span>
+            ) : (
+              <span className="font-black text-gray-900 bg-gray-100 px-2 py-1 rounded text-sm">
+                Mesa {item.order.table?.number}
+              </span>
+            )}
             <span className={`text-xs font-bold ${minutesWaiting > 15 ? 'text-rose-500' : 'text-gray-500'}`}>
               ⏱ {minutesWaiting} min
             </span>

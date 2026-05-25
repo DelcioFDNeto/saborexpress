@@ -18,7 +18,7 @@ return new class extends Migration
             $table->integer('quantity')->default(1);
             $table->decimal('unit_price', 10, 2); // Snapshot price
             $table->text('notes')->nullable();
-            $table->enum('status', ['Pendente', 'Em Preparo', 'Pronto', 'Entregue'])->default('Pendente');
+            $table->string('status')->default('Pendente');
             $table->timestamps();
             $table->softDeletes();
         });

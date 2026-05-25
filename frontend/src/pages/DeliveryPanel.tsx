@@ -45,7 +45,7 @@ export default function DeliveryPanel() {
   const updateDeliveryStatus = async (id: number, newStatus: string) => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      await axios.put(`${apiUrl}/api/orders/${id}`, {
+      await axios.put(`${apiUrl}/api/orders/${id}/delivery-status`, {
         delivery_status: newStatus
       });
       fetchOrders();
