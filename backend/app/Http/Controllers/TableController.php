@@ -3,18 +3,25 @@
 namespace App\Http\Controllers;
 
 use App\Models\Table;
-use App\Models\Order;
+use App\Repositories\Orders\OrderRepositoryInterface;
+use App\Repositories\Tables\TableRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class TableController extends Controller
 {
+    public function __construct(
+        private readonly TableRepositoryInterface $tables,
+        private readonly OrderRepositoryInterface $orders,
+    ) {
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        return response()->json(Table::all());
+        return response()->json($this->tables->allOrdered());
     }
 
     /**
@@ -28,7 +35,7 @@ class TableController extends Controller
             'status' => 'in:Livre,Ocupada,Reservada,Fechamento'
         ]);
 
-        $table = Table::create($validated);
+        $table = $this->tables->create($validated);
         return response()->json($table, 201);
     }
 
@@ -37,13 +44,9 @@ class TableController extends Controller
      */
     public function show(Table $table)
     {
-        // Load active order if table is occupied
         $activeOrder = null;
         if ($table->status === 'Ocupada' || $table->status === 'Fechamento') {
-            $activeOrder = Order::where('table_id', $table->id)
-                ->where('status', '!=', 'Pago')
-                ->where('status', '!=', 'Cancelado')
-                ->first();
+            $activeOrder = $this->orders->findActiveForTableId($table->id);
         }
 
         return response()->json([
@@ -63,8 +66,7 @@ class TableController extends Controller
             'status' => 'in:Livre,Ocupada,Reservada,Fechamento'
         ]);
 
-        $table->update($validated);
-        return response()->json($table);
+        return response()->json($this->tables->update($table, $validated));
     }
 
     /**
@@ -72,7 +74,7 @@ class TableController extends Controller
      */
     public function destroy(Table $table)
     {
-        $table->delete();
+        $this->tables->delete($table);
         return response()->json(null, 204);
     }
 
@@ -82,44 +84,51 @@ class TableController extends Controller
     public function openTable(Request $request, Table $table)
     {
         $validated = $request->validate([
-            'customer_name' => 'nullable|string',
-            'customer_phone' => 'nullable|string'
+            'customer_name' => 'nullable|string|max:255',
+            'customer_phone' => 'nullable|string|max:30'
         ]);
 
-        if ($table->status !== 'Livre' && $table->status !== 'Reservada') {
-            return response()->json(['message' => 'Table is not available for opening.'], 422);
-        }
+        $result = DB::transaction(function () use ($request, $table, $validated) {
+            $lockedTable = $this->tables->lockById($table->id);
 
-        try {
-            DB::beginTransaction();
+            if ($lockedTable->status !== 'Livre' && $lockedTable->status !== 'Reservada') {
+                return [
+                    'status' => 422,
+                    'body' => ['message' => 'Table is not available for opening.'],
+                ];
+            }
 
-            // 1. Change table status
-            $table->status = 'Ocupada';
-            $table->save();
+            $activeOrder = $this->orders->findActiveForTableId($lockedTable->id, lock: true);
 
-            // 2. Create the Order
-            $order = Order::create([
-                'table_id' => $table->id,
+            if ($activeOrder) {
+                return [
+                    'status' => 409,
+                    'body' => ['message' => 'Table already has an active order.'],
+                ];
+            }
+
+            $lockedTable = $this->tables->update($lockedTable, ['status' => 'Ocupada']);
+
+            $order = $this->orders->create([
+                'table_id' => $lockedTable->id,
+                'user_id' => $request->user()->id,
                 'customer_name' => $validated['customer_name'] ?? null,
                 'customer_phone' => $validated['customer_phone'] ?? null,
-                'status' => 'Aberto',
-                'total_amount' => 0
+                'status' => 'Aberta',
+                'type' => 'Mesa',
+                'total_amount' => 0,
             ]);
 
-            DB::commit();
+            return [
+                'status' => 201,
+                'body' => [
+                    'message' => 'Table opened successfully.',
+                    'table' => $lockedTable,
+                    'order' => $order,
+                ],
+            ];
+        });
 
-            return response()->json([
-                'message' => 'Table opened successfully.',
-                'table' => $table,
-                'order' => $order
-            ], 201);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'message' => 'Failed to open table due to an internal error.',
-                'error' => $e->getMessage()
-            ], 500);
-        }
+        return response()->json($result['body'], $result['status']);
     }
 }
