@@ -6,17 +6,14 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('table_id')->nullable()->constrained()->nullOnDelete(); // Nullable for delivery
-            $table->foreignId('user_id')->constrained(); // Garçom ou Atendente que abriu
-            $table->string('status')->default('Aberta');
-            $table->string('type')->default('Mesa');
+            $table->foreignId('table_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('user_id')->constrained();
+            $table->enum('status', ['Aberta', 'Fechamento', 'Paga', 'Cancelada'])->default('Aberta');
+            $table->enum('type', ['Mesa', 'Delivery', 'Takeout'])->default('Mesa');
             $table->string('customer_name')->nullable();
             $table->string('customer_phone')->nullable();
             $table->text('delivery_address')->nullable();
@@ -28,9 +25,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('orders');

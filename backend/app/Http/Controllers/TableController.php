@@ -2,253 +2,157 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Audit\RecordAuditEventAction;
+use App\Actions\Tables\CancelTableReservationAction;
+use App\Actions\Tables\MarkTableFreeAction;
+use App\Actions\Tables\MergeTableOrdersAction;
+use App\Actions\Tables\OpenTableAction;
 use App\Actions\Tables\ReleaseTableAction;
-use App\Enums\OrderStatus;
+use App\Actions\Tables\ReserveTableAction;
+use App\Actions\Tables\TransferTableOrderAction;
+use App\Enums\AuditEventType;
 use App\Enums\TableStatus;
+use App\Http\Requests\Tables\MoveTableOrderRequest;
+use App\Http\Requests\Tables\OpenTableRequest;
+use App\Http\Requests\Tables\ReserveTableRequest;
+use App\Http\Requests\Tables\StoreTableRequest;
+use App\Http\Requests\Tables\UpdateTableRequest;
+use App\Http\Resources\OrderResource;
+use App\Http\Resources\TableResource;
 use App\Models\Table;
 use App\Repositories\Orders\OrderRepositoryInterface;
 use App\Repositories\Tables\TableRepositoryInterface;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Response;
 
 class TableController extends Controller
 {
     public function __construct(
         private readonly TableRepositoryInterface $tables,
         private readonly OrderRepositoryInterface $orders,
+        private readonly RecordAuditEventAction $recordAuditEvent,
     ) {}
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        return response()->json($this->tables->allOrdered());
+        return TableResource::collection($this->tables->allOrdered());
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(StoreTableRequest $request)
     {
-        $validated = $request->validate([
-            'number' => 'required|string|unique:tables,number',
-            'capacity' => 'required|integer|min:1',
-            'status' => 'in:Livre,Ocupada,Reservada,Fechamento',
-        ]);
+        $table = $this->tables->create($request->validated());
+        $this->recordAuditEvent->execute($request->user(), AuditEventType::TableCreated, $table);
 
-        $table = $this->tables->create($validated);
-
-        return response()->json($table, 201);
+        return (new TableResource($table))
+            ->response()
+            ->setStatusCode(Response::HTTP_CREATED);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Table $table)
     {
         $activeOrder = null;
-        if ($table->status === 'Ocupada' || $table->status === 'Fechamento') {
-            $activeOrder = $this->orders->findActiveForTableId($table->id);
+
+        if (in_array($table->status, [TableStatus::Occupied->value, TableStatus::Closing->value], true)) {
+            $activeOrder = $this->orders->findActiveForTable($table);
         }
 
         return response()->json([
-            'table' => $table,
-            'active_order' => $activeOrder,
+            'table' => new TableResource($table),
+            'active_order' => $activeOrder ? new OrderResource($activeOrder) : null,
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Table $table)
+    public function update(UpdateTableRequest $request, Table $table)
     {
-        $validated = $request->validate([
-            'number' => 'string|unique:tables,number,'.$table->id,
-            'capacity' => 'integer|min:1',
-            'status' => 'in:Livre,Ocupada,Reservada,Fechamento',
-        ]);
+        $table = $this->tables->update($table, $request->validated());
+        $this->recordAuditEvent->execute($request->user(), AuditEventType::TableUpdated, $table);
 
-        return response()->json($this->tables->update($table, $validated));
+        return new TableResource($table);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Table $table)
+    public function destroy(Request $request, Table $table)
     {
+        $this->recordAuditEvent->execute($request->user(), AuditEventType::TableDeleted, $table, [
+            'number' => $table->number,
+        ]);
         $this->tables->delete($table);
 
-        return response()->json(null, 204);
+        return response()->json(null, Response::HTTP_NO_CONTENT);
     }
 
-    /**
-     * Atomic method to Open a Table and link it to a new Order.
-     */
-    public function openTable(Request $request, Table $table)
+    public function openTable(OpenTableRequest $request, Table $table, OpenTableAction $openTable)
     {
-        $validated = $request->validate([
-            'customer_name' => 'nullable|string|max:255',
-            'customer_phone' => 'nullable|string|max:30',
+        $order = $openTable->execute($table, $request->user(), $request->validated());
+        $this->recordAuditEvent->execute($request->user(), AuditEventType::TableOpened, $order, [
+            'table_id' => $order->table_id,
+            'customer_name' => $order->customer_name,
         ]);
 
-        $result = DB::transaction(function () use ($request, $table, $validated) {
-            $lockedTable = $this->tables->lockById($table->id);
-
-            if ($lockedTable->status !== 'Livre' && $lockedTable->status !== 'Reservada') {
-                return [
-                    'status' => 422,
-                    'body' => ['message' => 'Table is not available for opening.'],
-                ];
-            }
-
-            $activeOrder = $this->orders->findActiveForTableId($lockedTable->id, lock: true);
-
-            if ($activeOrder) {
-                return [
-                    'status' => 409,
-                    'body' => ['message' => 'Table already has an active order.'],
-                ];
-            }
-
-            $lockedTable = $this->tables->update($lockedTable, ['status' => 'Ocupada']);
-
-            $order = $this->orders->create([
-                'table_id' => $lockedTable->id,
-                'user_id' => $request->user()->id,
-                'customer_name' => $validated['customer_name'] ?? null,
-                'customer_phone' => $validated['customer_phone'] ?? null,
-                'status' => 'Aberta',
-                'type' => 'Mesa',
-                'total_amount' => 0,
-            ]);
-
-            return [
-                'status' => 201,
-                'body' => [
-                    'message' => 'Table opened successfully.',
-                    'table' => $lockedTable,
-                    'order' => $order,
-                ],
-            ];
-        });
-
-        return response()->json($result['body'], $result['status']);
+        return (new OrderResource($order))
+            ->response()
+            ->setStatusCode(Response::HTTP_CREATED);
     }
 
-    public function release(Table $table, ReleaseTableAction $releaseTable)
+    public function reserve(ReserveTableRequest $request, Table $table, ReserveTableAction $reserveTable)
     {
-        return response()->json($releaseTable->execute($table));
-    }
-
-    /**
-     * Pré-fechamento de conta (Req 5.1)
-     */
-    public function closeRequest(Request $request, Table $table)
-    {
-        $activeOrder = $this->orders->findActiveForTableId($table->id);
-        if (!$activeOrder) {
-            return response()->json(['message' => 'Mesa não possui comanda ativa'], 400);
-        }
-
-        if ($activeOrder->status !== OrderStatus::Open->value) {
-            return response()->json(['message' => 'Comanda já está em processo de fechamento ou finalizada'], 400);
-        }
-
-        DB::transaction(function () use ($activeOrder, $table) {
-            $this->orders->recalculateTotal($activeOrder);
-            $activeOrder->service_fee = number_format((float) $activeOrder->total_amount * 0.10, 2, '.', '');
-            $activeOrder->save();
-
-            $this->orders->updateStatus($activeOrder, OrderStatus::Closing->value);
-            $this->tables->update($table, ['status' => TableStatus::Closing->value]);
-        });
-
-        return response()->json(['message' => 'Pré-fechamento solicitado', 'order' => $activeOrder->fresh()]);
-    }
-
-    /**
-     * Transferir mesa (Req 2.4)
-     */
-    public function transfer(Request $request, Table $table)
-    {
-        $validated = $request->validate([
-            'target_table_id' => 'required|exists:tables,id',
+        $table = $reserveTable->execute($table, $request->validated());
+        $this->recordAuditEvent->execute($request->user(), AuditEventType::TableReserved, $table, [
+            'reservation_name' => $table->reservation_name,
+            'reserved_at' => $table->reserved_at,
         ]);
 
-        if ($table->id == $validated['target_table_id']) {
-            return response()->json(['message' => 'Mesa de destino deve ser diferente da atual'], 400);
-        }
-
-        $result = DB::transaction(function () use ($table, $validated) {
-            $sourceTable = $this->tables->lockById($table->id);
-            $targetTable = $this->tables->lockById($validated['target_table_id']);
-
-            if ($targetTable->status !== TableStatus::Free->value) {
-                return ['status' => 400, 'body' => ['message' => 'Mesa de destino não está livre']];
-            }
-
-            $order = $this->orders->findActiveForTableId($sourceTable->id, lock: true);
-            if (!$order) {
-                return ['status' => 400, 'body' => ['message' => 'Mesa atual não possui comanda ativa']];
-            }
-
-            $this->tables->update($targetTable, ['status' => TableStatus::Occupied->value]);
-            $this->tables->update($sourceTable, ['status' => TableStatus::Free->value]);
-
-            $order->table_id = $targetTable->id;
-            $order->save();
-
-            return ['status' => 200, 'body' => ['message' => 'Mesa transferida com sucesso', 'new_table_id' => $targetTable->id]];
-        });
-
-        return response()->json($result['body'], $result['status']);
+        return new TableResource($table);
     }
 
-    /**
-     * Agrupar mesas / Juntar comandas (Req 2.4)
-     */
-    public function merge(Request $request, Table $table)
+    public function cancelReservation(Request $request, Table $table, CancelTableReservationAction $cancelTableReservation)
     {
-        $validated = $request->validate([
-            'target_table_id' => 'required|exists:tables,id',
+        $table = $cancelTableReservation->execute($table);
+        $this->recordAuditEvent->execute($request->user(), AuditEventType::TableReservationCanceled, $table);
+
+        return new TableResource($table);
+    }
+
+    public function release(Request $request, Table $table, ReleaseTableAction $releaseTable)
+    {
+        $table = $releaseTable->execute($table);
+        $this->recordAuditEvent->execute($request->user(), AuditEventType::TableReleased, $table);
+
+        return new TableResource($table);
+    }
+
+    public function markFree(Request $request, Table $table, MarkTableFreeAction $markTableFree)
+    {
+        $table = $markTableFree->execute($table);
+        $this->recordAuditEvent->execute($request->user(), AuditEventType::TableMarkedFree, $table);
+
+        return new TableResource($table);
+    }
+
+    public function transferOrder(
+        MoveTableOrderRequest $request,
+        Table $table,
+        TransferTableOrderAction $transferTableOrder,
+    ) {
+        $order = $transferTableOrder->execute($table, $request->validated('target_table_id'));
+        $this->recordAuditEvent->execute($request->user(), AuditEventType::TableOrderTransferred, $order, [
+            'source_table_id' => $table->id,
+            'target_table_id' => $request->validated('target_table_id'),
         ]);
 
-        if ($table->id == $validated['target_table_id']) {
-            return response()->json(['message' => 'Mesa de destino deve ser diferente da atual'], 400);
-        }
+        return new OrderResource($order);
+    }
 
-        $result = DB::transaction(function () use ($table, $validated) {
-            $sourceTable = $this->tables->lockById($table->id);
-            $targetTable = $this->tables->lockById($validated['target_table_id']);
+    public function mergeOrder(
+        MoveTableOrderRequest $request,
+        Table $table,
+        MergeTableOrdersAction $mergeTableOrders,
+    ) {
+        $order = $mergeTableOrders->execute($table, $request->validated('target_table_id'));
+        $this->recordAuditEvent->execute($request->user(), AuditEventType::TableOrdersMerged, $order, [
+            'source_table_id' => $table->id,
+            'target_table_id' => $request->validated('target_table_id'),
+        ]);
 
-            if ($targetTable->status !== TableStatus::Occupied->value && $targetTable->status !== TableStatus::Closing->value) {
-                return ['status' => 400, 'body' => ['message' => 'Mesa de destino deve estar ocupada para agrupar']];
-            }
-
-            $sourceOrder = $this->orders->findActiveForTableId($sourceTable->id, lock: true);
-            $targetOrder = $this->orders->findActiveForTableId($targetTable->id, lock: true);
-
-            if (!$sourceOrder || !$targetOrder) {
-                return ['status' => 400, 'body' => ['message' => 'Ambas as mesas devem possuir comandas ativas para agrupar']];
-            }
-
-            // Transfere itens da comanda de origem para a de destino
-            DB::table('order_items')
-                ->where('order_id', $sourceOrder->id)
-                ->update(['order_id' => $targetOrder->id]);
-
-            // Recalcula totais
-            $this->orders->recalculateTotal($targetOrder);
-
-            // Cancela comanda de origem e libera mesa
-            $this->orders->updateStatus($sourceOrder, OrderStatus::Canceled->value);
-            $this->tables->update($sourceTable, ['status' => TableStatus::Free->value]);
-
-            return ['status' => 200, 'body' => ['message' => 'Mesas agrupadas com sucesso', 'new_table_id' => $targetTable->id]];
-        });
-
-        return response()->json($result['body'], $result['status']);
+        return new OrderResource($order);
     }
 }
-

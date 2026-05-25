@@ -12,6 +12,8 @@ interface OrderItemRepositoryInterface
 
     public function paginateForKitchen(array $filters = [], int $perPage = 15): LengthAwarePaginator;
 
+    public function paginateGroupedOrdersForKitchen(array $filters = [], int $perPage = 15): LengthAwarePaginator;
+
     public function loadProduct(OrderItem $orderItem): OrderItem;
 
     public function createForOrder(Order $order, array $data): OrderItem;

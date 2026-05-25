@@ -4,6 +4,7 @@ namespace App\Actions\Kitchen;
 
 use App\Enums\OrderItemStatus;
 use App\Enums\OrderStatus;
+use App\Events\OrderItemMarkedReady;
 use App\Models\OrderItem;
 use App\Repositories\OrderItems\OrderItemRepositoryInterface;
 use App\Repositories\Orders\OrderRepositoryInterface;
@@ -34,6 +35,8 @@ class MarkOrderItemReadyAction
             $item = $this->orderItems->update($lockedItem, [
                 'status' => OrderItemStatus::Ready->value,
             ]);
+
+            OrderItemMarkedReady::dispatch($item);
 
             return $this->orderItems->loadProduct($item)->load('order.table');
         });

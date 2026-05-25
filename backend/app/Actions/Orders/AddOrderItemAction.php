@@ -30,10 +30,14 @@ class AddOrderItemAction
                 throw new ConflictHttpException('Order is not open for item changes.');
             }
 
-            $product = $this->products->findOrFail($data['product_id']);
+            $product = $this->products->lockById($data['product_id']);
 
             if (! $product->is_available) {
                 throw new UnprocessableEntityHttpException('Product is not available.');
+            }
+
+            if ($product->stock_quantity !== null && $product->stock_quantity < $data['quantity']) {
+                throw new UnprocessableEntityHttpException('Product does not have enough stock.');
             }
 
             $this->orderItems->createForOrder($lockedOrder, [
@@ -43,6 +47,8 @@ class AddOrderItemAction
                 'notes' => $data['notes'] ?? null,
                 'status' => OrderItemStatus::Pending->value,
             ]);
+
+            $this->products->decrementStock($product, $data['quantity']);
 
             return $this->recalculateOrderTotal->execute($lockedOrder);
         });

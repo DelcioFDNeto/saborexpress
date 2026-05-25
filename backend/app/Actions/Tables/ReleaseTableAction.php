@@ -26,11 +26,11 @@ class ReleaseTableAction
                 throw new ConflictHttpException('Table still has an active order.');
             }
 
-            if ($lockedTable->status === TableStatus::Free->value) {
+            if (in_array($lockedTable->status, [TableStatus::Free->value, TableStatus::Cleaning->value], true)) {
                 return $lockedTable;
             }
 
-            return $this->tables->update($lockedTable, ['status' => TableStatus::Free->value]);
+            return $this->tables->update($lockedTable, ['status' => TableStatus::Cleaning->value]);
         });
     }
 }

@@ -8,19 +8,18 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CheckRole
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  Closure(Request): (Response)  $next
-     */
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
-        if (!$request->user()) {
-            return response()->json(['message' => 'Unauthenticated.'], 401);
+        if (! $request->user()) {
+            abort(401, 'Unauthenticated.');
         }
 
-        if ($roles !== [] && !in_array($request->user()->role, $roles, true)) {
-            return response()->json(['message' => 'Forbidden. Insufficient permissions.'], 403);
+        if (! $request->user()->is_active) {
+            abort(403, 'Inactive users cannot access protected resources.');
+        }
+
+        if ($roles !== [] && ! in_array($request->user()->role, $roles, true)) {
+            abort(403, 'Forbidden. Insufficient permissions.');
         }
 
         return $next($request);

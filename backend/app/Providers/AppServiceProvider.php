@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Repositories\AuditEvents\AuditEventRepositoryInterface;
+use App\Repositories\AuditEvents\EloquentAuditEventRepository;
 use App\Repositories\Categories\CategoryRepositoryInterface;
 use App\Repositories\Categories\EloquentCategoryRepository;
 use App\Repositories\OrderItems\EloquentOrderItemRepository;
@@ -20,9 +22,6 @@ use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         $this->app->bind(CategoryRepositoryInterface::class, EloquentCategoryRepository::class);
@@ -32,13 +31,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(OrderItemRepositoryInterface::class, EloquentOrderItemRepository::class);
         $this->app->bind(PaymentRepositoryInterface::class, EloquentPaymentRepository::class);
         $this->app->bind(UserRepositoryInterface::class, EloquentUserRepository::class);
+        $this->app->bind(AuditEventRepositoryInterface::class, EloquentAuditEventRepository::class);
     }
 
-    /**
-     * Bootstrap any application services.
-     */
-    public function boot(): void
-    {
-        //
-    }
+    public function boot(): void {}
 }

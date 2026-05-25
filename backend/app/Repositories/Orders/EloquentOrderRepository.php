@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Orders;
 
+use App\Enums\OrderItemStatus;
 use App\Models\Order;
 use App\Models\Table;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -59,6 +60,7 @@ class EloquentOrderRepository implements OrderRepositoryInterface
     public function recalculateTotal(Order $order): Order
     {
         $itemsTotal = $order->items()
+            ->whereIn('status', OrderItemStatus::billableValues())
             ->selectRaw('COALESCE(SUM(quantity * unit_price), 0) as total')
             ->value('total');
 

@@ -2,59 +2,56 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
+use App\Actions\Audit\RecordAuditEventAction;
+use App\Enums\AuditEventType;
 use App\Http\Requests\StoreCategoryRequest;
 use App\Http\Requests\UpdateCategoryRequest;
 use App\Http\Resources\CategoryResource;
+use App\Models\Category;
 use App\Repositories\Categories\CategoryRepositoryInterface;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 class CategoryController extends Controller
 {
     public function __construct(
         private readonly CategoryRepositoryInterface $categories,
-    ) {
-    }
+        private readonly RecordAuditEventAction $recordAuditEvent,
+    ) {}
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         return CategoryResource::collection($this->categories->paginateWithProducts());
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(StoreCategoryRequest $request)
     {
         $category = $this->categories->create($request->validated());
+        $this->recordAuditEvent->execute($request->user(), AuditEventType::CategoryCreated, $category);
+
         return new CategoryResource($category);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Category $category)
     {
         return new CategoryResource($this->categories->loadProducts($category));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(UpdateCategoryRequest $request, Category $category)
     {
-        return new CategoryResource($this->categories->update($category, $request->validated()));
+        $category = $this->categories->update($category, $request->validated());
+        $this->recordAuditEvent->execute($request->user(), AuditEventType::CategoryUpdated, $category);
+
+        return new CategoryResource($category);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Category $category)
+    public function destroy(Request $request, Category $category)
     {
+        $this->recordAuditEvent->execute($request->user(), AuditEventType::CategoryDeleted, $category, [
+            'name' => $category->name,
+        ]);
         $this->categories->delete($category);
+
         return response()->json(null, Response::HTTP_NO_CONTENT);
     }
 }

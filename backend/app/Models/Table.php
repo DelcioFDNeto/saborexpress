@@ -2,12 +2,10 @@
 
 namespace App\Models;
 
-use App\Enums\OrderStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Table extends Model
 {
@@ -17,21 +15,17 @@ class Table extends Model
         'number',
         'capacity',
         'status',
+        'reservation_name',
+        'reservation_phone',
+        'reserved_at',
+    ];
+
+    protected $casts = [
+        'reserved_at' => 'datetime',
     ];
 
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
     }
-
-    /**
-     * Get the active order for this table.
-     */
-    public function activeOrder(): HasOne
-    {
-        return $this->hasOne(Order::class)
-            ->whereIn('status', OrderStatus::activeValues())
-            ->latest();
-    }
 }
-

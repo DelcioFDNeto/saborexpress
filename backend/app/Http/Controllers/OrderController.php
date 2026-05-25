@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Audit\RecordAuditEventAction;
 use App\Actions\Orders\AddOrderItemAction;
 use App\Actions\Orders\CancelOrderAction;
 use App\Actions\Orders\RequestOrderClosingAction;
+use App\Enums\AuditEventType;
 use App\Enums\OrderStatus;
 use App\Http\Requests\Orders\AddOrderItemRequest;
 use App\Http\Requests\Orders\UpdateOrderStatusRequest;
@@ -22,6 +24,7 @@ class OrderController extends Controller
 {
     public function __construct(
         private readonly OrderRepositoryInterface $orders,
+        private readonly RecordAuditEventAction $recordAuditEvent,
     ) {}
 
     public function index()
@@ -34,19 +37,16 @@ class OrderController extends Controller
         abort(405, 'Orders are opened through table operations.');
     }
 
-    /**
-     * Portal simplificado (Delivery) - Store order from external cart.
-     */
     public function storeDelivery(Request $request)
     {
         $validated = $request->validate([
-            'customer_name' => 'required|string|max:255',
-            'customer_phone' => 'required|string|max:30',
-            'delivery_address' => 'required|string|max:500',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.notes' => 'nullable|string',
+            'customer_name' => ['required', 'string', 'max:255'],
+            'customer_phone' => ['required', 'string', 'max:30'],
+            'delivery_address' => ['required', 'string', 'max:500'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.product_id' => ['required', 'exists:products,id'],
+            'items.*.quantity' => ['required', 'integer', 'min:1'],
+            'items.*.notes' => ['nullable', 'string'],
         ]);
 
         $order = DB::transaction(function () use ($validated) {
@@ -73,7 +73,7 @@ class OrderController extends Controller
                     'status' => 'Pendente',
                 ]);
 
-                $totalAmount += ($product->price * $itemData['quantity']);
+                $totalAmount += (float) $product->price * $itemData['quantity'];
             }
 
             $order->total_amount = number_format($totalAmount, 2, '.', '');
@@ -102,6 +102,10 @@ class OrderController extends Controller
         AddOrderItemAction $addOrderItem,
     ) {
         $order = $addOrderItem->execute($order, $request->validated());
+        $this->recordAuditEvent->execute($request->user(), AuditEventType::OrderItemAdded, $order, [
+            'product_id' => $request->validated('product_id'),
+            'quantity' => $request->validated('quantity'),
+        ]);
 
         return (new OrderResource($order))->response()->setStatusCode(201);
     }
@@ -120,11 +124,17 @@ class OrderController extends Controller
         $status = $request->validated('status');
 
         if ($status === OrderStatus::Closing->value) {
-            return new OrderResource($requestOrderClosing->execute($order));
+            $order = $requestOrderClosing->execute($order);
+            $this->recordAuditEvent->execute($request->user(), AuditEventType::OrderClosingRequested, $order);
+
+            return new OrderResource($order);
         }
 
         if ($status === OrderStatus::Canceled->value) {
-            return new OrderResource($cancelOrder->execute($order));
+            $order = $cancelOrder->execute($order);
+            $this->recordAuditEvent->execute($request->user(), AuditEventType::OrderCanceled, $order);
+
+            return new OrderResource($order);
         }
 
         throw new ConflictHttpException('Use dedicated operations to change this order status.');
@@ -133,7 +143,7 @@ class OrderController extends Controller
     public function updateDeliveryStatus(Request $request, Order $order)
     {
         $validated = $request->validate([
-            'delivery_status' => 'required|in:Aguardando,Em Rota,Entregue',
+            'delivery_status' => ['required', 'in:Aguardando,Em Rota,Entregue'],
         ]);
 
         if ($order->type !== 'Delivery') {
@@ -143,17 +153,23 @@ class OrderController extends Controller
         $order->delivery_status = $validated['delivery_status'];
         $order->save();
 
+        return new OrderResource($this->orders->loadDetails($order));
+    }
+
+    public function requestClosing(Request $request, Order $order, RequestOrderClosingAction $requestOrderClosing)
+    {
+        $order = $requestOrderClosing->execute($order);
+        $this->recordAuditEvent->execute($request->user(), AuditEventType::OrderClosingRequested, $order);
+
         return new OrderResource($order);
     }
 
-    public function requestClosing(Order $order, RequestOrderClosingAction $requestOrderClosing)
+    public function cancel(Request $request, Order $order, CancelOrderAction $cancelOrder)
     {
-        return new OrderResource($requestOrderClosing->execute($order));
-    }
+        $order = $cancelOrder->execute($order);
+        $this->recordAuditEvent->execute($request->user(), AuditEventType::OrderCanceled, $order);
 
-    public function cancel(Order $order, CancelOrderAction $cancelOrder)
-    {
-        return new OrderResource($cancelOrder->execute($order));
+        return new OrderResource($order);
     }
 
     public function destroy(Order $order)
@@ -161,4 +177,3 @@ class OrderController extends Controller
         abort(405, 'Orders are closed or canceled by dedicated operations.');
     }
 }
-

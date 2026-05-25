@@ -27,6 +27,21 @@ class EloquentOrderItemRepository implements OrderItemRepositoryInterface
             ->paginate($perPage);
     }
 
+    public function paginateGroupedOrdersForKitchen(array $filters = [], int $perPage = 15): LengthAwarePaginator
+    {
+        $statuses = $filters['status'] ?? OrderItemStatus::kitchenQueueValues();
+        $statuses = is_array($statuses) ? $statuses : [$statuses];
+
+        return Order::query()
+            ->with([
+                'table',
+                'items' => fn ($query) => $query->whereIn('status', $statuses)->with('product.category'),
+            ])
+            ->whereHas('items', fn ($query) => $query->whereIn('status', $statuses))
+            ->latest()
+            ->paginate($perPage);
+    }
+
     public function loadProduct(OrderItem $orderItem): OrderItem
     {
         return $orderItem->load('product.category');

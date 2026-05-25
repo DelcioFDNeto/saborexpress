@@ -9,8 +9,7 @@ class RecalculateOrderTotalAction
 {
     public function __construct(
         private readonly OrderRepositoryInterface $orders,
-    ) {
-    }
+    ) {}
 
     public function execute(Order $order): Order
     {
