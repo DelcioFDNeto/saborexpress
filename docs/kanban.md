@@ -91,7 +91,7 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 - [x] Abertura de mesa integrada à API.
 - [x] Transferência e junção de comandas integradas à API.
 - [x] Tela administrativa de cadastro e manutenção de mesas.
-- [ ] Melhorar fluxo visual de reserva e limpeza.
+- [x] Melhorar fluxo visual de reserva e limpeza (inclui suporte visual a mesas em Limpeza e Reservadas com ações de liberação, cancelamento e ocupação imediata).
 
 ## M04 - Auditoria e Histórico
 
@@ -136,9 +136,9 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 - [x] Modal de carrinho da comanda.
 - [x] Inclusão de itens na comanda.
 - [x] Solicitação de fechamento da comanda.
-- [ ] Conectar edição de quantidade e observações ao fluxo completo.
-- [ ] Conectar remoção e cancelamento de item à interface.
-- [ ] Exibir estados da cozinha com maior clareza na comanda.
+- [x] Conectar edição de quantidade e observações ao fluxo completo (comanda permite editar observações e quantidade de itens pendentes na API).
+- [x] Conectar remoção e cancelamento de item à interface (garçom consegue excluir itens pendentes ou cancelar itens em preparo diretamente da tela).
+- [x] Exibir estados da cozinha com maior clareza na comanda (badges dinâmicas e animadas para Pendente, Em Preparo, Pronto, Entregue e Cancelado).
 
 ## M06 - Cozinha
 
