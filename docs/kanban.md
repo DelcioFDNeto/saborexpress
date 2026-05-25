@@ -240,9 +240,9 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 - [x] `docs/kanban.md` organizado por módulos.
 - [x] Scalar disponível em `/docs/api`.
 - [x] OpenAPI em `backend/public/openapi.yaml` com schemas e endpoints de autenticação, cardápio, mesas, comandas, cozinha, pagamentos, delivery, dashboard e auditoria.
-- [ ] Documentar exemplos completos de fluxo ponta a ponta.
-- [ ] Documentar credenciais dos usuários seedados.
-- [ ] Documentar decisões arquiteturais relevantes.
+- [x] Documentar exemplos completos de fluxo ponta a ponta.
+- [x] Documentar credenciais dos usuários seedados.
+- [x] Documentar decisões arquiteturais relevantes.
 
 ## M11 - Docker e Ambiente Local
 
