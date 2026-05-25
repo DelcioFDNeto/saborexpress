@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../lib/api';
 import { toast } from 'sonner';
 
@@ -27,6 +27,8 @@ interface CartItem {
 
 export default function Menu() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchParam = searchParams.get('search') || '';
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
@@ -93,9 +95,15 @@ export default function Menu() {
     toast.success(`${product.name} adicionado à sua sacola! 🛍️`);
   };
 
-  const filteredProducts = activeCategory
-    ? products.filter(p => p.category_id === activeCategory)
-    : products;
+  // Filtro de pratos (compara categoria selecionada e texto da busca)
+  const filteredProducts = products.filter(p => {
+    const matchesCategory = activeCategory ? p.category_id === activeCategory : true;
+    const matchesSearch = searchParam
+      ? p.name.toLowerCase().includes(searchParam.toLowerCase()) ||
+        p.description.toLowerCase().includes(searchParam.toLowerCase())
+      : true;
+    return matchesCategory && matchesSearch;
+  });
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = cart.reduce((sum, item) => sum + (Number(item.product.price) * item.quantity), 0);
@@ -112,6 +120,21 @@ export default function Menu() {
           Navegue pelas nossas categorias, adicione pratos exóticos e combos promocionais à sua sacola, e finalize para receber quentinho em sua casa!
         </p>
       </div>
+
+      {/* Informativo amigável sobre resultados da busca */}
+      {searchParam && (
+        <div className="mb-8 flex items-center justify-between bg-emerald-50 border border-emerald-100 p-4 rounded-2xl animate-fade-in">
+          <p className="text-xs font-semibold text-emerald-800">
+            🔎 Pratos correspondentes à busca: <span className="font-extrabold text-emerald-950">"{searchParam}"</span>
+          </p>
+          <button 
+            onClick={() => setSearchParams({})} 
+            className="text-xs font-black text-emerald-700 hover:text-emerald-950 transition-colors"
+          >
+            Limpar Filtro ×
+          </button>
+        </div>
+      )}
       
       {/* Category Filter */}
       <div className="flex gap-3 mb-8 overflow-x-auto pb-2 scrollbar-none">
@@ -230,10 +253,24 @@ export default function Menu() {
           </div>
 
           {filteredProducts.length === 0 && (
-            <div className="text-center text-gray-400 mt-16 p-8 border border-dashed border-gray-200 rounded-3xl max-w-md mx-auto">
+            <div className="text-center text-gray-400 mt-16 p-8 border border-dashed border-gray-200 rounded-3xl max-w-md mx-auto animate-fade-in">
               <span className="text-4xl block mb-4">🥣</span>
-              <h3 className="font-bold text-gray-700 text-base mb-1">Nenhum prato disponível</h3>
-              <p className="text-xs">Tente escolher outra categoria de produtos acima.</p>
+              <h3 className="font-bold text-gray-700 text-base mb-1">
+                {searchParam ? 'Nenhum prato encontrado' : 'Nenhum prato disponível'}
+              </h3>
+              <p className="text-xs leading-relaxed">
+                {searchParam 
+                  ? `Não localizamos itens para "${searchParam}". Que tal tentar outro ingrediente ou prato regional?`
+                  : 'Tente escolher outra categoria de produtos acima.'}
+              </p>
+              {searchParam && (
+                <button 
+                  onClick={() => setSearchParams({})} 
+                  className="mt-4 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-black rounded-xl transition-all"
+                >
+                  Limpar Busca
+                </button>
+              )}
             </div>
           )}
         </>

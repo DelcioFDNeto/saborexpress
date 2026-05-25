@@ -66,6 +66,7 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 - [x] Tela administrativa de categorias.
 - [x] Tela administrativa de produtos.
 - [x] Interface para disponibilidade e estoque (integração inline com toggle de vendas e controle de estoque de ingredientes).
+- [x] Topbar com design premium, barra de pesquisa integrada e mecanismo robusto de busca (filtro instantâneo no cardápio público por nome e descrição com chips informativos de busca e estados vazios humanizados).
 
 ## M03 - Mesas e Salão
 
