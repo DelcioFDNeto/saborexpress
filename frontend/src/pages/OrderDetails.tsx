@@ -47,6 +47,9 @@ export default function OrderDetails() {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isTableActionModalOpen, setIsTableActionModalOpen] = useState(false);
+  const [tableActionType, setTableActionType] = useState<'transfer' | 'merge'>('transfer');
+  const [availableTables, setAvailableTables] = useState<Table[]>([]);
 
   const fetchOrderDetails = async () => {
     setLoading(true);
@@ -93,10 +96,6 @@ export default function OrderDetails() {
   if (!order) return null;
 
   const hasReadyItems = order.items.some(item => item.status === 'Pronto');
-
-  const [isTableActionModalOpen, setIsTableActionModalOpen] = useState(false);
-  const [tableActionType, setTableActionType] = useState<'transfer' | 'merge'>('transfer');
-  const [availableTables, setAvailableTables] = useState<Table[]>([]);
 
   const handleCloseRequest = async () => {
     if (!window.confirm('Tem certeza que deseja solicitar o fechamento da mesa? A conta será travada para novos itens.')) return;

@@ -18,7 +18,6 @@ export default function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    // If the user's role is not allowed, redirect to a safe page (e.g., home or menu)
     return <Navigate to="/" replace />;
   }
 

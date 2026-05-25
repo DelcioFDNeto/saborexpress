@@ -29,7 +29,6 @@ export default function Cashier() {
   const [numPeople, setNumPeople] = useState(1);
   const [selectedItemIds, setSelectedItemIds] = useState<number[]>([]);
   const [simulation, setSimulation] = useState<any>(null);
-  const [paidTotal, setPaidTotal] = useState(0);
 
   const fetchOrders = async () => {
     try {

@@ -71,17 +71,14 @@ function App() {
         <div className="min-h-screen bg-gray-50 flex flex-col">
           <Navigation />
 
-          {/* Main Content */}
           <main className="flex-1">
             <Routes>
-              {/* Public routes */}
               <Route path="/" element={<Index />} />
               <Route path="/cardapio" element={<Menu />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/delivery" element={<DeliveryClient />} />
 
-              {/* Protected Routes */}
               <Route element={<ProtectedRoute allowedRoles={['administrator']} />}>
                 <Route path="/dashboard" element={<Dashboard />} />
               </Route>
