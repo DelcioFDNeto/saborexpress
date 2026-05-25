@@ -1,201 +1,291 @@
 # Kanban do Projeto
 
-Este documento acompanha o estado atual do SaborExpress por módulos.
+Este documento acompanha o estado atual do SaborExpress por módulos. A marcação segue o formato:
+
+- [x] Concluído
+- [ ] Pendente
 
 ## M00 - Base, Arquitetura e Monorepo
 
-### Concluído
+### Backend e Monorepo
 
-- Monorepo com `backend/`, `frontend/`, `docs/` e Docker Compose.
-- Backend Laravel com Sanctum, PostgreSQL, Eloquent, Actions, Repositories, Resources, Form Requests e Enums.
-- Frontend React com Vite, TypeScript e Tailwind CSS.
-- Guia local `.ignore/module-guidelines-laravel.md` ignorado pelo Git.
-- Documentação principal no `README.md`.
-
-### Pendente
-
-- Definir estratégia de deploy.
-- Criar configuração de produção.
-- Criar pipeline de CI/CD.
+- [x] Estrutura de monorepo com `backend/`, `frontend/`, `docs/` e `docker-compose.yml`.
+- [x] Backend Laravel com Sanctum, PostgreSQL, Eloquent, Actions, Repositories, Resources, Form Requests e Enums.
+- [x] Frontend React com Vite, TypeScript, Tailwind CSS, Axios e React Router.
+- [x] Guia local `.ignore/module-guidelines-laravel.md` ignorado pelo Git.
+- [x] Documentação principal no `README.md`.
+- [ ] Definir estratégia de deploy.
+- [ ] Criar configuração de produção.
+- [ ] Criar pipeline de CI/CD.
 
 ## M01 - Autenticação, RBAC e Usuários
 
-### Concluído
+### Backend
 
-- Login, logout, usuário atual e token Sanctum.
-- Middleware `role` com bloqueio de usuário inativo.
-- Payload global de erros para validação, autenticação, autorização, conflito, 404, 405 e erro interno.
-- CRUD administrativo de usuários.
-- Troca administrativa de senha.
-- Ativação e desativação de usuários.
-- Filtros de usuários por papel, status ativo e busca textual.
-- `UserResource` sem vazamento de senha ou token.
+- [x] Login com Laravel Sanctum.
+- [x] Logout.
+- [x] Consulta do usuário autenticado.
+- [x] Middleware `role`.
+- [x] Bloqueio de usuário inativo.
+- [x] Payload global de erros para validação, autenticação, autorização, conflito, 404, 405 e erro interno.
+- [x] CRUD administrativo de usuários.
+- [x] Troca administrativa de senha.
+- [x] Ativação e desativação de usuários.
+- [x] Filtros de usuários por papel, status ativo e busca textual.
+- [x] `UserResource` sem vazamento de senha ou token.
+- [ ] Avaliar uso de Policies quando houver regras por recurso.
 
-### Pendente
+### Frontend
 
-- Avaliar Policies quando houver regras por recurso.
-- Criar tela administrativa de usuários no frontend.
+- [x] Tela de login.
+- [x] Tela de cadastro de cliente.
+- [x] Controle básico de sessão com token.
+- [x] Rotas protegidas por perfil.
+- [ ] Tela administrativa completa de usuários.
+- [ ] Revisar permissão da rota de entregas para incluir o perfil `delivery`.
 
 ## M02 - Cardápio, Categorias e Produtos
 
-### Concluído
+### Backend
 
-- CRUD backend de categorias e produtos.
-- Cardápio público para leitura.
-- Escrita restrita ao perfil `administrator`.
-- Busca textual de produtos.
-- Filtros por categoria, disponibilidade, faixa de preço e estoque.
-- Atualização dedicada de disponibilidade.
-- Estoque simples opcional por `stock_quantity`.
-- Ajuste automático de estoque ao adicionar, alterar, remover ou cancelar item de comanda.
-- Seeders de categorias e produtos.
+- [x] CRUD de categorias.
+- [x] CRUD de produtos.
+- [x] Cardápio público para leitura.
+- [x] Escrita restrita ao perfil `administrator`.
+- [x] Busca textual de produtos.
+- [x] Filtros por categoria, disponibilidade, faixa de preço e estoque.
+- [x] Atualização dedicada de disponibilidade.
+- [x] Estoque simples opcional por `stock_quantity`.
+- [x] Ajuste automático de estoque ao adicionar, alterar, remover ou cancelar item de comanda.
+- [x] Seeders de categorias e produtos.
+- [ ] Definir se haverá estoque avançado com movimentações históricas.
 
-### Pendente
+### Frontend
 
-- Criar telas administrativas para categorias e produtos.
-- Definir se haverá estoque avançado com movimentações históricas.
+- [x] Tela pública de cardápio.
+- [ ] Tela administrativa de categorias.
+- [ ] Tela administrativa de produtos.
+- [ ] Interface para disponibilidade e estoque.
 
 ## M03 - Mesas e Salão
 
-### Concluído
+### Backend
 
-- CRUD backend de mesas.
-- Abertura transacional de mesa com criação de comanda.
-- Prevenção de comanda ativa duplicada.
-- Consulta de comanda ativa por mesa.
-- Reserva com nome, telefone e horário reservado.
-- Cancelamento de reserva com limpeza dos dados de reserva.
-- Liberação para limpeza após pagamento ou cancelamento.
-- Conclusão de limpeza, retornando a mesa para `Livre`.
-- Transferência de comanda entre mesas.
-- Junção de comandas entre mesas abertas.
-- Status de mesa: `Livre`, `Ocupada`, `Reservada`, `Fechamento`, `Limpeza`.
+- [x] CRUD de mesas.
+- [x] Abertura transacional de mesa com criação de comanda.
+- [x] Prevenção de comanda ativa duplicada.
+- [x] Consulta de comanda ativa por mesa.
+- [x] Reserva com nome, telefone e horário reservado.
+- [x] Cancelamento de reserva com limpeza dos dados de reserva.
+- [x] Liberação para limpeza após pagamento ou cancelamento.
+- [x] Conclusão de limpeza, retornando a mesa para `Livre`.
+- [x] Transferência de comanda entre mesas.
+- [x] Junção de comandas entre mesas abertas.
+- [x] Status de mesa: `Livre`, `Ocupada`, `Reservada`, `Fechamento`, `Limpeza`.
+- [ ] Definir histórico detalhado de movimentações de mesa, caso o escopo exija auditoria operacional específica.
 
-### Pendente
+### Frontend
 
-- Criar tela administrativa de mesas.
-- Definir histórico de movimentações de mesa, se o escopo exigir auditoria operacional.
- 
+- [x] Tela de mesas.
+- [x] Tela de detalhes da comanda por mesa.
+- [x] Abertura de mesa integrada à API.
+- [x] Transferência e junção de comandas integradas à API.
+- [ ] Tela administrativa de cadastro e manutenção de mesas.
+- [ ] Melhorar fluxo visual de reserva e limpeza.
+
 ## M04 - Auditoria e Histórico
 
-### Concluído
+### Backend
 
-- Migration `audit_events`.
-- Model `AuditEvent`.
-- Enum `AuditEventType`.
-- Repository de auditoria.
-- Action `RecordAuditEventAction`.
-- Resource `AuditEventResource`.
-- Controller `AuditEventController`.
-- Rotas administrativas `GET /api/audit-events` e `GET /api/audit-events/{auditEvent}`.
-- Filtros por evento, usuário, recurso auditado, período e paginação.
-- Registro automático de eventos nos fluxos de usuários, categorias, produtos, mesas, comandas, itens, cozinha e pagamentos.
+- [x] Migration `audit_events`.
+- [x] Model `AuditEvent`.
+- [x] Enum `AuditEventType`.
+- [x] Repository de auditoria.
+- [x] Action `RecordAuditEventAction`.
+- [x] Resource `AuditEventResource`.
+- [x] Controller `AuditEventController`.
+- [x] Rotas administrativas `GET /api/audit-events` e `GET /api/audit-events/{auditEvent}`.
+- [x] Filtros por evento, usuário, recurso auditado, período e paginação.
+- [x] Registro automático de eventos nos fluxos de usuários, categorias, produtos, mesas, comandas, itens, cozinha e pagamentos.
+- [ ] Definir política de retenção ou expurgo de histórico.
 
-### Pendente
+### Frontend
 
-- Criar tela administrativa de auditoria no frontend.
-- Definir retenção de histórico, se o projeto precisar de política de expurgo.
+- [ ] Tela administrativa de auditoria.
+- [ ] Filtros visuais para evento, usuário, recurso e período.
 
 ## M05 - Comandas e Itens
 
-### Concluído
+### Backend
 
-- Listagem e consulta de comandas.
-- Inclusão, alteração, remoção, entrega e cancelamento de itens.
-- Snapshot de preço em `order_items.unit_price`.
-- Recálculo automático do total.
-- Itens cancelados não entram no total.
-- Bloqueio de fechamento enquanto houver item `Pendente`, `Em Preparo` ou `Pronto`.
-- Transição oficial da comanda: `Aberta -> Fechamento -> Paga` ou `Cancelada`.
+- [x] Listagem de comandas.
+- [x] Consulta de comanda.
+- [x] Inclusão de item.
+- [x] Alteração de item.
+- [x] Remoção de item.
+- [x] Entrega de item.
+- [x] Cancelamento de item.
+- [x] Snapshot de preço em `order_items.unit_price`.
+- [x] Recálculo automático do total.
+- [x] Itens cancelados não entram no total.
+- [x] Bloqueio de fechamento enquanto houver item `Pendente`, `Em Preparo` ou `Pronto`.
+- [x] Transição oficial da comanda: `Aberta -> Fechamento -> Paga` ou `Cancelada`.
 
-### Pendente
+### Frontend
 
-- Conectar o frontend ao fluxo completo de comanda por mesa.
+- [x] Modal de carrinho da comanda.
+- [x] Inclusão de itens na comanda.
+- [x] Solicitação de fechamento da comanda.
+- [ ] Conectar edição de quantidade e observações ao fluxo completo.
+- [ ] Conectar remoção e cancelamento de item à interface.
+- [ ] Exibir estados da cozinha com maior clareza na comanda.
 
 ## M06 - Cozinha
 
-### Concluído
+### Backend
 
-- Fila por item para `Pendente`, `Em Preparo` e `Pronto`.
-- Filtros por status, comanda e paginação.
-- Fila agrupada por comanda em `GET /api/kitchen/orders`.
-- Início de preparo.
-- Marcação de item como pronto.
-- Entrega de item pronto ao salão pela rota `/api/kitchen/order-items/{orderItem}/deliver`.
-- Cancelamento de item antes da entrega.
-- Evento Laravel `OrderItemMarkedReady` ao marcar item como pronto.
-- Painel da cozinha no frontend conectado às rotas reais.
+- [x] Fila por item para `Pendente`, `Em Preparo` e `Pronto`.
+- [x] Filtros por status, comanda e paginação.
+- [x] Fila agrupada por comanda em `GET /api/kitchen/orders`.
+- [x] Início de preparo.
+- [x] Marcação de item como pronto.
+- [x] Entrega de item pronto ao salão pela rota `/api/kitchen/order-items/{orderItem}/deliver`.
+- [x] Cancelamento de item antes da entrega.
+- [x] Evento Laravel `OrderItemMarkedReady` ao marcar item como pronto.
+- [ ] Listener real para notificação em tempo real, caso o projeto use WebSocket ou broadcast.
 
-### Pendente
+### Frontend
 
-- Adicionar listener real para notificação em tempo real, caso o projeto use WebSocket ou broadcast.
+- [x] Painel da cozinha conectado às rotas reais.
+- [x] Colunas de pendentes, em preparo e prontos.
+- [x] Atualização automática por polling.
+- [ ] Notificação em tempo real.
+- [ ] Melhorar tratamento visual de erro nas ações da cozinha.
 
 ## M07 - Pagamentos e Caixa
 
-### Concluído
+### Backend
 
-- Registro de pagamento integral.
-- Pagamento simplificado ou parcial pela rota `/api/orders/{order}/pay`.
-- Simulação de divisão de conta integral, igual ou por itens.
-- Listagem e consulta de pagamentos.
-- Comanda muda para `Paga` após pagamento integral.
-- Mesa pode ser liberada para limpeza após pagamento.
+- [x] Registro de pagamento integral.
+- [x] Pagamento simplificado ou parcial pela rota `/api/orders/{order}/pay`.
+- [x] Simulação de divisão de conta integral, igual ou por itens.
+- [x] Listagem e consulta de pagamentos.
+- [x] Comanda muda para `Paga` após pagamento integral.
+- [x] Mesa pode ser liberada para limpeza após pagamento.
+- [ ] Abertura de caixa.
+- [ ] Fechamento de caixa.
+- [ ] Sangria.
+- [ ] Suprimento.
+- [ ] Estorno.
+- [ ] Relatórios financeiros.
 
-### Pendente
+### Frontend
 
-- Abertura e fechamento de caixa.
-- Sangria, suprimento, estorno e relatórios financeiros.
+- [x] Tela de caixa.
+- [x] Listagem de comandas em fechamento.
+- [x] Ação de pagamento simplificado.
+- [ ] Fluxo visual completo de pagamentos parciais.
+- [ ] Interface de divisão de conta por pessoas ou itens.
+- [ ] Telas de abertura, fechamento, sangria, suprimento e estorno.
 
 ## M08 - Delivery e Retirada
 
-### Concluído
+### Backend
 
-- Enum `OrderType` já prevê `Delivery` e `Takeout`.
-- A tabela `orders` já possui campos básicos para pedido sem mesa.
-- Endpoint público `POST /api/orders/delivery`.
-- Endpoint `PUT /api/orders/{order}/delivery-status`.
-- Painel de entregas no frontend.
-- Tela pública de pedido delivery no frontend.
+- [x] Enum `OrderType` com `Delivery` e `Takeout`.
+- [x] Campos básicos em `orders` para pedido sem mesa.
+- [x] Endpoint público `POST /api/orders/delivery`.
+- [x] Endpoint `PUT /api/orders/{order}/delivery-status`.
+- [x] Pedido delivery sem `user_id` obrigatório.
+- [x] Reuso da action de itens para estoque e total no delivery.
+- [ ] Endpoints próprios para retirada.
+- [ ] Endereço estruturado.
+- [ ] Atribuição de entregador.
+- [ ] Acompanhamento pelo cliente.
 
-### Pendente
+### Frontend
 
-- Endpoints próprios para retirada.
-- Endereço estruturado.
-- Atribuição de entregador.
-- Acompanhamento pelo cliente.
+- [x] Tela pública de pedido delivery.
+- [x] Painel de entregas.
+- [ ] Corrigir acesso do perfil `delivery` ao painel de entregas.
+- [ ] Tela de acompanhamento pelo cliente.
+- [ ] Tela ou fluxo de retirada.
 
-## M09 - Documentação
+## M09 - Dashboard e Relatórios Operacionais
 
-### Concluído
+### Backend
 
-- `README.md` com visão geral do projeto.
-- `docs/API.md` atualizado com as rotas atuais.
-- Scalar disponível em `/docs/api`.
-- OpenAPI em `backend/public/openapi.yaml` com schemas e endpoints de autenticação, cardápio, mesas, comandas, cozinha, pagamentos, delivery, dashboard e auditoria.
+- [x] Endpoint `GET /api/dashboard`.
+- [x] Indicadores básicos de comandas.
+- [x] Contagem por status compatível com os enums atuais.
+- [x] Curva ABC baseada em pedidos pagos.
+- [ ] Relatórios financeiros avançados.
+- [ ] Indicadores por período, operador, forma de pagamento e canal.
 
-### Pendente
+### Frontend
 
-- Documentar exemplos completos de fluxo ponta a ponta.
+- [x] Tela de dashboard administrativo.
+- [ ] Ajustar visualização para métricas reais do MVP.
+- [ ] Criar filtros por período.
 
-## M10 - Qualidade Técnica
+## M10 - Documentação e OpenAPI
 
-### Concluído
+### Documentação
 
-- Padronização global de erros.
-- Auditoria operacional com histórico consultável.
-- Validações manuais com lint PHP, listagem de rotas, migrations e seeders.
-- Uso de transações e `lockForUpdate()` nos fluxos críticos.
+- [x] `README.md` com visão geral do projeto.
+- [x] `docs/API.md` atualizado com as rotas atuais.
+- [x] `docs/kanban.md` organizado por módulos.
+- [x] Scalar disponível em `/docs/api`.
+- [x] OpenAPI em `backend/public/openapi.yaml` com schemas e endpoints de autenticação, cardápio, mesas, comandas, cozinha, pagamentos, delivery, dashboard e auditoria.
+- [ ] Documentar exemplos completos de fluxo ponta a ponta.
+- [ ] Documentar credenciais dos usuários seedados.
+- [ ] Documentar decisões arquiteturais relevantes.
 
-### Pendente
+## M11 - Docker e Ambiente Local
 
-- Criar testes automatizados.
-- Criar factories específicas para os módulos principais.
-- Criar testes de integração para o fluxo presencial completo.
+### Infraestrutura
+
+- [x] `docker-compose.yml` com `postgres`, `backend` e `frontend`.
+- [x] Possibilidade de subir a stack completa via `docker compose up -d --build`.
+- [x] Possibilidade de subir apenas o banco via `docker compose up -d postgres`.
+- [x] Porta do PostgreSQL configurável por `POSTGRES_PORT`.
+- [x] `backend/Dockerfile` com PHP 8.3, Apache, Composer e extensão PostgreSQL.
+- [x] Entrypoint do backend aguardando banco, executando migrations e seeders.
+- [x] `frontend/Dockerfile` com Node 22 e Vite.
+- [x] `.dockerignore` para backend e frontend.
+- [x] Scripts Docker no `package.json`.
+- [ ] Avaliar imagem de produção separada para frontend estático.
+- [ ] Avaliar uso de variáveis reais de ambiente para produção.
+
+## M12 - Qualidade Técnica
+
+### Backend
+
+- [x] Padronização global de erros.
+- [x] Auditoria operacional com histórico consultável.
+- [x] Uso de transações nos fluxos críticos.
+- [x] Uso de `lockForUpdate()` em operações sensíveis.
+- [x] Validações manuais com lint PHP, listagem de rotas, migrations e seeders.
+- [ ] Criar testes automatizados.
+- [ ] Criar factories específicas para os módulos principais.
+- [ ] Criar testes de integração para o fluxo presencial completo.
+- [ ] Criar testes de integração para delivery.
+- [ ] Criar testes de integração para pagamentos.
+
+### Frontend
+
+- [x] Lint configurado.
+- [x] Cliente HTTP centralizado.
+- [x] `.env.example` com `VITE_API_URL`.
+- [ ] Padronizar componentes visuais.
+- [ ] Melhorar tratamento global de erros no cliente.
+- [ ] Revisar responsividade das telas operacionais.
 
 ## Próximas Prioridades
 
-1. Corrigir telas administrativas ausentes no frontend.
-2. Implementar retirada.
-3. Criar fluxo completo de caixa.
-4. Documentar exemplos ponta a ponta.
-5. Criar testes automatizados dos fluxos críticos.
+1. Corrigir pendências de acesso e permissões no frontend, principalmente o painel de entregas para o perfil `delivery`.
+2. Finalizar telas administrativas de usuários, categorias, produtos e mesas.
+3. Implementar retirada.
+4. Criar fluxo completo de caixa.
+5. Documentar exemplos ponta a ponta.
+6. Criar testes automatizados dos fluxos críticos.
