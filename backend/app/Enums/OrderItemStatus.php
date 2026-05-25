@@ -25,4 +25,13 @@ enum OrderItemStatus: string
             self::Preparing->value,
         ];
     }
+
+    public static function undeliveredValues(): array
+    {
+        return [
+            self::Pending->value,
+            self::Preparing->value,
+            self::Ready->value,
+        ];
+    }
 }

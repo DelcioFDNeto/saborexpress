@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Orders\DeliverOrderItemAction;
 use App\Actions\Orders\RemoveOrderItemAction;
 use App\Actions\Orders\UpdateOrderItemAction;
 use App\Http\Requests\Orders\UpdateOrderItemRequest;
@@ -14,8 +15,7 @@ class OrderItemController extends Controller
 {
     public function __construct(
         private readonly OrderItemRepositoryInterface $orderItems,
-    ) {
-    }
+    ) {}
 
     public function index()
     {
@@ -47,5 +47,10 @@ class OrderItemController extends Controller
         $order = $removeOrderItem->execute($orderItem);
 
         return new OrderResource($order);
+    }
+
+    public function deliver(OrderItem $orderItem, DeliverOrderItemAction $deliverOrderItem)
+    {
+        return new OrderItemResource($deliverOrderItem->execute($orderItem));
     }
 }

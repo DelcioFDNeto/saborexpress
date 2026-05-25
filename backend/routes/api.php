@@ -52,6 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('orders/{order}/cancel', [OrderController::class, 'cancel']);
         Route::post('orders/{order}/items', [OrderController::class, 'addItem']);
         Route::apiResource('order-items', OrderItemController::class)->only(['index', 'show', 'update', 'destroy']);
+        Route::patch('order-items/{orderItem}/deliver', [OrderItemController::class, 'deliver']);
     });
 
     Route::middleware('role:administrator,cashier')->group(function () {

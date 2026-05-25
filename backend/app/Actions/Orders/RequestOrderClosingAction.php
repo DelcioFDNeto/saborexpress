@@ -32,8 +32,8 @@ class RequestOrderClosingAction
 
             $lockedOrder = $this->recalculateOrderTotal->execute($lockedOrder);
 
-            if ($this->orderItems->hasStatusesForOrder($lockedOrder, OrderItemStatus::unfinishedKitchenValues())) {
-                throw new ConflictHttpException('Order has kitchen items pending or in preparation.');
+            if ($this->orderItems->hasStatusesForOrder($lockedOrder, OrderItemStatus::undeliveredValues())) {
+                throw new ConflictHttpException('Order has items that were not delivered yet.');
             }
 
             if ($lockedOrder->status === OrderStatus::Open->value) {
