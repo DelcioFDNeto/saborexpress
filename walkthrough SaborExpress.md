@@ -603,8 +603,17 @@ Transformamos radicalmente o console gerencial do SaborExpress, solucionando gar
 * **Perfis de Colaboradores com Avatares Personalizados**:
   - Ajustamos a listagem de equipe de um formato comprimido para um layout elegante de duas colunas (cadastro elegante à esquerda, perfis à direita).
   - Cada colaborador exibe um avatar circular com suas iniciais estilizadas e coloridas de forma inteligente com base no papel corporativo (`administrator` em slate, `waiter` em esmeralda, `kitchen` em laranja, `cashier` em roxo, `delivery` em ciano).
-* **Sidebar e Navegação do Cardápio**:
-  - O painel lateral de categorias recebeu desfoque de vidro (`backdrop-blur-md bg-white/90`) e as categorias ativas agora utilizam gradiente metálico elegante (`bg-gradient-to-r from-slate-900 to-slate-800 text-white`). Os botões de controle foram integrados à linha flex, impedindo sobreposição absoluta de textos.
+* **Isolamento Completo de Clientes (Clientes vs Colaboradores)**:
+  - Removemos definitivamente a aba híbrida de "Equipe" que mesclava o quadro de funcionários operacionais com clientes comuns através de sub-abas.
+  - Criamos duas abas principais independentes na barra de navegação lateral (Sidebar) do Dashboard: **Colaboradores** e **Clientes**.
+  - A aba **Colaboradores** destina-se exclusivamente ao staff administrativo e operacional, com o formulário de cadastro "Adicionar Colaborador" fixado à esquerda.
+  - A aba **Clientes** lista de forma independente e limpa os perfis de clientes comuns (`role === 'client'`), ocultando colunas redundantes e exibindo o Painel de Relacionamento contextualizado à esquerda.
+* **Refinamento e Organização da Sidebar e Topbar**:
+  - Alteramos as nomenclaturas dos botões da sidebar do Dashboard para evitar ambiguidade com os botões globais da Topbar do site:
+    * **Cardápio** passou a se chamar **Gestão de Cardápio** (distinguindo-se da visualização pública do cliente).
+    * **Mesas** passou a se chamar **Gestão de Mesas** (distinguindo-se da visão operacional de comandas).
+    * **Equipe** passou a se chamar **Colaboradores**.
+  - Refinamos o cálculo dinâmico de altura (`calc(100vh - 88px)`) no contêiner principal do Dashboard, casando-o milimetricamente com as proporções da Topbar de forma 100% responsiva, eliminando por completo rolagens duplas ou elementos cortados.
 
 ---
 

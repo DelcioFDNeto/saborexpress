@@ -208,7 +208,7 @@ const AuditSkeleton = () => (
 );
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState<'indicators' | 'menu' | 'tables' | 'team' | 'audit'>('indicators');
+  const [activeTab, setActiveTab] = useState<'indicators' | 'menu' | 'tables' | 'team' | 'clients' | 'audit'>('indicators');
   
   // Local silent loading states
   const [kpisLoading, setKpisLoading] = useState(!localStorage.getItem('se_cache_kpis'));
@@ -387,7 +387,7 @@ export default function Dashboard() {
       fetchMenuData();
     } else if (activeTab === 'tables') {
       fetchTablesData();
-    } else if (activeTab === 'team') {
+    } else if (activeTab === 'team' || activeTab === 'clients') {
       fetchUsersData();
     } else if (activeTab === 'audit') {
       fetchAuditData();
@@ -633,10 +633,10 @@ export default function Dashboard() {
     : products.filter(p => p.category_id === selectedCategoryId);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row font-sans">
+    <div className="flex flex-col md:flex-row bg-slate-900 font-sans min-h-[calc(100vh-88px)] md:h-[calc(100vh-88px)] overflow-hidden">
       
       {/* Dynamic Left Sidebar on Desktop */}
-      <aside className="w-full md:w-64 bg-slate-900 text-slate-300 md:min-h-screen flex flex-col border-r border-slate-800">
+      <aside className="w-full md:w-64 bg-slate-900 text-slate-300 flex flex-col border-r border-slate-800 shrink-0 md:h-full">
         <div className="p-6 border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-sabor-primary flex items-center justify-center font-black text-sabor-dark text-lg">S</div>
@@ -668,7 +668,7 @@ export default function Dashboard() {
             }`}
           >
             <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-            Cardápio
+            Gestão de Cardápio
           </button>
 
           <button 
@@ -680,7 +680,7 @@ export default function Dashboard() {
             }`}
           >
             <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-            Mesas
+            Gestão de Mesas
           </button>
 
           <button 
@@ -692,7 +692,19 @@ export default function Dashboard() {
             }`}
           >
             <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-            Equipe
+            Colaboradores
+          </button>
+
+          <button 
+            onClick={() => setActiveTab('clients')}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all duration-200 whitespace-nowrap md:w-full ${
+              activeTab === 'clients' 
+                ? 'bg-sabor-primary text-sabor-dark shadow-lg shadow-sabor-primary/10' 
+                : 'hover:bg-slate-800 hover:text-white'
+            }`}
+          >
+            <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+            Clientes
           </button>
 
           <button 
@@ -710,7 +722,7 @@ export default function Dashboard() {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 p-6 md:p-10 max-h-screen overflow-y-auto">
+      <main className="flex-1 p-6 md:p-10 overflow-y-auto md:h-full bg-gray-50">
         
         {/* ========================================== */}
         {/* TAB 1: INDICATORS */}
@@ -1307,11 +1319,14 @@ export default function Dashboard() {
         {/* ========================================== */}
         {/* TAB 4: TEAM / USERS */}
         {/* ========================================== */}
+        {/* ========================================== */}
+        {/* TAB 4: TEAM / USERS */}
+        {/* ========================================== */}
         {activeTab === 'team' && (
           <div>
             <div className="mb-8">
               <h1 className="text-3xl font-black text-gray-900 tracking-tight">Gestão da Equipe</h1>
-              <p className="text-gray-500 font-medium mt-1">Gerencie os acessos, cargos operacionais e status das contas.</p>
+              <p className="text-gray-500 font-medium mt-1">Gerencie os acessos, cargos operacionais e status das contas dos colaboradores.</p>
             </div>
 
             {/* Password Modal */}
@@ -1337,137 +1352,295 @@ export default function Dashboard() {
             {teamLoading && users.length === 0 ? (
               <TeamSkeleton />
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                
-                {/* Form to Register Collaborator */}
-                <div className="lg:col-span-1">
-                  <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
-                    <h2 className="text-lg font-black text-slate-800 mb-5 tracking-tight">Adicionar Colaborador</h2>
-                    <form onSubmit={handleCreateUserSubmit} className="space-y-5">
-                      <div>
-                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Nome Completo</label>
-                        <input type="text" required value={newUserName} onChange={e => setNewUserName(e.target.value)} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-sabor-primary focus:border-sabor-primary sm:text-sm placeholder-slate-300 font-semibold" placeholder="Ex: Lucas Nazaré" />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">E-mail Corporativo</label>
-                        <input type="email" required value={newUserEmail} onChange={e => setNewUserEmail(e.target.value)} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-sabor-primary focus:border-sabor-primary sm:text-sm placeholder-slate-300 font-semibold" placeholder="lucas@saborexpress.com" />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Senha Provisória</label>
-                        <input type="password" required minLength={6} value={newUserPassword} onChange={e => setNewUserPassword(e.target.value)} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-sabor-primary focus:border-sabor-primary sm:text-sm placeholder-slate-300 font-semibold" placeholder="Mínimo 6 caracteres" />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Cargo / Perfil</label>
-                        <select value={newUserRole} onChange={e => setNewUserRole(e.target.value)} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-sabor-primary focus:border-sabor-primary sm:text-sm bg-white font-extrabold text-slate-700">
-                          <option value="waiter">Garçom</option>
-                          <option value="kitchen">Cozinha</option>
-                          <option value="cashier">Caixa</option>
-                          <option value="delivery">Entregador</option>
-                          <option value="administrator">Administrador</option>
-                        </select>
-                      </div>
-                      <button type="submit" disabled={isCreatingUser} className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-black text-sm transition-all shadow-md mt-2">
-                        {isCreatingUser ? 'Salvando...' : 'Salvar Novo Membro'}
-                      </button>
-                    </form>
-                  </div>
-                </div>
+              (() => {
+                const staffMembers = users.filter(u => u.role !== 'client');
 
-                {/* Members List */}
-                <div className="lg:col-span-2">
-                  <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div className="p-6 md:p-8 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                      <h3 className="font-extrabold text-slate-800 text-lg tracking-tight">Membros da Equipe</h3>
-                      <span className="bg-sabor-light text-sabor-dark px-3 py-1 rounded-lg text-xs font-black">{users.length} ativos</span>
+                return (
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                    
+                    {/* Left Column: Form to Register Colaborador */}
+                    <div className="lg:col-span-1">
+                      <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
+                        <h2 className="text-lg font-black text-slate-800 mb-5 tracking-tight">Adicionar Colaborador</h2>
+                        <form onSubmit={handleCreateUserSubmit} className="space-y-5">
+                          <div>
+                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Nome Completo</label>
+                            <input type="text" required value={newUserName} onChange={e => setNewUserName(e.target.value)} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-sabor-primary focus:border-sabor-primary sm:text-sm placeholder-slate-300 font-semibold" placeholder="Ex: Lucas Nazaré" />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">E-mail Corporativo</label>
+                            <input type="email" required value={newUserEmail} onChange={e => setNewUserEmail(e.target.value)} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-sabor-primary focus:border-sabor-primary sm:text-sm placeholder-slate-300 font-semibold" placeholder="lucas@saborexpress.com" />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Senha Provisória</label>
+                            <input type="password" required minLength={6} value={newUserPassword} onChange={e => setNewUserPassword(e.target.value)} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-sabor-primary focus:border-sabor-primary sm:text-sm placeholder-slate-300 font-semibold" placeholder="Mínimo 6 caracteres" />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Cargo / Perfil</label>
+                            <select value={newUserRole} onChange={e => setNewUserRole(e.target.value)} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-sabor-primary focus:border-sabor-primary sm:text-sm bg-white font-extrabold text-slate-700">
+                              <option value="waiter">Garçom</option>
+                              <option value="kitchen">Cozinha</option>
+                              <option value="cashier">Caixa</option>
+                              <option value="delivery">Entregador</option>
+                              <option value="administrator">Administrador</option>
+                            </select>
+                          </div>
+                          <button type="submit" disabled={isCreatingUser} className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-black text-sm transition-all shadow-md mt-2">
+                            {isCreatingUser ? 'Salvando...' : 'Salvar Novo Membro'}
+                          </button>
+                        </form>
+                      </div>
                     </div>
 
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left border-collapse">
-                        <thead>
-                          <tr className="bg-gray-50/20 border-b border-gray-100">
-                            <th className="px-6 py-4.5 font-bold text-slate-400 text-xs uppercase tracking-wider">Nome</th>
-                            <th className="px-6 py-4.5 font-bold text-slate-400 text-xs uppercase tracking-wider">Email</th>
-                            <th className="px-6 py-4.5 font-bold text-slate-400 text-xs uppercase tracking-wider whitespace-nowrap">Cargo</th>
-                            <th className="px-6 py-4.5 font-bold text-slate-400 text-xs uppercase tracking-wider whitespace-nowrap">Status</th>
-                            <th className="px-6 py-4.5 font-bold text-slate-400 text-xs uppercase tracking-wider text-right whitespace-nowrap">Ações</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {users.map(u => {
-                            const initials = u.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-                            const getRoleDetails = (role: string) => {
-                              switch (role) {
-                                case 'administrator':
-                                  return { label: 'Administrador', bg: 'bg-slate-800 text-white' };
-                                case 'waiter':
-                                  return { label: 'Garçom', bg: 'bg-emerald-500 text-white' };
-                                case 'kitchen':
-                                  return { label: 'Cozinha', bg: 'bg-orange-500 text-white' };
-                                case 'cashier':
-                                  return { label: 'Caixa', bg: 'bg-indigo-500 text-white' };
-                                case 'delivery':
-                                  return { label: 'Entregador', bg: 'bg-cyan-500 text-white' };
-                                default:
-                                  return { label: role, bg: 'bg-slate-500 text-white' };
-                              }
-                            };
-                            const roleInfo = getRoleDetails(u.role);
-                            
-                            return (
-                              <tr key={u.id} className="hover:bg-slate-50/40 transition-colors group">
-                                <td className="px-6 py-5">
-                                  <div className="flex items-center gap-4">
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs uppercase tracking-wider shadow-sm flex-shrink-0 ${roleInfo.bg}`}>
-                                      {initials}
-                                    </div>
-                                    <div>
-                                      <div className="font-extrabold text-slate-800 text-sm tracking-tight">{u.name}</div>
-                                      <div className="text-slate-400 text-[10px] font-bold uppercase tracking-wider lg:hidden mt-0.5">{roleInfo.label}</div>
-                                    </div>
-                                  </div>
-                                </td>
-                                <td className="px-6 py-5 text-xs font-semibold text-slate-600">{u.email}</td>
-                                <td className="px-6 py-5 whitespace-nowrap">
-                                  <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${
-                                    u.role === 'administrator' ? 'bg-slate-100 text-slate-800' :
-                                    u.role === 'waiter' ? 'bg-emerald-50 text-emerald-700' :
-                                    u.role === 'kitchen' ? 'bg-orange-50 text-orange-700' :
-                                    u.role === 'cashier' ? 'bg-indigo-50 text-indigo-700' :
-                                    'bg-cyan-50 text-cyan-700'
-                                  }`}>
-                                    {roleInfo.label}
-                                  </span>
-                                </td>
-                                <td className="px-6 py-5 whitespace-nowrap">
-                                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider whitespace-nowrap ${
-                                    u.is_active ? 'bg-sabor-light text-sabor-dark' : 'bg-rose-50 text-rose-600 border border-rose-100'
-                                  }`}>
-                                    {u.is_active ? 'Ativo' : 'Inativo'}
-                                  </span>
-                                </td>
-                                <td className="px-6 py-5 text-right whitespace-nowrap">
-                                  <div className="flex items-center justify-end gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                                    <button onClick={() => setEditingUser(u)} title="Alterar Senha" className="p-2 hover:bg-slate-100 rounded-xl text-slate-500 hover:text-slate-800 transition-colors">
-                                      🔑
-                                    </button>
-                                    <button onClick={() => handleToggleUserStatus(u)} title={u.is_active ? "Inativar Conta" : "Ativar Conta"} className={`p-2 hover:bg-slate-100 rounded-xl transition-colors ${u.is_active ? 'text-amber-500 hover:text-amber-700' : 'text-emerald-500 hover:text-emerald-700'}`}>
-                                      {u.is_active ? '🚫' : '✅'}
-                                    </button>
-                                    <button onClick={() => handleDeleteUser(u)} title="Excluir Conta Permanentemente" className="p-2 hover:bg-rose-50 rounded-xl text-rose-500 hover:text-rose-700 transition-colors">
-                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                    </button>
-                                  </div>
-                                </td>
+                    {/* Members List */}
+                    <div className="lg:col-span-2">
+                      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div className="p-6 md:p-8 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                          <h3 className="font-extrabold text-slate-800 text-lg tracking-tight">Colaboradores Cadastrados</h3>
+                          <span className="bg-sabor-light text-sabor-dark px-3 py-1 rounded-lg text-xs font-black">
+                            {staffMembers.length} colaboradores
+                          </span>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left border-collapse">
+                            <thead>
+                              <tr className="bg-gray-50/20 border-b border-gray-100">
+                                <th className="px-6 py-4.5 font-bold text-slate-400 text-xs uppercase tracking-wider">Nome</th>
+                                <th className="px-6 py-4.5 font-bold text-slate-400 text-xs uppercase tracking-wider">Email</th>
+                                <th className="px-6 py-4.5 font-bold text-slate-400 text-xs uppercase tracking-wider whitespace-nowrap">Cargo</th>
+                                <th className="px-6 py-4.5 font-bold text-slate-400 text-xs uppercase tracking-wider whitespace-nowrap">Status</th>
+                                <th className="px-6 py-4.5 font-bold text-slate-400 text-xs uppercase tracking-wider text-right whitespace-nowrap">Ações</th>
                               </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                              {staffMembers.length === 0 ? (
+                                <tr>
+                                  <td colSpan={5} className="px-6 py-12 text-center text-slate-400 font-medium">Nenhum colaborador cadastrado.</td>
+                                </tr>
+                              ) : (
+                                staffMembers.map(u => {
+                                  const initials = u.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                                  const getRoleDetails = (role: string) => {
+                                    switch (role) {
+                                      case 'administrator':
+                                        return { label: 'Administrador', bg: 'bg-slate-800 text-white' };
+                                      case 'waiter':
+                                        return { label: 'Garçom', bg: 'bg-emerald-500 text-white' };
+                                      case 'kitchen':
+                                        return { label: 'Cozinha', bg: 'bg-orange-500 text-white' };
+                                      case 'cashier':
+                                        return { label: 'Caixa', bg: 'bg-indigo-500 text-white' };
+                                      case 'delivery':
+                                        return { label: 'Entregador', bg: 'bg-cyan-500 text-white' };
+                                      default:
+                                        return { label: role, bg: 'bg-slate-500 text-white' };
+                                    }
+                                  };
+                                  const roleInfo = getRoleDetails(u.role);
+                                  
+                                  return (
+                                    <tr key={u.id} className="hover:bg-slate-50/40 transition-colors group">
+                                      <td className="px-6 py-5">
+                                        <div className="flex items-center gap-4">
+                                          <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs uppercase tracking-wider shadow-sm flex-shrink-0 ${roleInfo.bg}`}>
+                                            {initials}
+                                          </div>
+                                          <div>
+                                            <div className="font-extrabold text-slate-800 text-sm tracking-tight">{u.name}</div>
+                                            <div className="text-slate-400 text-[10px] font-bold uppercase tracking-wider lg:hidden mt-0.5">{roleInfo.label}</div>
+                                          </div>
+                                        </div>
+                                      </td>
+                                      <td className="px-6 py-5 text-xs font-semibold text-slate-600">{u.email}</td>
+                                      <td className="px-6 py-5 whitespace-nowrap">
+                                        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${
+                                          u.role === 'administrator' ? 'bg-slate-100 text-slate-800' :
+                                          u.role === 'waiter' ? 'bg-emerald-50 text-emerald-700' :
+                                          u.role === 'kitchen' ? 'bg-orange-50 text-orange-700' :
+                                          u.role === 'cashier' ? 'bg-indigo-50 text-indigo-700' :
+                                          'bg-cyan-50 text-cyan-700'
+                                        }`}>
+                                          {roleInfo.label}
+                                        </span>
+                                      </td>
+                                      <td className="px-6 py-5 whitespace-nowrap">
+                                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider whitespace-nowrap ${
+                                          u.is_active ? 'bg-sabor-light text-sabor-dark' : 'bg-rose-50 text-rose-600 border border-rose-100'
+                                        }`}>
+                                          {u.is_active ? 'Ativo' : 'Inativo'}
+                                        </span>
+                                      </td>
+                                      <td className="px-6 py-5 text-right whitespace-nowrap">
+                                        <div className="flex items-center justify-end gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                                          <button onClick={() => setEditingUser(u)} title="Alterar Senha" className="p-2 hover:bg-slate-100 rounded-xl text-slate-500 hover:text-slate-800 transition-colors">
+                                            🔑
+                                          </button>
+                                          <button onClick={() => handleToggleUserStatus(u)} title={u.is_active ? "Inativar Conta" : "Ativar Conta"} className={`p-2 hover:bg-slate-100 rounded-xl transition-colors ${u.is_active ? 'text-amber-500 hover:text-amber-700' : 'text-emerald-500 hover:text-emerald-700'}`}>
+                                            {u.is_active ? '🚫' : '✅'}
+                                          </button>
+                                          <button onClick={() => handleDeleteUser(u)} title="Excluir Conta Permanentemente" className="p-2 hover:bg-rose-50 rounded-xl text-rose-500 hover:text-rose-700 transition-colors">
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                          </button>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  );
+                                })
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
 
+                  </div>
+                );
+              })()
+            )}
+          </div>
+        )}
+
+        {/* ========================================== */}
+        {/* TAB 4.5: CLIENTS */}
+        {/* ========================================== */}
+        {activeTab === 'clients' && (
+          <div>
+            <div className="mb-8">
+              <h1 className="text-3xl font-black text-gray-900 tracking-tight">Gestão de Clientes</h1>
+              <p className="text-gray-500 font-medium mt-1">Gerencie os perfis dos clientes cadastrados no portal do SaborExpress.</p>
+            </div>
+
+            {/* Password Modal */}
+            {editingUser && (
+              <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] flex items-center justify-center p-4">
+                <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl animate-fade-in">
+                  <h3 className="text-xl font-black text-gray-900 mb-2">🔑 Alterar Senha</h3>
+                  <p className="text-sm text-gray-500 mb-4">Atualizar senha de <span className="font-bold text-gray-900">{editingUser.name}</span></p>
+                  <form onSubmit={handleUpdatePassword} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Nova Senha</label>
+                      <input type="password" required minLength={6} value={userPasswordChange} onChange={e => setUserPasswordChange(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-sabor-primary focus:border-sabor-primary sm:text-sm" placeholder="Mínimo 6 caracteres" />
+                    </div>
+                    <div className="flex gap-3 pt-2">
+                      <button type="button" onClick={() => setEditingUser(null)} className="flex-1 py-2.5 border border-gray-300 text-gray-600 rounded-xl font-bold text-sm hover:bg-gray-50 transition-colors">Cancelar</button>
+                      <button type="submit" className="flex-1 py-2.5 bg-sabor-primary text-sabor-dark rounded-xl font-black text-sm hover:bg-sabor-primary/95 transition-all">Alterar Senha</button>
+                    </div>
+                  </form>
+                </div>
               </div>
+            )}
+
+            {teamLoading && users.length === 0 ? (
+              <TeamSkeleton />
+            ) : (
+              (() => {
+                const clients = users.filter(u => u.role === 'client');
+
+                return (
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                    
+                    {/* Left Column: Client Relationship Panel */}
+                    <div className="lg:col-span-1">
+                      <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 relative overflow-hidden flex flex-col justify-between h-full min-h-[340px]">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-amber-50 rounded-bl-full -mr-4 -mt-4 opacity-50 z-0"></div>
+                        <div className="z-10">
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Painel de Relacionamento</span>
+                          <h2 className="text-xl font-black text-slate-800 tracking-tight mb-4">Clientes Registrados</h2>
+                          <p className="text-xs font-semibold text-slate-500 leading-relaxed mb-6">
+                            Estes são os clientes que criaram cadastro no SaborExpress para realizar pedidos de delivery, balcão/retirada ou gerenciar reservas de mesa diretamente no portal online.
+                          </p>
+                        </div>
+                        
+                        <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 flex items-center gap-3.5 z-10">
+                          <span className="text-2xl">🛍️</span>
+                          <div>
+                            <span className="text-slate-400 font-bold text-[9px] uppercase tracking-wider block">Canal de Compras</span>
+                            <span className="text-slate-700 font-extrabold text-xs block">Portal do Cliente</span>
+                          </div>
+                        </div>
+                        
+                        <div className="text-[10px] text-slate-400 font-bold mt-4 z-10">
+                          💡 Contas de clientes são auto-gerenciáveis e protegidas por criptografia.
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Clients List */}
+                    <div className="lg:col-span-2">
+                      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div className="p-6 md:p-8 border-b border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                          <h2 className="font-black text-lg text-slate-800 tracking-tight">Clientes Cadastrados</h2>
+                          <span className="bg-sabor-light text-sabor-dark px-3 py-1 rounded-lg text-xs font-black whitespace-nowrap">
+                            {clients.length} clientes
+                          </span>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left border-collapse">
+                            <thead>
+                              <tr className="bg-gray-50/20 border-b border-gray-100">
+                                <th className="px-6 py-4.5 font-bold text-slate-400 text-xs uppercase tracking-wider">Nome</th>
+                                <th className="px-6 py-4.5 font-bold text-slate-400 text-xs uppercase tracking-wider">Email</th>
+                                <th className="px-6 py-4.5 font-bold text-slate-400 text-xs uppercase tracking-wider whitespace-nowrap">Status</th>
+                                <th className="px-6 py-4.5 font-bold text-slate-400 text-xs uppercase tracking-wider text-right whitespace-nowrap">Ações</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                              {clients.length === 0 ? (
+                                <tr>
+                                  <td colSpan={4} className="px-6 py-12 text-center text-slate-400 font-medium">Nenhum cliente cadastrado.</td>
+                                </tr>
+                              ) : (
+                                clients.map(u => {
+                                  const initials = u.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                                  
+                                  return (
+                                    <tr key={u.id} className="hover:bg-slate-50/40 transition-colors group">
+                                      <td className="px-6 py-5">
+                                        <div className="flex items-center gap-4">
+                                          <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs uppercase tracking-wider shadow-sm flex-shrink-0 bg-amber-500 text-white">
+                                            {initials}
+                                          </div>
+                                          <div>
+                                            <div className="font-extrabold text-slate-800 text-sm tracking-tight">{u.name}</div>
+                                          </div>
+                                        </div>
+                                      </td>
+                                      <td className="px-6 py-5 text-xs font-semibold text-slate-600">{u.email}</td>
+                                      <td className="px-6 py-5 whitespace-nowrap">
+                                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider whitespace-nowrap ${
+                                          u.is_active ? 'bg-sabor-light text-sabor-dark' : 'bg-rose-50 text-rose-600 border border-rose-100'
+                                        }`}>
+                                          {u.is_active ? 'Ativo' : 'Inativo'}
+                                        </span>
+                                      </td>
+                                      <td className="px-6 py-5 text-right whitespace-nowrap">
+                                        <div className="flex items-center justify-end gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                                          <button onClick={() => setEditingUser(u)} title="Alterar Senha" className="p-2 hover:bg-slate-100 rounded-xl text-slate-500 hover:text-slate-800 transition-colors">
+                                            🔑
+                                          </button>
+                                          <button onClick={() => handleToggleUserStatus(u)} title={u.is_active ? "Inativar Conta" : "Ativar Conta"} className={`p-2 hover:bg-slate-100 rounded-xl transition-colors ${u.is_active ? 'text-amber-500 hover:text-amber-700' : 'text-emerald-500 hover:text-emerald-700'}`}>
+                                            {u.is_active ? '🚫' : '✅'}
+                                          </button>
+                                          <button onClick={() => handleDeleteUser(u)} title="Excluir Conta Permanentemente" className="p-2 hover:bg-rose-50 rounded-xl text-rose-500 hover:text-rose-700 transition-colors">
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                          </button>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  );
+                                })
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                );
+              })()
             )}
           </div>
         )}
