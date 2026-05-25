@@ -7,26 +7,24 @@ use Illuminate\Http\Request;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
+use App\Repositories\Products\ProductRepositoryInterface;
 use Illuminate\Http\Response;
 
 class ProductController extends Controller
 {
+    public function __construct(
+        private readonly ProductRepositoryInterface $products,
+    ) {
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        $query = Product::with('category');
-
-        if ($request->has('category_id')) {
-            $query->where('category_id', $request->category_id);
-        }
-
-        if ($request->has('is_available')) {
-            $query->where('is_available', filter_var($request->is_available, FILTER_VALIDATE_BOOLEAN));
-        }
-
-        return ProductResource::collection($query->paginate(30));
+        return ProductResource::collection(
+            $this->products->paginateWithCategory($request->only(['category_id', 'is_available']))
+        );
     }
 
     /**
@@ -34,9 +32,7 @@ class ProductController extends Controller
      */
     public function store(StoreProductRequest $request)
     {
-        $product = Product::create($request->validated());
-        $product->load('category');
-        return new ProductResource($product);
+        return new ProductResource($this->products->create($request->validated()));
     }
 
     /**
@@ -44,8 +40,7 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
-        $product->load('category');
-        return new ProductResource($product);
+        return new ProductResource($this->products->loadCategory($product));
     }
 
     /**
@@ -53,9 +48,7 @@ class ProductController extends Controller
      */
     public function update(UpdateProductRequest $request, Product $product)
     {
-        $product->update($request->validated());
-        $product->load('category');
-        return new ProductResource($product);
+        return new ProductResource($this->products->update($product, $request->validated()));
     }
 
     /**
@@ -63,7 +56,7 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
-        $product->delete();
+        $this->products->delete($product);
         return response()->json(null, Response::HTTP_NO_CONTENT);
     }
 }
