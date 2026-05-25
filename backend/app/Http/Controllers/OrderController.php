@@ -62,7 +62,26 @@ class OrderController extends Controller
      */
     public function update(Request $request, Order $order)
     {
-        //
+        // Valida se status enviado é permitido
+        $validated = $request->validate([
+            'status' => 'required|string|in:Aberta,Fechada,Finalizada'
+        ]);
+
+        // Se a comanda já estiver finalizada, impede alteração
+        if ($order->status === 'Finalizada') {
+            return response()->json([
+                'message' => 'Cannot update a finished order.'
+            ], 422);
+        }
+
+        $order->update([
+            'status' => $validated['status']
+        ]);
+
+        return response()->json([
+            'message' => 'Order status updated successfully.',
+            'data' => $order
+        ], 200);
     }
 
     /**
