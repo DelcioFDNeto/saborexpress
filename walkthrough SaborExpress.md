@@ -242,13 +242,19 @@ Para ampliar os canais de atendimento, implementamos o fluxo de **Retirada no Es
 
 ---
 
-## 12. Autoatendimento e Reservas Online
+## 12. Autoatendimento e Reservas Online com Mapa Interativo
 
-O ecossistema se expandiu para oferecer poder diretamente às mãos dos clientes fiéis.
+O ecossistema se expandiu para oferecer poder diretamente às mãos dos clientes fiéis, tornando a experiência de agendamento altamente visual e engajadora.
 
-- **Painel do Cliente (`Minhas Reservas`)**: Clientes devidamente cadastrados logados com seu perfil têm acesso a uma interface web intuitiva onde conseguem enxergar o mapa de mesas do salão.
-- **Reserva Online Real-time**: Com um clique de calendário, os clientes podem reservar previamente mesas, adicionando notas e pedidos especiais (Ex: cadeiras de bebê).
-- O backend processa validações complexas, negando choques de horário (com 2 horas de tolerância entre ocupantes da mesma mesa), e as informações chegam na mesma tela dos recepcionistas do restaurante.
+* **Painel do Cliente (`Minhas Reservas`)**: Clientes logados têm acesso a um painel amplo e responsivo em `/minhas-reservas` (representado por [ClientReservations.tsx](file:///c:/Projetos/saborexpress/frontend/src/pages/ClientReservations.tsx)).
+* **Mapa de Mesas Interativo em Tempo Real**: Substituímos a seleção tradicional via dropdown de texto sem contexto por um **gorgeous mapa de mesas interativo e reativo** integrado na própria página de nova reserva.
+* **Visualização Clara e Codificada por Cores**: Cada mesa é representada como um card físico com hover effects premium e estados de tempo real sincronizados com o salão físico do restaurante:
+  - **Livre (Verde Suave)**: Indica mesa livre e totalmente pronta para agendamentos.
+  - **Ocupada / Fechamento (Vermelho Suave)**: Sinalizada com a badge *"Ocupada Agora"*, indicando que a mesa possui clientes consumindo no salão neste instante.
+  - **Reservada (Azul Suave)**: Sinalizada com a badge *"Reservada"*, indicando compromisso ativo para a mesa.
+  - **Limpeza (Cinza Suave)**: Sinalizada com a badge animada *"Limpeza"*, mostrando processo de higienização ativo.
+* **Seleção Dinâmica com Sincronização Bidirecional**: O cliente pode clicar diretamente sobre a mesa desejada no mapa para selecioná-la. A mesa ganha um contorno verde esmeralda brilhante, uma badge pulsante de marcação de seleção e um *checkmark* (✓), sincronizando instantaneamente com o campo oculto do formulário para envio seguro.
+* **Prevenção de Conflitos e Regras de Negócio**: O backend processa validações complexas, negando choques de horário (com 2 horas de tolerância entre ocupantes da mesma mesa), e as informações chegam na mesma tela dos recepcionistas e garçons do restaurante para organização.
 
 ---
 
