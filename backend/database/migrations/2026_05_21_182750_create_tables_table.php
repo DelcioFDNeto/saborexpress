@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('number')->unique();
             $table->integer('capacity')->default(4);
-            $table->enum('status', ['Livre', 'Ocupada', 'Reservada', 'Aguardando Limpeza'])->default('Livre');
+            $table->enum('status', ['Livre', 'Ocupada', 'Reservada', 'Fechamento'])->default('Livre');
             $table->timestamps();
             $table->softDeletes();
         });

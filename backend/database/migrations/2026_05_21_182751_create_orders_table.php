@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('table_id')->nullable()->constrained()->nullOnDelete(); // Nullable for delivery
             $table->foreignId('user_id')->constrained(); // Garçom ou Atendente que abriu
-            $table->enum('status', ['Aberta', 'Fechada', 'Finalizada'])->default('Aberta');
+            $table->enum('status', ['Aberta', 'Fechamento', 'Paga', 'Cancelada'])->default('Aberta');
             $table->enum('type', ['Mesa', 'Delivery', 'Takeout'])->default('Mesa');
             $table->string('customer_name')->nullable();
             $table->string('customer_phone')->nullable();

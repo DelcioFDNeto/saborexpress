@@ -1,0 +1,21 @@
+<?php
+
+namespace App\Repositories\Products;
+
+use App\Models\Product;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+
+interface ProductRepositoryInterface
+{
+    public function paginateWithCategory(array $filters = [], int $perPage = 30): LengthAwarePaginator;
+
+    public function create(array $data): Product;
+
+    public function findOrFail(int $id): Product;
+
+    public function loadCategory(Product $product): Product;
+
+    public function update(Product $product, array $data): Product;
+
+    public function delete(Product $product): void;
+}
