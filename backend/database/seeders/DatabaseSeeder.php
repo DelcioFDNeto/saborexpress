@@ -10,9 +10,6 @@ class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
 
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
         $roles = [
@@ -25,17 +22,20 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($roles as $role => $email) {
-            \App\Models\User::factory()->create([
-                'name' => ucfirst($role) . ' User',
-                'email' => $email,
-                'password' => bcrypt('password'),
-                'role' => $role,
-            ]);
+            User::updateOrCreate(
+                ['email' => $email],
+                [
+                    'name' => ucfirst($role).' User',
+                    'password' => bcrypt('password'),
+                    'role' => $role,
+                ]
+            );
         }
 
         $this->call([
             TableSeeder::class,
-            MenuSeeder::class,
+            CategorySeeder::class,
+            ProductSeeder::class,
         ]);
     }
 }
