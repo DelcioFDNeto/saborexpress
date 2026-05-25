@@ -141,8 +141,22 @@ Exigem papel `administrator`.
 
 Filtros: `event`, `user_id`, `auditable_type`, `auditable_id`, `date_from`, `date_to`, `per_page`.
 
-## Ainda Pendente
+## Consumo da API no Frontend
 
-- Retirada ainda não possui endpoints próprios.
-- Fluxo completo de caixa com abertura, fechamento, sangria, suprimento e estorno ainda não foi implementado.
-- Relatórios financeiros avançados ainda não foram implementados.
+Todo o frontend consome a API através de um cliente Axios centralizado localizado em [api.ts](file:///c:/Users/ShinerayADM/Projetos/saborexpress/frontend/src/lib/api.ts).
+
+### Características do Cliente
+- **Base URL automática**: Configurado com `import.meta.env.VITE_API_URL || 'http://localhost:8000'` e prefixo `/api` embutido.
+- **Inserção automática do Token**: O token de autenticação (Sanctum) é inserido de forma automática e dinâmica nos headers de todas as requisições HTTP através da função `setAuthToken(token)`.
+- **Desacoplamento**: Todas as chamadas para `/categories`, `/products`, `/orders`, `/tables` e `/kitchen` agora utilizam a instância `api` centralizada em vez de importações ad-hoc do Axios.
+
+> [!NOTE]
+> O arquivo [DeliveryClient.tsx](file:///c:/Users/ShinerayADM/Projetos/saborexpress/frontend/src/pages/DeliveryClient.tsx) é a única exceção que mantém a importação direta de `axios` exclusivamente para consultar a API pública e externa do ViaCEP (`https://viacep.com.br/ws/...`), preservando o cliente interno do SaborExpress de interferências de CORS ou cabeçalhos globais.
+
+## Próximos Passos & Melhorias Pendentes
+
+- **Controle de Caixa Avançado**: Telas e endpoints completos para abertura de caixa, fechamento diário, sangria (retirada de valores), suprimento (aporte de troco) e estorno operacional.
+- **Fluxo de Retirada (Takeout)**: Adicionar suporte e endpoints dedicados a pedidos de retirada pelo próprio cliente no estabelecimento.
+- **Telas Administrativas de Recursos**: Completar interfaces administrativas no frontend para o gerenciamento direto (CRUD) de usuários (com bloqueio/ativação), categorias, produtos e mesas.
+- **Testes de Integração**: Implementar suítes de testes automatizados no backend e testes de ponta a ponta no frontend para cobertura de fluxos críticos (comanda, caixa e entregas).
+- **WebSocket/Broadcast Real**: Habilitar notificações instantâneas no painel da cozinha (KDS) e garçons através de Websockets nativos utilizando o Echo integrado.

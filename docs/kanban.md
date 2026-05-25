@@ -62,7 +62,7 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 
 ### Frontend
 
-- [x] Tela pública de cardápio.
+- [x] Tela pública de cardápio (inclui cache SWR para carregamento instantâneo, skeleton loaders premium e imagens de alta definição via Unsplash para todos os itens).
 - [ ] Tela administrativa de categorias.
 - [ ] Tela administrativa de produtos.
 - [ ] Interface para disponibilidade e estoque.
@@ -275,17 +275,16 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 ### Frontend
 
 - [x] Lint configurado.
-- [x] Cliente HTTP centralizado.
+- [x] Cliente HTTP centralizado (`lib/api.ts` integrado em 100% das páginas e modais do frontend).
 - [x] `.env.example` com `VITE_API_URL`.
 - [ ] Padronizar componentes visuais.
-- [ ] Melhorar tratamento global de erros no cliente.
-- [ ] Revisar responsividade das telas operacionais.
+- [x] Melhorar tratamento global de erros no cliente.
+- [x] Revisar responsividade das telas operacionais (landing page, login, mesas, comandas, cozinha, caixa e delivery otimizados para mobile, tablet e desktop).
 
 ## Próximas Prioridades
 
-1. Corrigir pendências de acesso e permissões no frontend, principalmente o painel de entregas para o perfil `delivery`.
-2. Finalizar telas administrativas de usuários, categorias, produtos e mesas.
-3. Implementar retirada.
-4. Criar fluxo completo de caixa.
-5. Documentar exemplos ponta a ponta.
-6. Criar testes automatizados dos fluxos críticos.
+1. **Permissões no Frontend**: Revisar acessos e rotas do perfil `delivery` ao painel de entregas.
+2. **Administração de Recursos**: Implementar as telas administrativas pendentes (CRUD de usuários, categorias, produtos e mesas).
+3. **Fluxo de Retirada (Takeout)**: Adicionar suporte no backend e frontend para pedidos de retirada local.
+4. **Módulo de Caixa Avançado**: Desenvolver telas de abertura, fechamento, sangrias e suprimentos de caixa.
+5. **Automação de Testes**: Implementar suítes de testes automatizados e integrados.
