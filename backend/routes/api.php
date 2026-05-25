@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KitchenController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrderItemController;
@@ -11,9 +12,14 @@ use App\Http\Controllers\TableController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+// Public routes
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']);
 Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
 Route::apiResource('products', ProductController::class)->only(['index', 'show']);
+
+// Delivery (public - external clients)
+Route::post('orders/delivery', [OrderController::class, 'storeDelivery']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
@@ -27,12 +33,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('categories', CategoryController::class)->except(['index', 'show']);
         Route::apiResource('products', ProductController::class)->except(['index', 'show']);
         Route::apiResource('tables', TableController::class)->only(['store', 'update', 'destroy']);
+        Route::get('dashboard', [DashboardController::class, 'index']);
     });
 
     Route::middleware('role:administrator,waiter,cashier')->group(function () {
         Route::apiResource('tables', TableController::class)->only(['index', 'show']);
         Route::post('tables/{table}/open', [TableController::class, 'openTable']);
         Route::post('tables/{table}/release', [TableController::class, 'release']);
+        Route::post('tables/{table}/close-request', [TableController::class, 'closeRequest']);
+        Route::post('tables/{table}/transfer', [TableController::class, 'transfer']);
+        Route::post('tables/{table}/merge', [TableController::class, 'merge']);
         Route::get('tables/{table}/active-order', [OrderController::class, 'activeForTable']);
         Route::apiResource('orders', OrderController::class)->only(['index', 'show', 'update']);
         Route::post('orders/{order}/request-closing', [OrderController::class, 'requestClosing']);
@@ -44,6 +54,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:administrator,cashier')->group(function () {
         Route::apiResource('payments', PaymentController::class)->only(['index', 'show']);
         Route::post('orders/{order}/payments', [PaymentController::class, 'store']);
+        Route::post('orders/{order}/split', [PaymentController::class, 'simulateSplit']);
+        Route::post('orders/{order}/pay', [PaymentController::class, 'pay']);
     });
 
     Route::middleware('role:administrator,kitchen')->group(function () {
@@ -52,3 +64,4 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('kitchen/order-items/{orderItem}/mark-ready', [KitchenController::class, 'markOrderItemReady']);
     });
 });
+

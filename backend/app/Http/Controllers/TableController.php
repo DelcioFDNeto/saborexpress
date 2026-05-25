@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Tables\ReleaseTableAction;
+use App\Enums\OrderStatus;
+use App\Enums\TableStatus;
 use App\Models\Table;
 use App\Repositories\Orders\OrderRepositoryInterface;
 use App\Repositories\Tables\TableRepositoryInterface;
@@ -138,4 +140,115 @@ class TableController extends Controller
     {
         return response()->json($releaseTable->execute($table));
     }
+
+    /**
+     * Pré-fechamento de conta (Req 5.1)
+     */
+    public function closeRequest(Request $request, Table $table)
+    {
+        $activeOrder = $this->orders->findActiveForTableId($table->id);
+        if (!$activeOrder) {
+            return response()->json(['message' => 'Mesa não possui comanda ativa'], 400);
+        }
+
+        if ($activeOrder->status !== OrderStatus::Open->value) {
+            return response()->json(['message' => 'Comanda já está em processo de fechamento ou finalizada'], 400);
+        }
+
+        DB::transaction(function () use ($activeOrder, $table) {
+            $this->orders->recalculateTotal($activeOrder);
+            $activeOrder->service_fee = $activeOrder->total_amount * 0.10;
+            $activeOrder->save();
+
+            $this->orders->updateStatus($activeOrder, OrderStatus::Closing->value);
+            $this->tables->update($table, ['status' => TableStatus::Closing->value]);
+        });
+
+        return response()->json(['message' => 'Pré-fechamento solicitado', 'order' => $activeOrder->fresh()]);
+    }
+
+    /**
+     * Transferir mesa (Req 2.4)
+     */
+    public function transfer(Request $request, Table $table)
+    {
+        $validated = $request->validate([
+            'target_table_id' => 'required|exists:tables,id',
+        ]);
+
+        if ($table->id == $validated['target_table_id']) {
+            return response()->json(['message' => 'Mesa de destino deve ser diferente da atual'], 400);
+        }
+
+        $result = DB::transaction(function () use ($table, $validated) {
+            $sourceTable = $this->tables->lockById($table->id);
+            $targetTable = $this->tables->lockById($validated['target_table_id']);
+
+            if ($targetTable->status !== TableStatus::Free->value) {
+                return ['status' => 400, 'body' => ['message' => 'Mesa de destino não está livre']];
+            }
+
+            $order = $this->orders->findActiveForTableId($sourceTable->id, lock: true);
+            if (!$order) {
+                return ['status' => 400, 'body' => ['message' => 'Mesa atual não possui comanda ativa']];
+            }
+
+            $this->tables->update($targetTable, ['status' => TableStatus::Occupied->value]);
+            $this->tables->update($sourceTable, ['status' => TableStatus::Free->value]);
+
+            $order->table_id = $targetTable->id;
+            $order->save();
+
+            return ['status' => 200, 'body' => ['message' => 'Mesa transferida com sucesso', 'new_table_id' => $targetTable->id]];
+        });
+
+        return response()->json($result['body'], $result['status']);
+    }
+
+    /**
+     * Agrupar mesas / Juntar comandas (Req 2.4)
+     */
+    public function merge(Request $request, Table $table)
+    {
+        $validated = $request->validate([
+            'target_table_id' => 'required|exists:tables,id',
+        ]);
+
+        if ($table->id == $validated['target_table_id']) {
+            return response()->json(['message' => 'Mesa de destino deve ser diferente da atual'], 400);
+        }
+
+        $result = DB::transaction(function () use ($table, $validated) {
+            $sourceTable = $this->tables->lockById($table->id);
+            $targetTable = $this->tables->lockById($validated['target_table_id']);
+
+            if ($targetTable->status !== TableStatus::Occupied->value && $targetTable->status !== TableStatus::Closing->value) {
+                return ['status' => 400, 'body' => ['message' => 'Mesa de destino deve estar ocupada para agrupar']];
+            }
+
+            $sourceOrder = $this->orders->findActiveForTableId($sourceTable->id, lock: true);
+            $targetOrder = $this->orders->findActiveForTableId($targetTable->id, lock: true);
+
+            if (!$sourceOrder || !$targetOrder) {
+                return ['status' => 400, 'body' => ['message' => 'Ambas as mesas devem possuir comandas ativas para agrupar']];
+            }
+
+            // Transfere itens da comanda de origem para a de destino
+            DB::table('order_items')
+                ->where('order_id', $sourceOrder->id)
+                ->update(['order_id' => $targetOrder->id]);
+
+            // Recalcula totais
+            $this->orders->recalculateTotal($targetOrder);
+
+            // Cancela comanda de origem e libera mesa
+            $this->orders->updateStatus($sourceOrder, OrderStatus::Canceled->value);
+            $this->tables->update($sourceTable, ['status' => TableStatus::Free->value]);
+
+            return ['status' => 200, 'body' => ['message' => 'Mesas agrupadas com sucesso', 'new_table_id' => $targetTable->id]];
+        });
+
+        return response()->json($result['body'], $result['status']);
+    }
 }
+

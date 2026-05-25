@@ -3,6 +3,13 @@ import { useContext } from 'react';
 import Menu from './pages/Menu';
 import Tables from './pages/Tables';
 import Login from './pages/Login';
+import Register from './pages/Register';
+import OrderDetails from './pages/OrderDetails';
+import Kitchen from './pages/Kitchen';
+import Cashier from './pages/Cashier';
+import DeliveryClient from './pages/DeliveryClient';
+import DeliveryPanel from './pages/DeliveryPanel';
+import Dashboard from './pages/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider, AuthContext } from './contexts/AuthContext';
 
@@ -27,7 +34,19 @@ function Navigation() {
           )}
 
           {isAuthenticated && (user?.role === 'administrator' || user?.role === 'kitchen') && (
-            <a href="#" className="text-gray-600 font-medium hover:text-emerald-600 transition-colors">Cozinha</a>
+            <Link to="/cozinha" className="text-gray-600 font-medium hover:text-emerald-600 transition-colors">Cozinha</Link>
+          )}
+
+          {isAuthenticated && (user?.role === 'administrator' || user?.role === 'cashier') && (
+            <Link to="/caixa" className="text-gray-600 font-medium hover:text-emerald-600 transition-colors">Caixa</Link>
+          )}
+
+          {isAuthenticated && (user?.role === 'administrator' || user?.role === 'kitchen') && (
+            <Link to="/entregas" className="text-gray-600 font-medium hover:text-emerald-600 transition-colors">Entregas</Link>
+          )}
+
+          {isAuthenticated && user?.role === 'administrator' && (
+            <Link to="/dashboard" className="text-amber-600 font-bold hover:text-amber-700 transition-colors bg-amber-50 px-3 py-1 rounded-lg">Painel</Link>
           )}
 
           {isAuthenticated ? (
@@ -54,13 +73,29 @@ function App() {
           {/* Main Content */}
           <main className="flex-1">
             <Routes>
-              {/* Public route */}
+              {/* Public routes */}
               <Route path="/" element={<Menu />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/delivery" element={<DeliveryClient />} />
 
               {/* Protected Routes */}
+              <Route element={<ProtectedRoute allowedRoles={['administrator']} />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+              </Route>
+
+              <Route element={<ProtectedRoute allowedRoles={['administrator', 'kitchen']} />}>
+                <Route path="/cozinha" element={<Kitchen />} />
+                <Route path="/entregas" element={<DeliveryPanel />} />
+              </Route>
+
               <Route element={<ProtectedRoute allowedRoles={['administrator', 'waiter', 'cashier']} />}>
                 <Route path="/mesas" element={<Tables />} />
+                <Route path="/mesas/:tableId" element={<OrderDetails />} />
+              </Route>
+
+              <Route element={<ProtectedRoute allowedRoles={['administrator', 'cashier']} />}>
+                <Route path="/caixa" element={<Cashier />} />
               </Route>
             </Routes>
           </main>
@@ -70,4 +105,4 @@ function App() {
   );
 }
 
-export default App
+export default App;

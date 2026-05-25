@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 interface ActiveOrder {
@@ -20,6 +21,7 @@ interface TableResponse {
 }
 
 export default function Tables() {
+  const navigate = useNavigate();
   const [tables, setTables] = useState<Table[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -103,11 +105,14 @@ export default function Tables() {
           {tables.map(table => (
             <div 
               key={table.id} 
-              onClick={() => table.status === 'Livre' && setSelectedTable(table)}
+              onClick={() => {
+                if (table.status === 'Livre') setSelectedTable(table);
+                else if (table.status === 'Ocupada' || table.status === 'Fechamento') navigate(`/mesas/${table.id}`);
+              }}
               className={`
                 relative p-6 rounded-2xl border-2 flex flex-col items-center justify-center gap-2
                 transition-all duration-200 
-                ${table.status === 'Livre' ? 'cursor-pointer hover:shadow-lg hover:-translate-y-1' : 'cursor-default opacity-90'}
+                ${table.status === 'Livre' ? 'cursor-pointer hover:shadow-lg hover:-translate-y-1' : 'cursor-pointer hover:shadow-lg opacity-90'}
                 ${getStatusColor(table.status)}
               `}
             >

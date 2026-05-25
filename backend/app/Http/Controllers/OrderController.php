@@ -10,8 +10,11 @@ use App\Http\Requests\Orders\AddOrderItemRequest;
 use App\Http\Requests\Orders\UpdateOrderStatusRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
+use App\Models\Product;
 use App\Models\Table;
 use App\Repositories\Orders\OrderRepositoryInterface;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -29,6 +32,57 @@ class OrderController extends Controller
     public function store()
     {
         abort(405, 'Orders are opened through table operations.');
+    }
+
+    /**
+     * Portal simplificado (Delivery) - Store order from external cart.
+     */
+    public function storeDelivery(Request $request)
+    {
+        $validated = $request->validate([
+            'customer_name' => 'required|string|max:255',
+            'customer_phone' => 'required|string|max:30',
+            'delivery_address' => 'required|string|max:500',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.notes' => 'nullable|string',
+        ]);
+
+        $order = DB::transaction(function () use ($validated) {
+            $order = $this->orders->create([
+                'type' => 'Delivery',
+                'status' => OrderStatus::Open->value,
+                'delivery_status' => 'Aguardando',
+                'customer_name' => $validated['customer_name'],
+                'customer_phone' => $validated['customer_phone'],
+                'delivery_address' => $validated['delivery_address'],
+                'user_id' => 1,
+            ]);
+
+            $totalAmount = 0;
+
+            foreach ($validated['items'] as $itemData) {
+                $product = Product::findOrFail($itemData['product_id']);
+
+                $order->items()->create([
+                    'product_id' => $product->id,
+                    'quantity' => $itemData['quantity'],
+                    'unit_price' => $product->price,
+                    'notes' => $itemData['notes'] ?? null,
+                    'status' => 'Pendente',
+                ]);
+
+                $totalAmount += ($product->price * $itemData['quantity']);
+            }
+
+            $order->total_amount = $totalAmount;
+            $order->save();
+
+            return $order;
+        });
+
+        return (new OrderResource($this->orders->loadDetails($order)))->response()->setStatusCode(201);
     }
 
     public function activeForTable(Table $table)
@@ -91,3 +145,4 @@ class OrderController extends Controller
         abort(405, 'Orders are closed or canceled by dedicated operations.');
     }
 }
+

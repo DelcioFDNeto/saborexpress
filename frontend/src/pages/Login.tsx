@@ -1,6 +1,6 @@
 import { useState, useContext } from 'react';
 import { AuthContext } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 
 export default function Login() {
@@ -98,10 +98,16 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 transition-colors"
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors"
               >
-                {loading ? 'Autenticando...' : 'Entrar no Sistema'}
+                {loading ? 'Entrando...' : 'Entrar no Sistema'}
               </button>
+            </div>
+
+            <div className="text-center mt-4 border-t border-gray-100 pt-6">
+              <Link to="/register" className="text-sm font-medium text-emerald-600 hover:text-emerald-500">
+                Ainda não tem conta? Cadastre-se
+              </Link>
             </div>
           </form>
         </div>
