@@ -8,7 +8,7 @@ services:
       POSTGRES_USER: saborexpress
       POSTGRES_PASSWORD: saborexpress
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -17,5 +17,56 @@ services:
       timeout: 5s
       retries: 5
 
+  backend:
+    build:
+      context: ./backend
+    container_name: saborexpress-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      APP_NAME: SaborExpress
+      APP_ENV: local
+      APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8000
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: saborexpress
+      DB_USERNAME: saborexpress
+      DB_PASSWORD: saborexpress
+      CACHE_STORE: file
+      SESSION_DRIVER: file
+      QUEUE_CONNECTION: sync
+      RUN_MIGRATIONS: "true"
+      RUN_SEEDERS: "true"
+    ports:
+      - "8000:80"
+    volumes:
+      - ./backend:/var/www/html
+      - backend-vendor:/var/www/html/vendor
+      - backend-storage:/var/www/html/storage
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: saborexpress-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      VITE_API_URL: http://localhost:8000
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - frontend-node-modules:/app/node_modules
+    command: npm run dev -- --host 0.0.0.0
+
 volumes:
   postgres-data:
+  backend-vendor:
+  backend-storage:
+  frontend-node-modules:

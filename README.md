@@ -30,7 +30,7 @@ Essa organização facilita:
 - executar comandos a partir da raiz;
 - manter documentação única do projeto;
 - versionar backend e frontend de forma coordenada;
-- compartilhar infraestrutura local, como o banco PostgreSQL via Docker Compose;
+- compartilhar infraestrutura local via Docker Compose, com opção de subir tudo ou apenas o banco PostgreSQL;
 - acompanhar a evolução dos módulos em um único fluxo.
 
 ## Tecnologias
@@ -45,7 +45,7 @@ Essa organização facilita:
 - Repository pattern
 - Form Requests
 - API Resources
-- Docker para deploy e ambiente local auxiliar
+- Docker para ambiente local completo ou banco isolado
 
 ### Frontend
 
@@ -93,15 +93,55 @@ Essa organização facilita:
 
 ## Executando o projeto
 
-### Banco de dados local
+### Tudo via Docker
 
 Na raiz do projeto, execute:
 
 ```bash
-npm run dev:db
+docker compose up -d --build
 ```
 
-Esse comando sobe um PostgreSQL local com as seguintes credenciais:
+Ou use o script equivalente:
+
+```bash
+npm run docker:up
+```
+
+Esse comando sobe:
+
+- PostgreSQL em `localhost:5432`;
+- backend Laravel em `http://localhost:8000`;
+- frontend Vite em `http://localhost:5173`.
+
+O container do backend aguarda o PostgreSQL ficar saudável, executa `php artisan migrate --force` e executa `php artisan db:seed --force`. Os seeders são idempotentes, então podem rodar novamente sem duplicar os dados base.
+
+Para acompanhar os logs:
+
+```bash
+docker compose logs -f
+```
+
+Para parar os containers:
+
+```bash
+docker compose down
+```
+
+### Apenas o banco via Docker
+
+Caso queira rodar backend e frontend localmente, mas manter apenas o PostgreSQL no Docker, execute:
+
+```bash
+docker compose up -d postgres
+```
+
+Ou use:
+
+```bash
+npm run docker:db
+```
+
+Esse comando sobe somente o PostgreSQL local com as seguintes credenciais:
 
 ```env
 DB_HOST=127.0.0.1
@@ -111,7 +151,16 @@ DB_USERNAME=saborexpress
 DB_PASSWORD=saborexpress
 ```
 
-### Backend
+Se a porta `5432` já estiver em uso na sua máquina, defina outra porta local antes de subir a stack completa ou apenas o banco:
+
+```powershell
+$env:POSTGRES_PORT=5433
+docker compose up -d --build
+```
+
+Para subir somente o banco nessa porta alternativa, troque o último comando por `docker compose up -d postgres`.
+
+### Backend local
 
 ```bash
 cd backend
@@ -128,7 +177,7 @@ No Windows PowerShell, use:
 Copy-Item .env.example .env
 ```
 
-### Frontend
+### Frontend local
 
 ```bash
 cd frontend
@@ -156,6 +205,10 @@ npm run dev          # executa backend e frontend em paralelo
 npm run dev:backend  # executa php artisan serve em backend/
 npm run dev:frontend # executa Vite em frontend/
 npm run dev:db       # sobe o PostgreSQL local
+npm run docker:up    # sobe PostgreSQL, backend e frontend via Docker
+npm run docker:db    # sobe somente o PostgreSQL via Docker
+npm run docker:down  # para os containers do Docker Compose
+npm run docker:logs  # acompanha logs dos containers
 npm run build        # gera build do frontend
 npm run lint         # executa lint do frontend
 npm run migrate      # executa migrations do Laravel
