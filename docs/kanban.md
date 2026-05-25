@@ -198,18 +198,21 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 
 - [x] Enum `OrderType` com `Delivery` e `Takeout`.
 - [x] Campos básicos em `orders` para pedido sem mesa.
-- [x] Endpoint público `POST /api/orders/delivery`.
+- [x] Endpoint seguro `POST /api/orders/delivery` sob middleware de cliente.
 - [x] Endpoint `PUT /api/orders/{order}/delivery-status`.
-- [x] Pedido delivery sem `user_id` obrigatório.
+- [x] Associação obrigatória de `user_id` com o perfil do cliente logado.
 - [x] Reuso da action de itens para estoque e total no delivery.
-- [x] Endpoints próprios para retirada (orders/takeout).
+- [x] Endpoints próprios para retirada (`orders/takeout`) protegidos.
+- [x] Processamento atômico de pagamentos online na criação de pedidos de delivery e retirada.
 - [x] Endereço estruturado (rua, número, bairro, CEP, referência na migration e banco).
 - [x] Atribuição de entregador (auto-assumir entrega na API e painel).
-- [x] Acompanhamento pelo cliente (endpoint público orders/{order}/track).
+- [x] Acompanhamento pelo cliente (endpoint público `orders/{order}/track`).
 
 ### Frontend
 
-- [x] Tela pública de pedido delivery.
+- [x] Tela pública de pedido delivery (exige login de cliente com preenchimento automático).
+- [x] Seleção reativa de pagamentos (no ato da entrega vs pelo site) com simulação realista de cartão de crédito e Pix online.
+- [x] Aba "Meus Pedidos" exclusiva para o cliente consultar histórico e rastreamento em andamento de forma nativa.
 - [x] Painel de entregas.
 - [x] Corrigir acesso do perfil `delivery` ao painel de entregas (RBAC configurado no frontend e backend).
 - [x] Tela de acompanhamento pelo cliente (OrderTracking timeline em tempo real).

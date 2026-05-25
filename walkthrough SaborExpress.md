@@ -578,6 +578,11 @@ Separamos as frentes de consumo do cardápio em dois grandes fluxos dedicados:
 * **Mecanismo Robusto de Busca Integrada**: Adicionamos uma barra de pesquisa moderna em formato de pílula integrada diretamente ao cabeçalho. Ela envia os termos de forma nativa para o cardápio público (`/cardapio?search=termo`). O valor inserido é sincronizado bidirecionalmente com a URL.
 * **Filtros e Retornos Humanizados**: No cardápio ([Menu.tsx](file:///c:/Users/ShinerayADM/Projetos/saborexpress/frontend/src/pages/Menu.tsx)), o filtro instantâneo cruza a busca de forma veloz com o nome e a descrição do mix de pratos, exibindo badges dinâmicas de buscas ativas e oferecendo soluções alternativas caso não sejam encontrados pratos correspondentes, com diálogos totalmente humanizados e fáceis.
 
+### 15.7 Histórico do Cliente (Meus Pedidos) e Enlace com Login
+* **Obrigatoriedade de Login para Delivery e Retirada**: Modificamos a regra de negócios de compras para exigir autenticação ativa de clientes para finalizar pedidos de entrega expressa ou retirada no balcão (`/delivery`). Visitantes não cadastrados são elegantemente notificados e redirecionados para a tela de login/cadastro, associando de forma robusta e transparente todo o ciclo de compras ao ID exclusivo do usuário (`user_id`).
+* **Seletor de Pagamento (No ato da entrega vs Pelo site)**: Integramos opções dinâmicas e realistas no checkout para escolher como pagar. O cliente escolhe entre pagamento físico no ato do recebimento ou pagamento digital direto pelo site (simulado reativamente com campos de Cartão de Crédito com mockup virtual e Pix online seguro).
+* **Novo Canal Exclusivo: Portal "Meus Pedidos"**: Desenvolvemos uma página dedicada **[ClientOrders.tsx](file:///c:/Users/ShinerayADM/Projetos/saborexpress/frontend/src/pages/ClientOrders.tsx)** em `/meus-pedidos` que lista as compras e solicitações passadas e atuais do cliente. A página exibe os itens detalhados de cada comanda, status real do preparo (badges para Pendente, Preparando, Em Rota, Entregue) e links rápidos de rastreamento integrados com o KDS.
+
 ---
 
 **Status Final do Projeto:** Ecossistema Integrado, 100% Funcional, com Cardápio Digital Autônomo para Mesa, Guest checkout dinâmico e Cobertura de Testes Automatizada! 🚀

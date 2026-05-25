@@ -20,8 +20,6 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
 Route::apiResource('products', ProductController::class)->only(['index', 'show']);
-Route::post('orders/delivery', [OrderController::class, 'storeDelivery']);
-Route::post('orders/takeout', [OrderController::class, 'storeTakeout']);
 Route::get('orders/{order}/track', [OrderController::class, 'show']);
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -32,12 +30,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    // Rotas de Reserva para o Cliente
+    // Rotas exclusivas de autoatendimento e controle de reservas do Cliente
     Route::middleware('role:client')->group(function () {
         Route::get('client/reservations', [TableReservationController::class, 'index']);
         Route::post('client/reservations', [TableReservationController::class, 'store']);
         Route::delete('client/reservations/{tableReservation}', [TableReservationController::class, 'destroy']);
-        Route::get('client/tables', [TableController::class, 'index']); // Permitir ver as mesas para reservar
+        Route::get('client/tables', [TableController::class, 'index']);
+        
+        // Pedidos de Delivery e Retirada protegidos para clientes logados
+        Route::post('orders/delivery', [OrderController::class, 'storeDelivery']);
+        Route::post('orders/takeout', [OrderController::class, 'storeTakeout']);
+        Route::get('client/orders', [OrderController::class, 'myOrders']);
     });
 
     Route::middleware('role:administrator')->group(function () {

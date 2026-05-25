@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState, useContext } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { api } from '../lib/api';
 import { toast } from 'sonner';
+import { AuthContext } from '../contexts/AuthContext';
 
 interface Category {
   id: number;
@@ -26,6 +27,9 @@ interface CartItem {
 }
 
 export default function DeliveryClient() {
+  const navigate = useNavigate();
+  const { isAuthenticated, user, isLoading: authLoading } = useContext(AuthContext);
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
@@ -47,6 +51,14 @@ export default function DeliveryClient() {
     localStorage.setItem('saborexpress_cart', JSON.stringify(cart));
   }, [cart]);
 
+  // Redireciona clientes não logados para a tela de login
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      toast.warning('Por favor, faça login ou cadastre-se para poder finalizar seu pedido! 🛍️');
+      navigate('/login?redirect=/delivery');
+    }
+  }, [isAuthenticated, authLoading, navigate]);
+
   const [isCheckout, setIsCheckout] = useState(false);
   const [orderType, setOrderType] = useState<'delivery' | 'takeout'>('delivery');
   
@@ -62,6 +74,24 @@ export default function DeliveryClient() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [createdOrderId, setCreatedOrderId] = useState<number | null>(null);
+
+  // Estado de Escolha de Pagamento do Cliente
+  const [paymentType, setPaymentType] = useState<'delivery' | 'online'>('delivery');
+  const [paymentMethod, setPaymentMethod] = useState<'Pix' | 'Cartao' | 'Dinheiro'>('Pix');
+  const [troco, setTroco] = useState('');
+
+  // Estado dos Inputs do Cartão Simulador de Alta Fidelidade (Pagamento Online)
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardName, setCardName] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [cardCvv, setCardCvv] = useState('');
+
+  // Preenche automaticamente o nome se o perfil estiver ativo
+  useEffect(() => {
+    if (isAuthenticated && user && !customerName) {
+      setCustomerName(user.name);
+    }
+  }, [isAuthenticated, user, customerName]);
 
   const handleCepBlur = async () => {
     if (orderType === 'takeout') return;
@@ -141,35 +171,38 @@ export default function DeliveryClient() {
     setLoading(true);
     try {
       let res;
+      const basePayload = {
+        customer_name: customerName,
+        customer_phone: customerPhone,
+        payment_type: paymentType,
+        payment_method: paymentMethod,
+        items: cart.map(item => ({
+          product_id: item.product.id,
+          quantity: item.quantity,
+          notes: item.notes
+        }))
+      };
+
       if (orderType === 'takeout') {
-        res = await api.post(`/orders/takeout`, {
-          customer_name: customerName,
-          customer_phone: customerPhone,
-          items: cart.map(item => ({
-            product_id: item.product.id,
-            quantity: item.quantity,
-            notes: item.notes
-          }))
-        });
+        res = await api.post(`/orders/takeout`, basePayload);
       } else {
         res = await api.post(`/orders/delivery`, {
-          customer_name: customerName,
-          customer_phone: customerPhone,
+          ...basePayload,
           delivery_address: `${street}, ${number} - ${neighborhood} (${reference}) CEP: ${cep}`,
-          items: cart.map(item => ({
-            product_id: item.product.id,
-            quantity: item.quantity,
-            notes: item.notes
-          }))
+          street,
+          number,
+          neighborhood,
+          cep,
+          reference
         });
       }
       const orderId = res.data.data?.id || res.data.id;
       setCreatedOrderId(orderId);
       setSuccess(true);
       setCart([]);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      toast.error('Erro ao processar pedido. Verifique os dados e tente novamente.');
+      toast.error(err.response?.data?.message || 'Erro ao processar pedido. Verifique os dados e tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -473,6 +506,167 @@ export default function DeliveryClient() {
                       value={reference} onChange={e => setReference(e.target.value)}
                       className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-sabor-primary focus:outline-none transition-all"
                     />
+                  </div>
+                )}
+
+                {/* Seleção do Tipo de Pagamento */}
+                <div className="space-y-3 pt-2">
+                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Como deseja pagar?</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => { setPaymentType('delivery'); setPaymentMethod('Pix'); }}
+                      className={`p-3 rounded-2xl border text-xs font-extrabold transition-all text-center flex flex-col items-center gap-1.5 ${
+                        paymentType === 'delivery'
+                          ? 'border-sabor-primary bg-sabor-light text-sabor-dark shadow-sm'
+                          : 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      <span className="text-lg">🛵</span>
+                      <span>No ato da entrega</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setPaymentType('online'); setPaymentMethod('Pix'); }}
+                      className={`p-3 rounded-2xl border text-xs font-extrabold transition-all text-center flex flex-col items-center gap-1.5 ${
+                        paymentType === 'online'
+                          ? 'border-sabor-primary bg-sabor-light text-sabor-dark shadow-sm'
+                          : 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      <span className="text-lg">💻</span>
+                      <span>Pelo site (Online)</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Seleção da Forma de Pagamento */}
+                <div className="space-y-3">
+                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Forma de Pagamento</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('Pix')}
+                      className={`py-2.5 px-3 rounded-xl border text-[11px] font-black transition-all text-center ${
+                        paymentMethod === 'Pix'
+                          ? 'border-sabor-primary bg-sabor-light text-sabor-dark shadow-xs'
+                          : 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      Pix ⚡
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('Cartao')}
+                      className={`py-2.5 px-3 rounded-xl border text-[11px] font-black transition-all text-center ${
+                        paymentMethod === 'Cartao'
+                          ? 'border-sabor-primary bg-sabor-light text-sabor-dark shadow-xs'
+                          : 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      Cartão 💳
+                    </button>
+                    <button
+                      type="button"
+                      disabled={paymentType === 'online'}
+                      onClick={() => setPaymentMethod('Dinheiro')}
+                      className={`py-2.5 px-3 rounded-xl border text-[11px] font-black transition-all text-center disabled:opacity-40 ${
+                        paymentMethod === 'Dinheiro'
+                          ? 'border-sabor-primary bg-sabor-light text-sabor-dark shadow-xs'
+                          : 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      Dinheiro 💵
+                    </button>
+                  </div>
+                </div>
+
+                {/* Troco se Dinheiro na Entrega */}
+                {paymentType === 'delivery' && paymentMethod === 'Dinheiro' && (
+                  <div className="space-y-2 animate-scale-in">
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider">Precisa de Troco?</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: Troco para R$ 100,00"
+                      value={troco}
+                      onChange={e => setTroco(e.target.value)}
+                      className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:ring-2 focus:ring-sabor-primary focus:outline-none transition-all text-xs font-semibold"
+                    />
+                  </div>
+                )}
+
+                {/* MOCK DE PAGAMENTO ONLINE SIMULADO */}
+                {paymentType === 'online' && paymentMethod === 'Cartao' && (
+                  <div className="space-y-4 bg-gray-50 p-4 rounded-3xl border border-gray-100 animate-scale-in">
+                    {/* Cartão Virtual Realístico */}
+                    <div className="bg-gradient-to-tr from-sabor-dark to-emerald-950 p-5 rounded-2xl text-white shadow-md relative overflow-hidden flex flex-col justify-between h-40">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-sabor-primary/20 rounded-full blur-2xl"></div>
+                      <div className="flex justify-between items-start z-10">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-sabor-primary">SABOR EXPRESS PAY 💳</span>
+                        <span className="text-xl">🏦</span>
+                      </div>
+                      <div className="font-mono text-base tracking-widest text-center my-2 z-10">
+                        {cardNumber || '•••• •••• •••• ••••'}
+                      </div>
+                      <div className="flex justify-between items-end text-[10px] uppercase font-mono z-10">
+                        <div>
+                          <p className="text-gray-400 text-[7px] lowercase">Titular</p>
+                          <p className="font-bold truncate max-w-[130px]">{cardName || 'NOME DO TITULAR'}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 text-[7px] lowercase">Expira</p>
+                          <p className="font-bold">{cardExpiry || 'MM/AA'}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <input
+                        required={paymentType === 'online' && paymentMethod === 'Cartao'}
+                        type="text"
+                        placeholder="Número do Cartão"
+                        maxLength={19}
+                        value={cardNumber}
+                        onChange={e => setCardNumber(e.target.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim())}
+                        className="w-full bg-white border border-gray-200 px-4 py-2.5 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-sabor-primary focus:outline-none transition-all"
+                      />
+                      <input
+                        required={paymentType === 'online' && paymentMethod === 'Cartao'}
+                        type="text"
+                        placeholder="Nome do Titular"
+                        value={cardName}
+                        onChange={e => setCardName(e.target.value.toUpperCase())}
+                        className="w-full bg-white border border-gray-200 px-4 py-2.5 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-sabor-primary focus:outline-none transition-all"
+                      />
+                      <div className="grid grid-cols-2 gap-3">
+                        <input
+                          required={paymentType === 'online' && paymentMethod === 'Cartao'}
+                          type="text"
+                          placeholder="Expiração (MM/AA)"
+                          maxLength={5}
+                          value={cardExpiry}
+                          onChange={e => setCardExpiry(e.target.value)}
+                          className="w-full bg-white border border-gray-200 px-4 py-2.5 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-sabor-primary focus:outline-none transition-all text-center"
+                        />
+                        <input
+                          required={paymentType === 'online' && paymentMethod === 'Cartao'}
+                          type="password"
+                          placeholder="CVV"
+                          maxLength={3}
+                          value={cardCvv}
+                          onChange={e => setCardCvv(e.target.value.replace(/\D/g, ''))}
+                          className="w-full bg-white border border-gray-200 px-4 py-2.5 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-sabor-primary focus:outline-none transition-all text-center"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {paymentType === 'online' && paymentMethod === 'Pix' && (
+                  <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-3xl animate-scale-in text-center flex flex-col items-center">
+                    <span className="text-3xl mb-1">⚡</span>
+                    <h4 className="font-extrabold text-xs text-emerald-800 uppercase tracking-wider mb-1">PIX Copia e Cola Gerado</h4>
+                    <p className="text-[10px] text-emerald-600 leading-relaxed max-w-[250px]">Você poderá copiar o código QR de segurança para efetuar o pagamento online instantâneo após a confirmação do seu pedido.</p>
                   </div>
                 )}
 

@@ -12,6 +12,7 @@ import DeliveryClient from './pages/DeliveryClient';
 import DeliveryPanel from './pages/DeliveryPanel';
 import Dashboard from './pages/Dashboard';
 import ClientReservations from './pages/ClientReservations';
+import ClientOrders from './pages/ClientOrders';
 import OrderTracking from './pages/OrderTracking';
 import DigitalMenu from './pages/DigitalMenu';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -108,9 +109,14 @@ function Navigation() {
           )}
 
           {isAuthenticated && user?.role === 'client' && (
-            <Link to="/minhas-reservas" className="text-gray-600 font-extrabold text-sm md:text-base hover:text-sabor-dark transition-colors shrink-0 py-1 border-b-2 border-transparent hover:border-sabor-primary">
-              Minhas Reservas
-            </Link>
+            <>
+              <Link to="/minhas-reservas" className="text-gray-600 font-extrabold text-sm md:text-base hover:text-sabor-dark transition-colors shrink-0 py-1 border-b-2 border-transparent hover:border-sabor-primary">
+                Minhas Reservas
+              </Link>
+              <Link to="/meus-pedidos" className="text-gray-600 font-extrabold text-sm md:text-base hover:text-sabor-dark transition-colors shrink-0 py-1 border-b-2 border-transparent hover:border-sabor-primary">
+                Meus Pedidos
+              </Link>
+            </>
           )}
 
           {isAuthenticated ? (
@@ -154,6 +160,7 @@ function App() {
               {/* Protected Routes */}
               <Route element={<ProtectedRoute allowedRoles={['client']} />}>
                 <Route path="/minhas-reservas" element={<ClientReservations />} />
+                <Route path="/meus-pedidos" element={<ClientOrders />} />
               </Route>
 
               <Route element={<ProtectedRoute allowedRoles={['administrator']} />}>

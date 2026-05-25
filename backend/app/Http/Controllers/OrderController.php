@@ -13,6 +13,8 @@ use App\Http\Requests\Orders\UpdateOrderStatusRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
 use App\Models\Table;
+use App\Models\Payment;
+use App\Models\CashMovement;
 use App\Repositories\Orders\OrderRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -47,6 +49,8 @@ class OrderController extends Controller
             'neighborhood' => ['nullable', 'string', 'max:255'],
             'cep' => ['nullable', 'string', 'max:20'],
             'reference' => ['nullable', 'string', 'max:255'],
+            'payment_type' => ['required', 'in:delivery,online'],
+            'payment_method' => ['required', 'in:Pix,Cartao,Dinheiro'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'exists:products,id'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
@@ -66,6 +70,7 @@ class OrderController extends Controller
                 'neighborhood' => $validated['neighborhood'] ?? null,
                 'cep' => $validated['cep'] ?? null,
                 'reference' => $validated['reference'] ?? null,
+                'user_id' => auth()->id(),
             ]);
 
             foreach ($validated['items'] as $itemData) {
@@ -74,6 +79,30 @@ class OrderController extends Controller
                     'quantity' => $itemData['quantity'],
                     'notes' => $itemData['notes'] ?? null,
                 ]);
+            }
+
+            // Registrar pagamento online caso selecionado pelo cliente
+            if ($validated['payment_type'] === 'online') {
+                Payment::create([
+                    'order_id' => $order->id,
+                    'user_id' => auth()->id(),
+                    'amount' => $order->total_amount,
+                    'method' => $validated['payment_method'],
+                    'status' => 'Paga',
+                    'paid_at' => now(),
+                ]);
+
+                CashMovement::create([
+                    'user_id' => auth()->id(),
+                    'type' => 'Sale',
+                    'amount' => $order->total_amount,
+                    'method' => $validated['payment_method'],
+                    'order_id' => $order->id,
+                    'description' => 'Pagamento Online de Pedido Delivery #' . $order->id,
+                ]);
+
+                $order->status = OrderStatus::Paid->value;
+                $order->save();
             }
 
             return $order;
@@ -87,6 +116,8 @@ class OrderController extends Controller
         $validated = $request->validate([
             'customer_name' => ['required', 'string', 'max:255'],
             'customer_phone' => ['required', 'string', 'max:30'],
+            'payment_type' => ['required', 'in:delivery,online'],
+            'payment_method' => ['required', 'in:Pix,Cartao,Dinheiro'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'exists:products,id'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
@@ -101,6 +132,7 @@ class OrderController extends Controller
                 'customer_name' => $validated['customer_name'],
                 'customer_phone' => $validated['customer_phone'],
                 'delivery_address' => 'Retirada no Estabelecimento',
+                'user_id' => auth()->id(),
             ]);
 
             foreach ($validated['items'] as $itemData) {
@@ -111,10 +143,43 @@ class OrderController extends Controller
                 ]);
             }
 
+            // Registrar pagamento online caso selecionado pelo cliente
+            if ($validated['payment_type'] === 'online') {
+                Payment::create([
+                    'order_id' => $order->id,
+                    'user_id' => auth()->id(),
+                    'amount' => $order->total_amount,
+                    'method' => $validated['payment_method'],
+                    'status' => 'Paga',
+                    'paid_at' => now(),
+                ]);
+
+                CashMovement::create([
+                    'user_id' => auth()->id(),
+                    'type' => 'Sale',
+                    'amount' => $order->total_amount,
+                    'method' => $validated['payment_method'],
+                    'order_id' => $order->id,
+                    'description' => 'Pagamento Online de Pedido Retirada #' . $order->id,
+                ]);
+
+                $order->status = OrderStatus::Paid->value;
+                $order->save();
+            }
+
             return $order;
         });
 
         return (new OrderResource($this->orders->loadDetails($order)))->response()->setStatusCode(201);
+    }
+
+    public function myOrders(Request $request)
+    {
+        $orders = Order::where('user_id', $request->user()->id)
+            ->with(['items.product'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+        return OrderResource::collection($orders);
     }
 
     public function activeForTable(Table $table)
