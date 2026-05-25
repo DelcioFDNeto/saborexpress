@@ -2,93 +2,73 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Orders\AddOrderItemAction;
+use App\Enums\OrderStatus;
+use App\Http\Requests\Orders\AddOrderItemRequest;
+use App\Http\Requests\Orders\UpdateOrderStatusRequest;
+use App\Http\Resources\OrderResource;
 use App\Models\Order;
-use Illuminate\Http\Request;
+use App\Models\Table;
+use App\Repositories\Orders\OrderRepositoryInterface;
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class OrderController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    public function __construct(
+        private readonly OrderRepositoryInterface $orders,
+    ) {
+    }
+
     public function index()
     {
-        //
+        return OrderResource::collection($this->orders->paginateWithDetails());
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store()
     {
-        // ... (Order creation logic will go here in M02/M03)
+        abort(405, 'Orders are opened through table operations.');
     }
 
-    /**
-     * Add an item to an existing order (M03 overlap).
-     * This method captures the current product price to ensure it is immutable for this order.
-     */
-    public function addItem(Request $request, Order $order)
+    public function activeForTable(Table $table)
     {
-        $validated = $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'quantity' => 'required|integer|min:1',
-            'notes' => 'nullable|string'
-        ]);
+        $order = $this->orders->findActiveForTable($table);
 
-        $product = \App\Models\Product::findOrFail($validated['product_id']);
-
-        // Snapshot Imutável de Preço: Gravando o preço atual na tabela intermediária
-        $orderItem = $order->items()->create([
-            'product_id' => $product->id,
-            'quantity' => $validated['quantity'],
-            'unit_price' => $product->price, // Captura o snapshot do preço
-            'notes' => $validated['notes'] ?? null,
-            'status' => 'Pendente'
-        ]);
-
-        return response()->json($orderItem, 201);
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Order $order)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Order $order)
-    {
-        // Valida se status enviado é permitido
-        $validated = $request->validate([
-            'status' => 'required|string|in:Aberta,Fechada,Finalizada'
-        ]);
-
-        // Se a comanda já estiver finalizada, impede alteração
-        if ($order->status === 'Finalizada') {
-            return response()->json([
-                'message' => 'Cannot update a finished order.'
-            ], 422);
+        if (!$order) {
+            throw new NotFoundHttpException('Table does not have an active order.');
         }
 
-        $order->update([
-            'status' => $validated['status']
-        ]);
-
-        return response()->json([
-            'message' => 'Order status updated successfully.',
-            'data' => $order
-        ], 200);
+        return new OrderResource($order);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+    public function addItem(
+        AddOrderItemRequest $request,
+        Order $order,
+        AddOrderItemAction $addOrderItem,
+    ) {
+        $order = $addOrderItem->execute($order, $request->validated());
+
+        return (new OrderResource($order))->response()->setStatusCode(201);
+    }
+
+    public function show(Order $order)
+    {
+        return new OrderResource($this->orders->loadDetails($order));
+    }
+
+    public function update(UpdateOrderStatusRequest $request, Order $order)
+    {
+        if (in_array($order->status, [OrderStatus::Paid->value, OrderStatus::Canceled->value], true)) {
+            throw new ConflictHttpException('Order status can no longer be changed.');
+        }
+
+        return new OrderResource(
+            $this->orders->updateStatus($order, $request->validated('status'))
+        );
+    }
+
     public function destroy(Order $order)
     {
-        //
+        abort(405, 'Orders are closed or canceled by dedicated operations.');
     }
 }

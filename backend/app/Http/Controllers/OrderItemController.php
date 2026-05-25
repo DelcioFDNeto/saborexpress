@@ -2,70 +2,50 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Orders\RemoveOrderItemAction;
+use App\Actions\Orders\UpdateOrderItemAction;
+use App\Http\Requests\Orders\UpdateOrderItemRequest;
+use App\Http\Resources\OrderItemResource;
+use App\Http\Resources\OrderResource;
 use App\Models\OrderItem;
-use App\Models\Product;
-use Illuminate\Http\Request;
+use App\Repositories\OrderItems\OrderItemRepositoryInterface;
 
 class OrderItemController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    public function __construct(
+        private readonly OrderItemRepositoryInterface $orderItems,
+    ) {
+    }
+
     public function index()
     {
-        //
+        return OrderItemResource::collection($this->orderItems->paginateWithProduct());
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store()
     {
-        $validated = $request->validate([
-            'order_id' => 'required|exists:orders,id',
-            'product_id' => 'required|exists:products,id',
-            'quantity' => 'required|integer|min:1',
-            'notes' => 'nullable|string'
-        ]);
-
-        $product = Product::findOrFail($validated['product_id']);
-
-        $orderItem = OrderItem::create([
-            'order_id' => $validated['order_id'],
-            'product_id' => $validated['product_id'],
-            'quantity' => $validated['quantity'],
-            'notes' => $validated['notes'] ?? null,
-            'unit_price' => $product->price,
-            'status' => 'Pendente'
-        ]);
-
-        return response()->json([
-            'message' => 'Order item created successfully.',
-            'data' => $orderItem
-        ], 201);
+        abort(405, 'Order items are created through orders.');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(OrderItem $orderItem)
     {
-        //
+        return new OrderItemResource($this->orderItems->loadProduct($orderItem));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, OrderItem $orderItem)
-    {
-        //
+    public function update(
+        UpdateOrderItemRequest $request,
+        OrderItem $orderItem,
+        UpdateOrderItemAction $updateOrderItem,
+    ) {
+        $order = $updateOrderItem->execute($orderItem, $request->validated());
+
+        return new OrderResource($order);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(OrderItem $orderItem)
+    public function destroy(OrderItem $orderItem, RemoveOrderItemAction $removeOrderItem)
     {
-        //
+        $order = $removeOrderItem->execute($orderItem);
+
+        return new OrderResource($order);
     }
 }
