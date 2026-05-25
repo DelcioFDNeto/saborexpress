@@ -371,9 +371,12 @@ Separamos as frentes de consumo do cardápio em dois grandes fluxos dedicados:
    * **Lançamentos Diretos**: O cliente pode navegar pelo cardápio, clicar em um produto ou combo e adicioná-lo diretamente à sua mesa via pop-up personalizado de observações. O item é inserido atômica e imediatamente na comanda daquela mesa em background (`POST /orders/{order}/items`), acionando o KDS da cozinha instantaneamente.
    * **Acompanhamento no Tablet**: O painel lateral direito exibe os itens que já foram consumidos ou estão em preparo naquela mesa, acompanhando os status da cozinha (Pendente, Preparando, Pronto!) e a conta parcial em tempo real com taxa de serviço calculada.
 
+### 15.5 Segurança e Controle de Acesso no Tablet (Cardápio Digital)
+* **Bloqueio de Configuração de Mesa**: O painel de vinculação e seleção de mesa física no Cardápio Digital (`/cardapio-digital`) foi rigorosamente protegido. Apenas usuários autenticados com perfis da equipe do restaurante (`administrator`, `waiter`, `cashier`) podem visualizar e associar o tablet a uma mesa. Se um usuário não autenticado ou comum tentar acessar a configuração, o sistema exibe uma tela elegante de bloqueio com link para login de equipe.
+* **Prevenção de Erros de Sanctum (401 Unauthorized)**: Corrigimos o vazamento de requisições de mesas públicas direcionando as consultas de salão de funcionários para a rota correta do painel `/api/tables` (em vez da rota `/api/client/tables` de uso exclusivo do papel `client`), solucionando integralmente as falhas de console do Axios.
+* **Persistência Segura e Lock de Dispositivo**: Uma vez travado na mesa por um funcionário, o tablet fica fixado na mesa gravada no `localStorage` do dispositivo. Visitantes não conseguem alterar ou desvincular o tablet sem a devida autenticação de staff, garantindo total conformidade operacional.
+* **Suporte a Redirecionamento Pós-Login**: Adicionamos suporte ao parâmetro de busca `?redirect` na tela de Login do SaborExpress, permitindo que garçons façam o login rapidamente e retornem direto para a página de autoatendimento da mesa correspondente.
+
 ---
 
 **Status Final do Projeto:** Ecossistema Integrado, 100% Funcional, com Cardápio Digital Autônomo para Mesa, Guest checkout dinâmico e Cobertura de Testes Automatizada! 🚀
-
-
-

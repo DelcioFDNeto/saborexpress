@@ -1,6 +1,6 @@
 import { useState, useContext } from 'react';
 import { AuthContext } from '../contexts/AuthContext';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { api } from '../lib/api';
 
 export default function Login() {
@@ -10,6 +10,8 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirect = searchParams.get('redirect');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,14 +25,18 @@ export default function Login() {
 
       login(res.data.access_token, res.data.user);
       
-      // Redirect based on role
-      const role = res.data.user.role;
-      if (role === 'administrator') navigate('/dashboard');
-      else if (role === 'waiter') navigate('/mesas');
-      else if (role === 'kitchen') navigate('/cozinha');
-      else if (role === 'cashier') navigate('/caixa');
-      else if (role === 'delivery') navigate('/entregas');
-      else navigate('/cardapio');
+      // Redirect based on redirect param or fallback to role default
+      if (redirect) {
+        navigate(redirect);
+      } else {
+        const role = res.data.user.role;
+        if (role === 'administrator') navigate('/dashboard');
+        else if (role === 'waiter') navigate('/mesas');
+        else if (role === 'kitchen') navigate('/cozinha');
+        else if (role === 'cashier') navigate('/caixa');
+        else if (role === 'delivery') navigate('/entregas');
+        else navigate('/cardapio');
+      }
 
     } catch (err: any) {
       if (err.response && err.response.data && err.response.data.errors) {

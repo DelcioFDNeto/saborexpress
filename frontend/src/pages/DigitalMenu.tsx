@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React, { useEffect, useState, useContext } from 'react';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
+import { AuthContext } from '../contexts/AuthContext';
 import { toast } from 'sonner';
 
 interface Category {
@@ -45,8 +46,11 @@ interface Table {
 }
 
 export default function DigitalMenu() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const tableNumberFromUrl = searchParams.get('table');
+
+  const { user, isAuthenticated, isLoading: authLoading } = useContext(AuthContext);
 
   // Core Data
   const [tables, setTables] = useState<Table[]>([]);
@@ -67,15 +71,32 @@ export default function DigitalMenu() {
   const [notes, setNotes] = useState('');
   const [submittingItem, setSubmittingItem] = useState(false);
 
-  // Load basic tables
+  // Check if current session belongs to restaurant staff
+  const isStaff = isAuthenticated && (user?.role === 'administrator' || user?.role === 'waiter' || user?.role === 'cashier');
+
+  // Load basic tables (only fetched if the user is authenticated as staff)
   const fetchAllTables = async () => {
+    if (!isStaff) {
+      setLoading(false);
+      return;
+    }
+    
     try {
-      const res = await api.get('/client/tables');
+      const res = await api.get('/tables');
       const allTables: Table[] = res.data.data ? res.data.data : res.data || [];
       setTables(allTables);
 
-      // If we have a table number in the URL, bind it
-      if (tableNumberFromUrl) {
+      // Sincronizar mesa travada no local storage ou na URL
+      const savedTable = localStorage.getItem('saborexpress_tablet_table');
+      if (savedTable) {
+        try {
+          const parsed = JSON.parse(savedTable) as Table;
+          setSelectedTable(parsed);
+          fetchActiveOrderForTable(parsed.id);
+        } catch (e) {
+          localStorage.removeItem('saborexpress_tablet_table');
+        }
+      } else if (tableNumberFromUrl) {
         const found = allTables.find(t => t.number === tableNumberFromUrl);
         if (found) {
           setSelectedTable(found);
@@ -84,7 +105,7 @@ export default function DigitalMenu() {
       }
     } catch (err) {
       console.error(err);
-      toast.error('Erro ao carregar mesas.');
+      toast.error('Erro ao carregar mesas de salão.');
     } finally {
       setLoading(false);
     }
@@ -128,15 +149,33 @@ export default function DigitalMenu() {
     }
   };
 
+  // On mount, check locked storage first
   useEffect(() => {
+    if (authLoading) return;
+
+    const savedTable = localStorage.getItem('saborexpress_tablet_table');
+    if (savedTable) {
+      try {
+        const parsed = JSON.parse(savedTable) as Table;
+        setSelectedTable(parsed);
+        fetchActiveOrderForTable(parsed.id);
+        setLoading(false);
+      } catch (e) {
+        localStorage.removeItem('saborexpress_tablet_table');
+      }
+    }
+    
+    // Fetch fresh table metadata in background
     fetchAllTables();
     fetchMenu();
-  }, [tableNumberFromUrl]);
+  }, [tableNumberFromUrl, isAuthenticated, authLoading]);
 
-  // Handle table selection from URL param synchronizer
+  // Handle table selection and lock it to tablet storage
   const selectLocalTable = (table: Table) => {
+    localStorage.setItem('saborexpress_tablet_table', JSON.stringify(table));
     setSelectedTable(table);
     setSearchParams({ table: table.number });
+    toast.success(`Este tablet foi vinculado e travado na Mesa ${table.number}! ⚙️`);
   };
 
   // Open active comanda
@@ -163,7 +202,7 @@ export default function DigitalMenu() {
     }
   };
 
-  // Launch item to the table comanda directly!
+  // Launch item to the table comanda directly
   const handleLaunchItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeOrder || !targetProduct) return;
@@ -198,7 +237,21 @@ export default function DigitalMenu() {
     }
   };
 
-  if (loading) {
+  // Lock configuration release
+  const handleReleaseConfig = () => {
+    if (isStaff) {
+      if (confirm('Deseja realmente desvincular este dispositivo e liberar a mesa?')) {
+        localStorage.removeItem('saborexpress_tablet_table');
+        setSelectedTable(null);
+        setSearchParams({});
+        toast.info('Tablet desvinculado. Redirecionando para seletor administrativo.');
+      }
+    } else {
+      toast.error('Acesso Negado: Apenas garçons ou administradores autenticados podem reconfigurar este tablet.');
+    }
+  };
+
+  if (loading || authLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sabor-primary"></div>
@@ -206,17 +259,47 @@ export default function DigitalMenu() {
     );
   }
 
-  // 1. Selector view if no table is selected
+  // 1. Selector view if no table is selected and locked
   if (!selectedTable) {
+    // SECURITY LOCK: If not staff, block setup configuration screen completely!
+    if (!isStaff) {
+      return (
+        <div className="max-w-md mx-auto p-6 md:p-10 font-sans min-h-[75vh] flex flex-col justify-center animate-fade-in">
+          <div className="bg-white p-8 rounded-3xl shadow-xl border border-rose-100 text-center flex flex-col items-center">
+            <div className="w-20 h-20 rounded-full bg-rose-50 text-rose-500 font-black text-3xl flex items-center justify-center mb-6 border border-rose-100 shadow-inner">
+              🔒
+            </div>
+            
+            <h1 className="text-2xl font-black text-gray-900 mb-2">Tablet Bloqueado</h1>
+            <p className="text-gray-500 text-sm mb-6 leading-relaxed">
+              Este dispositivo de autoatendimento ainda não foi configurado e vinculado a uma mesa física pelo restaurante.
+            </p>
+            
+            <div className="bg-amber-50 border border-amber-100 text-amber-800 text-xs font-bold p-4 rounded-xl leading-relaxed mb-6">
+              ⚠️ Apenas garçons, gerentes ou administradores com credenciais ativas podem vincular este tablet a uma mesa.
+            </div>
+
+            <Link 
+              to="/login?redirect=/cardapio-digital" 
+              className="w-full py-4 bg-sabor-primary hover:bg-sabor-primary/95 text-sabor-dark font-black text-base rounded-2xl transition-all shadow-[0_8px_25px_rgba(74,222,128,0.2)] block text-center"
+            >
+              Fazer Login de Garçom 🔑
+            </Link>
+          </div>
+        </div>
+      );
+    }
+
+    // If logged in as staff, display the administrative table binder
     return (
-      <div className="max-w-4xl mx-auto p-6 md:p-12 font-sans">
-        <header className="text-center mb-12">
+      <div className="max-w-5xl mx-auto p-6 md:p-12 font-sans animate-fade-in">
+        <header className="text-center mb-10 bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
           <span className="bg-sabor-light text-sabor-dark border border-sabor-primary/30 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider">
-            Autoatendimento Autônomo
+            Painel do Garçom: Configuração ⚙️
           </span>
-          <h1 className="text-3xl md:text-4xl font-black text-gray-900 mt-3">Cardápio Digital de Mesa</h1>
-          <p className="text-gray-500 text-sm md:text-base mt-2 max-w-lg mx-auto">
-            Por favor, selecione em qual mesa este dispositivo está fixado para acessar o cardápio interativo direto com a cozinha.
+          <h1 className="text-3xl font-black text-gray-900 mt-3">Vincular Tablet a uma Mesa</h1>
+          <p className="text-gray-500 text-xs sm:text-sm mt-2 max-w-lg mx-auto">
+            Olá, <span className="font-extrabold text-sabor-dark">{user?.name}</span>! Selecione abaixo em qual mesa física você deseja fixar este dispositivo. O cliente só poderá pedir para esta mesa.
           </p>
         </header>
 
@@ -254,7 +337,7 @@ export default function DigitalMenu() {
   // 2. Open Comanda screen if the table has no active comanda
   if (!activeOrder) {
     return (
-      <div className="max-w-md mx-auto p-6 md:p-10 font-sans min-h-[70vh] flex flex-col justify-center">
+      <div className="max-w-md mx-auto p-6 md:p-10 font-sans min-h-[70vh] flex flex-col justify-center animate-fade-in">
         <div className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100 text-center flex flex-col items-center">
           <div className="w-20 h-20 rounded-full bg-sabor-light text-sabor-dark font-black text-3xl flex items-center justify-center mb-6 border border-sabor-primary/20">
             {selectedTable.number}
@@ -286,11 +369,12 @@ export default function DigitalMenu() {
             </button>
           </form>
 
+          {/* Configuration button (only visible/functional for staff) */}
           <button 
-            onClick={() => setSelectedTable(null)}
-            className="text-gray-400 hover:text-gray-600 text-xs font-bold mt-6 underline"
+            onClick={handleReleaseConfig}
+            className="text-gray-400 hover:text-rose-500 text-xs font-bold mt-6 underline transition-colors"
           >
-            Trocar de Mesa
+            Configurar Tablet ⚙️
           </button>
         </div>
       </div>
@@ -303,7 +387,7 @@ export default function DigitalMenu() {
     : products;
 
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-8 font-sans">
+    <div className="max-w-7xl mx-auto p-4 md:p-8 font-sans animate-fade-in">
       
       {/* Visual Header */}
       <header className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-8">
@@ -330,11 +414,13 @@ export default function DigitalMenu() {
           >
             🔄 Atualizar Comanda
           </button>
+          
+          {/* Release device binder: Admin locked */}
           <button 
-            onClick={() => setSelectedTable(null)}
-            className="px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 font-extrabold text-sm rounded-xl transition-all"
+            onClick={handleReleaseConfig}
+            className="px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 font-extrabold text-sm rounded-xl transition-all flex items-center gap-1"
           >
-            Trocar Mesa
+            ⚙️ Configurar
           </button>
         </div>
       </header>
@@ -373,57 +459,59 @@ export default function DigitalMenu() {
 
           {/* Product list */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {filteredProducts.map(product => (
-              <div 
-                key={product.id} 
-                className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col group relative"
-              >
-                {/* Special Highlight for Combos e Promoções */}
-                {categories.find(c => c.id === product.category_id)?.name === 'Combos e Promoções' && (
-                  <span className="absolute top-4 left-4 z-10 bg-amber-500 text-white text-[9px] font-black uppercase px-2.5 py-1 rounded-full shadow-md tracking-wider">
-                    PROMOÇÃO 🔥
-                  </span>
-                )}
-
-                <div className="h-44 bg-gray-50 w-full overflow-hidden flex items-center justify-center relative">
-                  {product.image_url ? (
-                    <img 
-                      src={product.image_url} 
-                      alt={product.name} 
-                      className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500" 
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="text-sabor-primary bg-sabor-light w-full h-full flex items-center justify-center">
-                      📋
-                    </div>
+            {filteredProducts.map(product => {
+              const isCombo = categories.find(c => c.id === product.category_id)?.name === 'Combos e Promoções';
+              return (
+                <div 
+                  key={product.id} 
+                  className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col group relative"
+                >
+                  {isCombo && (
+                    <span className="absolute top-4 left-4 z-10 bg-amber-500 text-white text-[9px] font-black uppercase px-2.5 py-1 rounded-full shadow-md tracking-wider">
+                      PROMOÇÃO 🔥
+                    </span>
                   )}
-                  {!product.is_available && (
-                    <div className="absolute inset-0 bg-white/80 backdrop-blur-xs flex items-center justify-center">
-                      <span className="bg-rose-100 text-rose-700 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest">
-                        Esgotado
-                      </span>
-                    </div>
-                  )}
-                </div>
 
-                <div className="p-6 flex flex-col flex-1">
-                  <div className="flex justify-between items-start mb-3 gap-2">
-                    <h3 className="font-extrabold text-gray-900 text-base leading-snug group-hover:text-sabor-dark transition-colors">{product.name}</h3>
-                    <span className="font-black text-sabor-dark bg-sabor-light px-2.5 py-1 rounded-xl text-sm shrink-0">R$ {Number(product.price).toFixed(2)}</span>
+                  <div className="h-44 bg-gray-50 w-full overflow-hidden flex items-center justify-center relative">
+                    {product.image_url ? (
+                      <img 
+                        src={product.image_url} 
+                        alt={product.name} 
+                        className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500" 
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="text-sabor-primary bg-sabor-light w-full h-full flex items-center justify-center font-bold">
+                        🥣
+                      </div>
+                    )}
+                    {!product.is_available && (
+                      <div className="absolute inset-0 bg-white/80 backdrop-blur-xs flex items-center justify-center">
+                        <span className="bg-rose-100 text-rose-700 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest">
+                          Esgotado
+                        </span>
+                      </div>
+                    )}
                   </div>
-                  <p className="text-gray-400 text-xs mb-5 line-clamp-2 leading-relaxed">{product.description || 'Delicioso prato típico paraense.'}</p>
-                  
-                  <button 
-                    disabled={!product.is_available}
-                    onClick={() => setTargetProduct(product)}
-                    className="w-full py-3 bg-sabor-light text-sabor-dark font-extrabold text-sm rounded-xl hover:bg-sabor-primary transition-all disabled:opacity-45 mt-auto flex items-center justify-center gap-1.5"
-                  >
-                    <span>➕</span> Pedir Prato
-                  </button>
+
+                  <div className="p-6 flex flex-col flex-1">
+                    <div className="flex justify-between items-start mb-3 gap-2">
+                      <h3 className="font-extrabold text-gray-900 text-base leading-snug group-hover:text-sabor-dark transition-colors">{product.name}</h3>
+                      <span className="font-black text-sabor-dark bg-sabor-light px-2.5 py-1 rounded-xl text-sm shrink-0">R$ {Number(product.price).toFixed(2)}</span>
+                    </div>
+                    <p className="text-gray-400 text-xs mb-5 line-clamp-2 leading-relaxed">{product.description || 'Delicioso prato típico paraense.'}</p>
+                    
+                    <button 
+                      disabled={!product.is_available}
+                      onClick={() => setTargetProduct(product)}
+                      className="w-full py-3 bg-sabor-light text-sabor-dark font-extrabold text-sm rounded-xl hover:bg-sabor-primary transition-all disabled:opacity-45 mt-auto flex items-center justify-center gap-1.5"
+                    >
+                      <span>➕</span> Pedir Prato
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {filteredProducts.length === 0 && (
