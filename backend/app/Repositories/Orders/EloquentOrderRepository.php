@@ -10,21 +10,21 @@ class EloquentOrderRepository implements OrderRepositoryInterface
 {
     public function paginateWithDetails(int $perPage = 15): LengthAwarePaginator
     {
-        return Order::with(['table', 'items.product.category'])
+        return Order::with(['table', 'items.product.category', 'payments.user'])
             ->latest()
             ->paginate($perPage);
     }
 
     public function loadDetails(Order $order): Order
     {
-        return $order->load(['table', 'items.product.category']);
+        return $order->load(['table', 'items.product.category', 'payments.user']);
     }
 
     public function findActiveForTable(Table $table): ?Order
     {
         return Order::active()
             ->where('table_id', $table->id)
-            ->with(['table', 'items.product.category'])
+            ->with(['table', 'items.product.category', 'payments.user'])
             ->first();
     }
 
@@ -68,6 +68,6 @@ class EloquentOrderRepository implements OrderRepositoryInterface
         );
         $order->save();
 
-        return $order->fresh(['table', 'items.product.category']);
+        return $order->fresh(['table', 'items.product.category', 'payments.user']);
     }
 }

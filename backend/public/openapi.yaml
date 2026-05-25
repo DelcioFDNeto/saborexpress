@@ -25,6 +25,10 @@ tags:
     description: Comandas.
   - name: Order Items
     description: Itens de comanda.
+  - name: Kitchen
+    description: Fila operacional da cozinha.
+  - name: Payments
+    description: Pagamentos e fechamento financeiro.
 security:
   - bearerAuth: []
 paths:
@@ -534,6 +538,30 @@ paths:
           $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/ValidationError'
+  /tables/{table}/release:
+    parameters:
+      - $ref: '#/components/parameters/TableId'
+    post:
+      tags:
+        - Tables
+      summary: Libera uma mesa sem comanda ativa.
+      operationId: releaseTable
+      description: Exige perfil `administrator`, `waiter` ou `cashier`. A mesa so pode ser liberada quando nao houver comanda ativa.
+      responses:
+        '200':
+          description: Mesa liberada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Table'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /tables/{table}/active-order:
     parameters:
       - $ref: '#/components/parameters/TableId'
@@ -601,7 +629,7 @@ paths:
         - Orders
       summary: Atualiza o status de uma comanda.
       operationId: updateOrderStatus
-      description: Exige perfil `administrator`, `waiter` ou `cashier`. Comandas pagas ou canceladas não podem ter o status alterado.
+      description: Exige perfil `administrator`, `waiter` ou `cashier`. Use para compatibilidade com fechamento ou cancelamento; pagamento deve ser feito por `/orders/{order}/payments`.
       requestBody:
         required: true
         content:
@@ -630,7 +658,7 @@ paths:
         - Orders
       summary: Atualiza o status de uma comanda.
       operationId: replaceOrderStatus
-      description: Exige perfil `administrator`, `waiter` ou `cashier`. Comandas pagas ou canceladas não podem ter o status alterado.
+      description: Exige perfil `administrator`, `waiter` ou `cashier`. Use para compatibilidade com fechamento ou cancelamento; pagamento deve ser feito por `/orders/{order}/payments`.
       requestBody:
         required: true
         content:
@@ -654,6 +682,87 @@ paths:
           $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/ValidationError'
+  /orders/{order}/request-closing:
+    parameters:
+      - $ref: '#/components/parameters/OrderId'
+    post:
+      tags:
+        - Orders
+      summary: Solicita o fechamento de uma comanda.
+      operationId: requestOrderClosing
+      description: Exige perfil `administrator`, `waiter` ou `cashier`. Transiciona a comanda de `Aberta` para `Fechamento` e coloca a mesa em `Fechamento`.
+      responses:
+        '200':
+          description: Comanda em fechamento.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResourceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /orders/{order}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/OrderId'
+    post:
+      tags:
+        - Orders
+      summary: Cancela uma comanda.
+      operationId: cancelOrder
+      description: Exige perfil `administrator`, `waiter` ou `cashier`. Comandas pagas ou com pagamento pago nao podem ser canceladas.
+      responses:
+        '200':
+          description: Comanda cancelada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResourceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /orders/{order}/payments:
+    parameters:
+      - $ref: '#/components/parameters/OrderId'
+    post:
+      tags:
+        - Payments
+        - Orders
+      summary: Registra o pagamento integral de uma comanda.
+      operationId: registerOrderPayment
+      description: Exige perfil `administrator` ou `cashier`. A comanda precisa estar em `Fechamento` e o valor informado deve bater com o total atual.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterPaymentRequest'
+      responses:
+        '201':
+          description: Pagamento registrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResourceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
   /orders/{order}/items:
     parameters:
       - $ref: '#/components/parameters/OrderId'
@@ -663,7 +772,7 @@ paths:
         - Order Items
       summary: Adiciona um item à comanda.
       operationId: addOrderItem
-      description: Exige perfil `administrator`, `waiter` ou `cashier`.
+      description: Exige perfil `administrator`, `waiter` ou `cashier`. A comanda precisa estar `Aberta`.
       requestBody:
         required: true
         content:
@@ -691,7 +800,7 @@ paths:
         - Order Items
       summary: Lista itens de comanda.
       operationId: listOrderItems
-      description: Exige perfil `administrator`, `waiter` ou `cashier`.
+      description: Exige perfil `administrator`, `waiter` ou `cashier`. A comanda precisa estar `Aberta`.
       responses:
         '200':
           description: Lista paginada de itens.
@@ -711,7 +820,7 @@ paths:
         - Order Items
       summary: Exibe um item de comanda.
       operationId: showOrderItem
-      description: Exige perfil `administrator`, `waiter` ou `cashier`.
+      description: Exige perfil `administrator`, `waiter` ou `cashier`. A comanda precisa estar `Aberta`.
       responses:
         '200':
           description: Item encontrado.
@@ -730,7 +839,7 @@ paths:
         - Order Items
       summary: Atualiza um item de comanda.
       operationId: updateOrderItem
-      description: Exige perfil `administrator`, `waiter` ou `cashier`.
+      description: Exige perfil `administrator`, `waiter` ou `cashier`. A comanda precisa estar `Aberta`.
       requestBody:
         required: true
         content:
@@ -804,6 +913,132 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+  /kitchen/order-items:
+    get:
+      tags:
+        - Kitchen
+      summary: Lista a fila de itens da cozinha.
+      operationId: listKitchenOrderItems
+      description: Exige perfil `administrator` ou `kitchen`. Por padrão retorna itens `Pendente`, `Em Preparo` e `Pronto`.
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/KitchenOrderItemStatus'
+        - name: order_id
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: per_page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Lista paginada da cozinha.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedOrderItems'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /kitchen/order-items/{orderItem}/start:
+    parameters:
+      - $ref: '#/components/parameters/OrderItemId'
+    patch:
+      tags:
+        - Kitchen
+      summary: Inicia o preparo de um item.
+      operationId: startKitchenOrderItem
+      description: Exige perfil `administrator` ou `kitchen`. Transiciona o item de `Pendente` para `Em Preparo`.
+      responses:
+        '200':
+          description: Item em preparo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderItemResourceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /kitchen/order-items/{orderItem}/mark-ready:
+    parameters:
+      - $ref: '#/components/parameters/OrderItemId'
+    patch:
+      tags:
+        - Kitchen
+      summary: Marca um item como pronto.
+      operationId: markKitchenOrderItemReady
+      description: Exige perfil `administrator` ou `kitchen`. Transiciona o item de `Em Preparo` para `Pronto`.
+      responses:
+        '200':
+          description: Item pronto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderItemResourceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /payments:
+    get:
+      tags:
+        - Payments
+      summary: Lista pagamentos.
+      operationId: listPayments
+      description: Exige perfil `administrator` ou `cashier`.
+      responses:
+        '200':
+          description: Lista paginada de pagamentos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPayments'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /payments/{payment}:
+    parameters:
+      - $ref: '#/components/parameters/PaymentId'
+    get:
+      tags:
+        - Payments
+      summary: Exibe um pagamento.
+      operationId: showPayment
+      description: Exige perfil `administrator` ou `cashier`.
+      responses:
+        '200':
+          description: Pagamento encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResourceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
 components:
   securitySchemes:
     bearerAuth:
@@ -837,6 +1072,12 @@ components:
         type: integer
     OrderItemId:
       name: orderItem
+      in: path
+      required: true
+      schema:
+        type: integer
+    PaymentId:
+      name: payment
       in: path
       required: true
       schema:
@@ -1210,6 +1451,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/OrderItem'
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Payment'
         created_at:
           type:
             - string
@@ -1260,6 +1505,8 @@ components:
           $ref: '#/components/schemas/OrderItemStatus'
         product:
           $ref: '#/components/schemas/Product'
+        order:
+          $ref: '#/components/schemas/Order'
         created_at:
           type:
             - string
@@ -1277,6 +1524,71 @@ components:
         - Em Preparo
         - Pronto
         - Entregue
+    KitchenOrderItemStatus:
+      type: string
+      enum:
+        - Pendente
+        - Em Preparo
+        - Pronto
+    Payment:
+      type: object
+      required:
+        - id
+        - order_id
+        - user_id
+        - method
+        - status
+        - amount
+      properties:
+        id:
+          type: integer
+        order_id:
+          type: integer
+        user_id:
+          type: integer
+        method:
+          $ref: '#/components/schemas/PaymentMethod'
+        status:
+          $ref: '#/components/schemas/PaymentStatus'
+        amount:
+          type: string
+          example: '84.50'
+        paid_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        notes:
+          type:
+            - string
+            - 'null'
+        order:
+          $ref: '#/components/schemas/Order'
+        user:
+          $ref: '#/components/schemas/User'
+        created_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        updated_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+    PaymentMethod:
+      type: string
+      enum:
+        - Pix
+        - Cartao
+        - Dinheiro
+    PaymentStatus:
+      type: string
+      enum:
+        - Pendente
+        - Pago
+        - Cancelado
+        - Estornado
     AddOrderItemRequest:
       type: object
       required:
@@ -1300,6 +1612,24 @@ components:
       properties:
         status:
           $ref: '#/components/schemas/OrderStatus'
+    RegisterPaymentRequest:
+      type: object
+      required:
+        - method
+        - amount
+      properties:
+        method:
+          $ref: '#/components/schemas/PaymentMethod'
+        amount:
+          type: number
+          format: float
+          minimum: 0
+          example: 84.5
+        notes:
+          type:
+            - string
+            - 'null'
+          maxLength: 1000
     UpdateOrderItemRequest:
       type: object
       properties:
@@ -1357,6 +1687,13 @@ components:
       properties:
         data:
           $ref: '#/components/schemas/OrderItem'
+    PaymentResourceResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/Payment'
     PaginationLinks:
       type: object
       additionalProperties: true
@@ -1403,6 +1740,17 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/OrderItem'
+        links:
+          $ref: '#/components/schemas/PaginationLinks'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+    PaginatedPayments:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Payment'
         links:
           $ref: '#/components/schemas/PaginationLinks'
         meta:

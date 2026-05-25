@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Tables\ReleaseTableAction;
 use App\Models\Table;
 use App\Repositories\Orders\OrderRepositoryInterface;
 use App\Repositories\Tables\TableRepositoryInterface;
@@ -13,8 +14,7 @@ class TableController extends Controller
     public function __construct(
         private readonly TableRepositoryInterface $tables,
         private readonly OrderRepositoryInterface $orders,
-    ) {
-    }
+    ) {}
 
     /**
      * Display a listing of the resource.
@@ -32,10 +32,11 @@ class TableController extends Controller
         $validated = $request->validate([
             'number' => 'required|string|unique:tables,number',
             'capacity' => 'required|integer|min:1',
-            'status' => 'in:Livre,Ocupada,Reservada,Fechamento'
+            'status' => 'in:Livre,Ocupada,Reservada,Fechamento',
         ]);
 
         $table = $this->tables->create($validated);
+
         return response()->json($table, 201);
     }
 
@@ -51,7 +52,7 @@ class TableController extends Controller
 
         return response()->json([
             'table' => $table,
-            'active_order' => $activeOrder
+            'active_order' => $activeOrder,
         ]);
     }
 
@@ -61,9 +62,9 @@ class TableController extends Controller
     public function update(Request $request, Table $table)
     {
         $validated = $request->validate([
-            'number' => 'string|unique:tables,number,' . $table->id,
+            'number' => 'string|unique:tables,number,'.$table->id,
             'capacity' => 'integer|min:1',
-            'status' => 'in:Livre,Ocupada,Reservada,Fechamento'
+            'status' => 'in:Livre,Ocupada,Reservada,Fechamento',
         ]);
 
         return response()->json($this->tables->update($table, $validated));
@@ -75,6 +76,7 @@ class TableController extends Controller
     public function destroy(Table $table)
     {
         $this->tables->delete($table);
+
         return response()->json(null, 204);
     }
 
@@ -85,7 +87,7 @@ class TableController extends Controller
     {
         $validated = $request->validate([
             'customer_name' => 'nullable|string|max:255',
-            'customer_phone' => 'nullable|string|max:30'
+            'customer_phone' => 'nullable|string|max:30',
         ]);
 
         $result = DB::transaction(function () use ($request, $table, $validated) {
@@ -130,5 +132,10 @@ class TableController extends Controller
         });
 
         return response()->json($result['body'], $result['status']);
+    }
+
+    public function release(Table $table, ReleaseTableAction $releaseTable)
+    {
+        return response()->json($releaseTable->execute($table));
     }
 }

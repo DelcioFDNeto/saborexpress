@@ -19,21 +19,20 @@ class AddOrderItemAction
         private readonly OrderRepositoryInterface $orders,
         private readonly OrderItemRepositoryInterface $orderItems,
         private readonly ProductRepositoryInterface $products,
-    ) {
-    }
+    ) {}
 
     public function execute(Order $order, array $data): Order
     {
         return DB::transaction(function () use ($order, $data) {
             $lockedOrder = $this->orders->lockById($order->id);
 
-            if (!in_array($lockedOrder->status, OrderStatus::activeValues(), true)) {
+            if (! in_array($lockedOrder->status, OrderStatus::itemEditableValues(), true)) {
                 throw new ConflictHttpException('Order is not open for item changes.');
             }
 
             $product = $this->products->findOrFail($data['product_id']);
 
-            if (!$product->is_available) {
+            if (! $product->is_available) {
                 throw new UnprocessableEntityHttpException('Product is not available.');
             }
 

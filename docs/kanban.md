@@ -28,6 +28,17 @@ Este documento acompanha o estado atual do SaborExpress. Ele deve ser atualizado
 - Atualização de quantidade, observação e status de item.
 - Remoção de item da comanda.
 - Recálculo do total da comanda no backend.
+- Solicitação de fechamento de comanda.
+- Cancelamento de comanda antes do pagamento.
+- Registro de pagamento integral da comanda.
+- Transição oficial de comanda: `Aberta -> Fechamento -> Paga` ou `Cancelada`.
+- Bloqueio de alteração de itens após solicitação de fechamento.
+- Fila backend da cozinha para itens `Pendente`, `Em Preparo` e `Pronto`.
+- Transição de item da cozinha de `Pendente` para `Em Preparo`.
+- Transição de item da cozinha de `Em Preparo` para `Pronto`.
+- Bloqueio de fechamento de comanda com itens pendentes ou em preparo.
+- Liberação de mesa após pagamento ou cancelamento.
+- Repositories, Action, Resource e Form Request para pagamentos.
 - API Resources para categorias, produtos, comandas e itens de comanda.
 - Form Requests para operações de comanda.
 - Actions Laravel para regras de negócio de comandas.
@@ -43,18 +54,18 @@ Este documento acompanha o estado atual do SaborExpress. Ele deve ser atualizado
 - Consolidação da documentação técnica.
 - Separação clara entre funcionalidades implementadas e funcionalidades planejadas.
 - Validação do fluxo backend de comandas antes de iniciar novas telas no frontend.
+- Validação funcional do fluxo de pagamento com dados reais.
 
 ## A fazer
 
 - Criar seeders de categorias e produtos.
 - Implementar tela frontend de comanda por mesa.
 - Permitir que o garçom adicione produtos à comanda pelo frontend.
-- Implementar fluxo de envio de itens para cozinha.
 - Criar painel da cozinha.
-- Criar fluxo de fechamento de conta.
-- Implementar pagamento.
-- Liberar mesa após pagamento ou cancelamento.
-- Criar fluxo de caixa.
+- Implementar pagamento parcial.
+- Implementar divisão de conta por valor.
+- Implementar divisão de conta por itens.
+- Criar fluxo de caixa completo.
 - Criar fluxo de delivery.
 - Criar telas administrativas para categorias e produtos.
 - Criar tela administrativa para mesas.

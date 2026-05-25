@@ -8,4 +8,21 @@ enum OrderItemStatus: string
     case Preparing = 'Em Preparo';
     case Ready = 'Pronto';
     case Delivered = 'Entregue';
+
+    public static function kitchenQueueValues(): array
+    {
+        return [
+            self::Pending->value,
+            self::Preparing->value,
+            self::Ready->value,
+        ];
+    }
+
+    public static function unfinishedKitchenValues(): array
+    {
+        return [
+            self::Pending->value,
+            self::Preparing->value,
+        ];
+    }
 }

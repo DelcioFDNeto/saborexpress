@@ -8,6 +8,8 @@ use App\Repositories\OrderItems\EloquentOrderItemRepository;
 use App\Repositories\OrderItems\OrderItemRepositoryInterface;
 use App\Repositories\Orders\EloquentOrderRepository;
 use App\Repositories\Orders\OrderRepositoryInterface;
+use App\Repositories\Payments\EloquentPaymentRepository;
+use App\Repositories\Payments\PaymentRepositoryInterface;
 use App\Repositories\Products\EloquentProductRepository;
 use App\Repositories\Products\ProductRepositoryInterface;
 use App\Repositories\Tables\EloquentTableRepository;
@@ -28,6 +30,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(TableRepositoryInterface::class, EloquentTableRepository::class);
         $this->app->bind(OrderRepositoryInterface::class, EloquentOrderRepository::class);
         $this->app->bind(OrderItemRepositoryInterface::class, EloquentOrderItemRepository::class);
+        $this->app->bind(PaymentRepositoryInterface::class, EloquentPaymentRepository::class);
         $this->app->bind(UserRepositoryInterface::class, EloquentUserRepository::class);
     }
 

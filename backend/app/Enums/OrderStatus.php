@@ -16,4 +16,19 @@ enum OrderStatus: string
             self::Closing->value,
         ];
     }
+
+    public static function itemEditableValues(): array
+    {
+        return [
+            self::Open->value,
+        ];
+    }
+
+    public static function terminalValues(): array
+    {
+        return [
+            self::Paid->value,
+            self::Canceled->value,
+        ];
+    }
 }

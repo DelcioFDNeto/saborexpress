@@ -16,8 +16,7 @@ class RemoveOrderItemAction
         private readonly RecalculateOrderTotalAction $recalculateOrderTotal,
         private readonly OrderRepositoryInterface $orders,
         private readonly OrderItemRepositoryInterface $orderItems,
-    ) {
-    }
+    ) {}
 
     public function execute(OrderItem $orderItem): Order
     {
@@ -26,7 +25,7 @@ class RemoveOrderItemAction
 
             $order = $this->orders->lockById($lockedItem->order_id);
 
-            if (!in_array($order->status, OrderStatus::activeValues(), true)) {
+            if (! in_array($order->status, OrderStatus::itemEditableValues(), true)) {
                 throw new ConflictHttpException('Order is not open for item changes.');
             }
 

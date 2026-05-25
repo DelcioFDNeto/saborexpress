@@ -10,6 +10,8 @@ interface OrderItemRepositoryInterface
 {
     public function paginateWithProduct(int $perPage = 15): LengthAwarePaginator;
 
+    public function paginateForKitchen(array $filters = [], int $perPage = 15): LengthAwarePaginator;
+
     public function loadProduct(OrderItem $orderItem): OrderItem;
 
     public function createForOrder(Order $order, array $data): OrderItem;
@@ -17,6 +19,8 @@ interface OrderItemRepositoryInterface
     public function lockById(int $id): OrderItem;
 
     public function update(OrderItem $orderItem, array $data): OrderItem;
+
+    public function hasStatusesForOrder(Order $order, array $statuses): bool;
 
     public function delete(OrderItem $orderItem): void;
 }
