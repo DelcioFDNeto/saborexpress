@@ -1,0 +1,1409 @@
+openapi: 3.1.0
+info:
+  title: SaborExpress API
+  version: 0.3.0
+  summary: API REST para gestão acadêmica de restaurante.
+  license:
+    name: MIT
+    identifier: MIT
+  description: >
+    Documentação OpenAPI da API atual do SaborExpress. A especificação descreve
+    apenas as rotas implementadas no backend Laravel.
+servers:
+  - url: /api
+    description: Servidor da aplicação atual
+tags:
+  - name: Auth
+    description: Autenticação e sessão.
+  - name: Categories
+    description: Categorias do cardápio.
+  - name: Products
+    description: Produtos do cardápio.
+  - name: Tables
+    description: Mesas do salão.
+  - name: Orders
+    description: Comandas.
+  - name: Order Items
+    description: Itens de comanda.
+security:
+  - bearerAuth: []
+paths:
+  /login:
+    post:
+      tags:
+        - Auth
+      summary: Autentica um usuário.
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              waiter:
+                value:
+                  email: waiter@saborexpress.com
+                  password: password
+      responses:
+        '200':
+          description: Login realizado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /user:
+    get:
+      tags:
+        - Auth
+      summary: Retorna o usuário autenticado.
+      operationId: getAuthenticatedUser
+      responses:
+        '200':
+          description: Usuário autenticado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+  /me:
+    get:
+      tags:
+        - Auth
+      summary: Retorna o usuário autenticado.
+      operationId: getMe
+      responses:
+        '200':
+          description: Usuário autenticado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+  /logout:
+    post:
+      tags:
+        - Auth
+      summary: Encerra a sessão atual.
+      operationId: logout
+      responses:
+        '200':
+          description: Logout realizado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+  /categories:
+    get:
+      tags:
+        - Categories
+      summary: Lista categorias.
+      operationId: listCategories
+      security: []
+      responses:
+        '200':
+          description: Lista paginada de categorias.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCategories'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    post:
+      tags:
+        - Categories
+      summary: Cria uma categoria.
+      operationId: createCategory
+      description: Exige perfil `administrator`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryWrite'
+      responses:
+        '201':
+          description: Categoria criada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResourceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /categories/{category}:
+    parameters:
+      - $ref: '#/components/parameters/CategoryId'
+    get:
+      tags:
+        - Categories
+      summary: Exibe uma categoria.
+      operationId: showCategory
+      security: []
+      responses:
+        '200':
+          description: Categoria encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResourceResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+        - Categories
+      summary: Atualiza uma categoria.
+      operationId: updateCategory
+      description: Exige perfil `administrator`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryUpdate'
+      responses:
+        '200':
+          description: Categoria atualizada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResourceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    put:
+      tags:
+        - Categories
+      summary: Substitui uma categoria.
+      operationId: replaceCategory
+      description: Exige perfil `administrator`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryUpdate'
+      responses:
+        '200':
+          description: Categoria atualizada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResourceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags:
+        - Categories
+      summary: Remove uma categoria.
+      operationId: deleteCategory
+      description: Exige perfil `administrator`.
+      responses:
+        '204':
+          description: Categoria removida.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /products:
+    get:
+      tags:
+        - Products
+      summary: Lista produtos.
+      operationId: listProducts
+      security: []
+      parameters:
+        - in: query
+          name: category_id
+          schema:
+            type: integer
+          description: Filtra produtos por categoria.
+        - in: query
+          name: is_available
+          schema:
+            type: boolean
+          description: Filtra produtos por disponibilidade.
+      responses:
+        '200':
+          description: Lista paginada de produtos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProducts'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    post:
+      tags:
+        - Products
+      summary: Cria um produto.
+      operationId: createProduct
+      description: Exige perfil `administrator`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductWrite'
+      responses:
+        '201':
+          description: Produto criado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResourceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /products/{product}:
+    parameters:
+      - $ref: '#/components/parameters/ProductId'
+    get:
+      tags:
+        - Products
+      summary: Exibe um produto.
+      operationId: showProduct
+      security: []
+      responses:
+        '200':
+          description: Produto encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResourceResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+        - Products
+      summary: Atualiza um produto.
+      operationId: updateProduct
+      description: Exige perfil `administrator`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductUpdate'
+      responses:
+        '200':
+          description: Produto atualizado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResourceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    put:
+      tags:
+        - Products
+      summary: Substitui um produto.
+      operationId: replaceProduct
+      description: Exige perfil `administrator`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductUpdate'
+      responses:
+        '200':
+          description: Produto atualizado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResourceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags:
+        - Products
+      summary: Remove um produto.
+      operationId: deleteProduct
+      description: Exige perfil `administrator`.
+      responses:
+        '204':
+          description: Produto removido.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /tables:
+    get:
+      tags:
+        - Tables
+      summary: Lista mesas.
+      operationId: listTables
+      description: Exige perfil `administrator`, `waiter` ou `cashier`.
+      responses:
+        '200':
+          description: Lista de mesas.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Table'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - Tables
+      summary: Cria uma mesa.
+      operationId: createTable
+      description: Exige perfil `administrator`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TableWrite'
+      responses:
+        '201':
+          description: Mesa criada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Table'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /tables/{table}:
+    parameters:
+      - $ref: '#/components/parameters/TableId'
+    get:
+      tags:
+        - Tables
+      summary: Exibe uma mesa e sua comanda ativa.
+      operationId: showTable
+      description: Exige perfil `administrator`, `waiter` ou `cashier`.
+      responses:
+        '200':
+          description: Mesa encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableShowResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+        - Tables
+      summary: Atualiza uma mesa.
+      operationId: updateTable
+      description: Exige perfil `administrator`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TableUpdate'
+      responses:
+        '200':
+          description: Mesa atualizada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Table'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    put:
+      tags:
+        - Tables
+      summary: Substitui uma mesa.
+      operationId: replaceTable
+      description: Exige perfil `administrator`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TableUpdate'
+      responses:
+        '200':
+          description: Mesa atualizada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Table'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags:
+        - Tables
+      summary: Remove uma mesa.
+      operationId: deleteTable
+      description: Exige perfil `administrator`.
+      responses:
+        '204':
+          description: Mesa removida.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /tables/{table}/open:
+    parameters:
+      - $ref: '#/components/parameters/TableId'
+    post:
+      tags:
+        - Tables
+        - Orders
+      summary: Abre uma mesa e cria uma comanda.
+      operationId: openTable
+      description: Exige perfil `administrator`, `waiter` ou `cashier`.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenTableRequest'
+      responses:
+        '201':
+          description: Mesa aberta e comanda criada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenTableResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /tables/{table}/active-order:
+    parameters:
+      - $ref: '#/components/parameters/TableId'
+    get:
+      tags:
+        - Orders
+      summary: Retorna a comanda ativa de uma mesa.
+      operationId: getActiveOrderForTable
+      description: Exige perfil `administrator`, `waiter` ou `cashier`.
+      responses:
+        '200':
+          description: Comanda ativa encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResourceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /orders:
+    get:
+      tags:
+        - Orders
+      summary: Lista comandas.
+      operationId: listOrders
+      description: Exige perfil `administrator`, `waiter` ou `cashier`.
+      responses:
+        '200':
+          description: Lista paginada de comandas.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedOrders'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /orders/{order}:
+    parameters:
+      - $ref: '#/components/parameters/OrderId'
+    get:
+      tags:
+        - Orders
+      summary: Exibe uma comanda.
+      operationId: showOrder
+      description: Exige perfil `administrator`, `waiter` ou `cashier`.
+      responses:
+        '200':
+          description: Comanda encontrada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResourceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+        - Orders
+      summary: Atualiza o status de uma comanda.
+      operationId: updateOrderStatus
+      description: Exige perfil `administrator`, `waiter` ou `cashier`. Comandas pagas ou canceladas não podem ter o status alterado.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrderStatusRequest'
+      responses:
+        '200':
+          description: Status da comanda atualizado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResourceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    put:
+      tags:
+        - Orders
+      summary: Atualiza o status de uma comanda.
+      operationId: replaceOrderStatus
+      description: Exige perfil `administrator`, `waiter` ou `cashier`. Comandas pagas ou canceladas não podem ter o status alterado.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrderStatusRequest'
+      responses:
+        '200':
+          description: Status da comanda atualizado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResourceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /orders/{order}/items:
+    parameters:
+      - $ref: '#/components/parameters/OrderId'
+    post:
+      tags:
+        - Orders
+        - Order Items
+      summary: Adiciona um item à comanda.
+      operationId: addOrderItem
+      description: Exige perfil `administrator`, `waiter` ou `cashier`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddOrderItemRequest'
+      responses:
+        '201':
+          description: Item adicionado e comanda recalculada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResourceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /order-items:
+    get:
+      tags:
+        - Order Items
+      summary: Lista itens de comanda.
+      operationId: listOrderItems
+      description: Exige perfil `administrator`, `waiter` ou `cashier`.
+      responses:
+        '200':
+          description: Lista paginada de itens.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedOrderItems'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /order-items/{orderItem}:
+    parameters:
+      - $ref: '#/components/parameters/OrderItemId'
+    get:
+      tags:
+        - Order Items
+      summary: Exibe um item de comanda.
+      operationId: showOrderItem
+      description: Exige perfil `administrator`, `waiter` ou `cashier`.
+      responses:
+        '200':
+          description: Item encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderItemResourceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+        - Order Items
+      summary: Atualiza um item de comanda.
+      operationId: updateOrderItem
+      description: Exige perfil `administrator`, `waiter` ou `cashier`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrderItemRequest'
+      responses:
+        '200':
+          description: Item atualizado e comanda recalculada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResourceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    put:
+      tags:
+        - Order Items
+      summary: Substitui um item de comanda.
+      operationId: replaceOrderItem
+      description: Exige perfil `administrator`, `waiter` ou `cashier`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrderItemRequest'
+      responses:
+        '200':
+          description: Item atualizado e comanda recalculada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResourceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags:
+        - Order Items
+      summary: Remove um item de comanda.
+      operationId: deleteOrderItem
+      description: Exige perfil `administrator`, `waiter` ou `cashier`.
+      responses:
+        '200':
+          description: Item removido e comanda recalculada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResourceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Sanctum token
+  parameters:
+    CategoryId:
+      name: category
+      in: path
+      required: true
+      schema:
+        type: integer
+    ProductId:
+      name: product
+      in: path
+      required: true
+      schema:
+        type: integer
+    TableId:
+      name: table
+      in: path
+      required: true
+      schema:
+        type: integer
+    OrderId:
+      name: order
+      in: path
+      required: true
+      schema:
+        type: integer
+    OrderItemId:
+      name: orderItem
+      in: path
+      required: true
+      schema:
+        type: integer
+  responses:
+    Unauthenticated:
+      description: Usuário não autenticado.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MessageResponse'
+    Forbidden:
+      description: Usuário sem permissão para acessar o recurso.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MessageResponse'
+    NotFound:
+      description: Recurso não encontrado.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MessageResponse'
+    Conflict:
+      description: Conflito com o estado atual do recurso.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MessageResponse'
+    ValidationError:
+      description: Erro de validação.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+    LoginResponse:
+      type: object
+      required:
+        - access_token
+        - token_type
+        - user
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+          example: Bearer
+        user:
+          $ref: '#/components/schemas/User'
+    User:
+      type: object
+      required:
+        - id
+        - name
+        - email
+        - role
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum:
+            - administrator
+            - waiter
+            - kitchen
+            - cashier
+            - delivery
+            - client
+    Category:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type:
+            - string
+            - 'null'
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        created_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        updated_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+    CategoryWrite:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type:
+            - string
+            - 'null'
+    CategoryUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type:
+            - string
+            - 'null'
+    Product:
+      type: object
+      required:
+        - id
+        - category_id
+        - name
+        - price
+        - is_available
+      properties:
+        id:
+          type: integer
+        category_id:
+          type: integer
+        name:
+          type: string
+        description:
+          type:
+            - string
+            - 'null'
+        image_url:
+          type:
+            - string
+            - 'null'
+          format: uri
+        price:
+          type: string
+          example: '42.90'
+        is_available:
+          type: boolean
+        category:
+          $ref: '#/components/schemas/Category'
+        created_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        updated_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+    ProductWrite:
+      type: object
+      required:
+        - category_id
+        - name
+        - price
+      properties:
+        category_id:
+          type: integer
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type:
+            - string
+            - 'null'
+        image_url:
+          type:
+            - string
+            - 'null'
+          format: uri
+          maxLength: 2048
+        price:
+          type: number
+          minimum: 0
+        is_available:
+          type: boolean
+    ProductUpdate:
+      type: object
+      properties:
+        category_id:
+          type: integer
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type:
+            - string
+            - 'null'
+        image_url:
+          type:
+            - string
+            - 'null'
+          format: uri
+        price:
+          type: number
+          minimum: 0
+        is_available:
+          type: boolean
+    Table:
+      type: object
+      required:
+        - id
+        - number
+        - capacity
+        - status
+      properties:
+        id:
+          type: integer
+        number:
+          type: string
+        capacity:
+          type: integer
+        status:
+          $ref: '#/components/schemas/TableStatus'
+        created_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        updated_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+    TableWrite:
+      type: object
+      required:
+        - number
+        - capacity
+      properties:
+        number:
+          type: string
+        capacity:
+          type: integer
+          minimum: 1
+        status:
+          $ref: '#/components/schemas/TableStatus'
+    TableUpdate:
+      type: object
+      properties:
+        number:
+          type: string
+        capacity:
+          type: integer
+          minimum: 1
+        status:
+          $ref: '#/components/schemas/TableStatus'
+    TableStatus:
+      type: string
+      enum:
+        - Livre
+        - Ocupada
+        - Reservada
+        - Fechamento
+    TableShowResponse:
+      type: object
+      required:
+        - table
+        - active_order
+      properties:
+        table:
+          $ref: '#/components/schemas/Table'
+        active_order:
+          oneOf:
+            - $ref: '#/components/schemas/Order'
+            - type: 'null'
+    OpenTableRequest:
+      type: object
+      properties:
+        customer_name:
+          type:
+            - string
+            - 'null'
+          maxLength: 255
+        customer_phone:
+          type:
+            - string
+            - 'null'
+          maxLength: 30
+    OpenTableResponse:
+      type: object
+      required:
+        - message
+        - table
+        - order
+      properties:
+        message:
+          type: string
+        table:
+          $ref: '#/components/schemas/Table'
+        order:
+          $ref: '#/components/schemas/Order'
+    Order:
+      type: object
+      required:
+        - id
+        - status
+        - type
+        - total_amount
+      properties:
+        id:
+          type: integer
+        table_id:
+          type:
+            - integer
+            - 'null'
+        user_id:
+          type: integer
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        type:
+          type: string
+          enum:
+            - Mesa
+            - Delivery
+            - Takeout
+        customer_name:
+          type:
+            - string
+            - 'null'
+        customer_phone:
+          type:
+            - string
+            - 'null'
+        delivery_address:
+          type:
+            - string
+            - 'null'
+        total_amount:
+          type: string
+          example: '84.50'
+        discount:
+          type: string
+          example: '0.00'
+        service_fee:
+          type: string
+          example: '0.00'
+        table:
+          $ref: '#/components/schemas/Table'
+        user:
+          $ref: '#/components/schemas/User'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        created_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        updated_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+    OrderStatus:
+      type: string
+      enum:
+        - Aberta
+        - Fechamento
+        - Paga
+        - Cancelada
+    OrderItem:
+      type: object
+      required:
+        - id
+        - order_id
+        - product_id
+        - quantity
+        - unit_price
+        - line_total
+        - status
+      properties:
+        id:
+          type: integer
+        order_id:
+          type: integer
+        product_id:
+          type: integer
+        quantity:
+          type: integer
+        unit_price:
+          type: string
+          example: '42.90'
+        line_total:
+          type: string
+          example: '85.80'
+        notes:
+          type:
+            - string
+            - 'null'
+        status:
+          $ref: '#/components/schemas/OrderItemStatus'
+        product:
+          $ref: '#/components/schemas/Product'
+        created_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        updated_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+    OrderItemStatus:
+      type: string
+      enum:
+        - Pendente
+        - Em Preparo
+        - Pronto
+        - Entregue
+    AddOrderItemRequest:
+      type: object
+      required:
+        - product_id
+        - quantity
+      properties:
+        product_id:
+          type: integer
+        quantity:
+          type: integer
+          minimum: 1
+        notes:
+          type:
+            - string
+            - 'null'
+          maxLength: 1000
+    UpdateOrderStatusRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+    UpdateOrderItemRequest:
+      type: object
+      properties:
+        quantity:
+          type: integer
+          minimum: 1
+        notes:
+          type:
+            - string
+            - 'null'
+          maxLength: 1000
+        status:
+          $ref: '#/components/schemas/OrderItemStatus'
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+    ValidationError:
+      type: object
+      properties:
+        message:
+          type: string
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+    CategoryResourceResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/Category'
+    ProductResourceResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/Product'
+    OrderResourceResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/Order'
+    OrderItemResourceResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/OrderItem'
+    PaginationLinks:
+      type: object
+      additionalProperties: true
+    PaginationMeta:
+      type: object
+      additionalProperties: true
+    PaginatedCategories:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+        links:
+          $ref: '#/components/schemas/PaginationLinks'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+    PaginatedProducts:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        links:
+          $ref: '#/components/schemas/PaginationLinks'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+    PaginatedOrders:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Order'
+        links:
+          $ref: '#/components/schemas/PaginationLinks'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+    PaginatedOrderItems:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        links:
+          $ref: '#/components/schemas/PaginationLinks'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
