@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../lib/api';
+import axios from 'axios';
+
+interface ActiveOrder {
+  id: number;
+  customer_name: string | null;
+  status: string;
+}
 
 interface Table {
   id: number;
@@ -14,6 +20,7 @@ export default function Tables() {
   const [tables, setTables] = useState<Table[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Modal State
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
@@ -21,7 +28,8 @@ export default function Tables() {
 
   const fetchTables = async () => {
     try {
-      const res = await api.get('/tables');
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const res = await axios.get(`${apiUrl}/api/tables`);
       setTables(res.data);
     } catch (err) {
       console.error(err);
@@ -39,10 +47,12 @@ export default function Tables() {
     setActionLoading(true);
 
     try {
-      await api.post(`/tables/${selectedTable.id}/open`, {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      await axios.post(`${apiUrl}/api/tables/${selectedTable.id}/open`, {
         customer_name: customerName,
         customer_phone: customerPhone,
       });
+      // Refresh
       await fetchTables();
       closeModal();
     } catch (err) {
@@ -85,6 +95,7 @@ export default function Tables() {
           </div>
         </div>
 
+        {/* Grid de Mesas */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
           {tables.map(table => (
             <div 
@@ -112,6 +123,7 @@ export default function Tables() {
           ))}
         </div>
 
+        {/* Modal de Abertura de Mesa */}
         {selectedTable && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl transform transition-all">

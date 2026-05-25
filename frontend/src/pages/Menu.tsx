@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { api } from '../lib/api';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 
 interface Category {
   id: number;
@@ -22,11 +22,15 @@ export default function Menu() {
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
 
   useEffect(() => {
-    api.get('/categories').then(res => {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    
+    // Fetch categories
+    axios.get(`${apiUrl}/api/categories`).then(res => {
       setCategories(res.data.data || []);
     }).catch(err => console.error(err));
 
-    api.get('/products').then(res => {
+    // Fetch products
+    axios.get(`${apiUrl}/api/products`).then(res => {
       setProducts(res.data.data || []);
     }).catch(err => console.error(err));
   }, []);
@@ -39,6 +43,7 @@ export default function Menu() {
     <div className="p-8">
       <h1 className="text-3xl font-bold mb-6">Cardápio</h1>
       
+      {/* Category Filter */}
       <div className="flex gap-4 mb-8 overflow-x-auto">
         <button 
           onClick={() => setActiveCategory(null)}
@@ -57,6 +62,7 @@ export default function Menu() {
         ))}
       </div>
 
+      {/* Product List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredProducts.map(product => (
           <div key={product.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow flex flex-col">

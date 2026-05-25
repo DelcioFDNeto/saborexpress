@@ -1,9 +1,7 @@
 import { useState, useContext } from 'react';
-import type { FormEvent } from 'react';
 import { AuthContext } from '../contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
-import { isAxiosError } from 'axios';
-import { api } from '../lib/api';
+import axios from 'axios';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -13,19 +11,21 @@ export default function Login() {
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const handleLogin = async (e: FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
-      const res = await api.post('/login', {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const res = await axios.post(`${apiUrl}/api/login`, {
         email,
         password
       });
 
       login(res.data.access_token, res.data.user);
       
+      // Redirect based on role
       const role = res.data.user.role;
       if (role === 'administrator') navigate('/dashboard');
       else if (role === 'waiter') navigate('/mesas');
@@ -34,9 +34,9 @@ export default function Login() {
       else if (role === 'delivery') navigate('/entregas');
       else navigate('/cardapio');
 
-    } catch (err: unknown) {
-      if (isAxiosError<{ errors?: { email?: string[] } }>(err) && err.response?.data.errors) {
-        setError(err.response.data.errors.email?.[0] || 'Falha ao fazer login.');
+    } catch (err: any) {
+      if (err.response && err.response.data && err.response.data.errors) {
+        setError(err.response.data.errors.email[0] || 'Falha ao fazer login.');
       } else {
         setError('Erro de conexão. Verifique se a API está online.');
       }

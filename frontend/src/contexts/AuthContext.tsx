@@ -1,6 +1,5 @@
-import { createContext, useState, useEffect } from 'react';
-import type { ReactNode } from 'react';
-import { setAuthToken } from '../lib/api';
+import { createContext, useState, useEffect, ReactNode } from 'react';
+import axios from 'axios';
 
 interface User {
   id: number;
@@ -33,7 +32,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
       
-      setAuthToken(storedToken);
+      // Configure axios default header
+      axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
     }
     
     setIsLoading(false);
@@ -46,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('@SaborExpress:token', newToken);
     localStorage.setItem('@SaborExpress:user', JSON.stringify(loggedUser));
     
-    setAuthToken(newToken);
+    axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
   };
 
   const logout = () => {
@@ -54,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     localStorage.removeItem('@SaborExpress:token');
     localStorage.removeItem('@SaborExpress:user');
-    setAuthToken(null);
+    delete axios.defaults.headers.common['Authorization'];
   };
 
   return (
