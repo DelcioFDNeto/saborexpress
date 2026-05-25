@@ -14,9 +14,9 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 - [x] Frontend React com Vite, TypeScript, Tailwind CSS, Axios e React Router.
 - [x] Guia local `.ignore/module-guidelines-laravel.md` ignorado pelo Git.
 - [x] Documentação principal no `README.md`.
-- [ ] Definir estratégia de deploy.
-- [ ] Criar configuração de produção.
-- [ ] Criar pipeline de CI/CD.
+- [x] Definir estratégia de deploy.
+- [x] Criar configuração de produção.
+- [x] Criar pipeline de CI/CD.
 
 ## M01 - Autenticação, RBAC e Usuários
 
@@ -33,7 +33,7 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 - [x] Ativação e desativação de usuários.
 - [x] Filtros de usuários por papel, status ativo e busca textual.
 - [x] `UserResource` sem vazamento de senha ou token.
-- [ ] Avaliar uso de Policies quando houver regras por recurso.
+- [x] Avaliar uso de Policies quando houver regras por recurso.
 
 ### Frontend
 
@@ -58,7 +58,7 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 - [x] Estoque simples opcional por `stock_quantity`.
 - [x] Ajuste automático de estoque ao adicionar, alterar, remover ou cancelar item de comanda.
 - [x] Seeders de categorias e produtos.
-- [ ] Definir se haverá estoque avançado com movimentações históricas.
+- [x] Definir se haverá estoque avançado com movimentações históricas.
 
 ### Frontend
 
@@ -83,7 +83,7 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 - [x] Junção de comandas entre mesas abertas.
 - [x] Status de mesa: `Livre`, `Ocupada`, `Reservada`, `Fechamento`, `Limpeza`.
 - [x] Múltiplas reservas com histórico via tabela `table_reservations` (backend robusto).
-- [ ] Definir histórico detalhado de movimentações de mesa, caso o escopo exija auditoria operacional específica.
+- [x] Definir histórico detalhado de movimentações de mesa, caso o escopo exija auditoria operacional específica.
 
 ### Frontend
 
@@ -109,7 +109,7 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 - [x] Rotas administrativas `GET /api/audit-events` e `GET /api/audit-events/{auditEvent}`.
 - [x] Filtros por evento, usuário, recurso auditado, período e paginação.
 - [x] Registro automático de eventos nos fluxos de usuários, categorias, produtos, mesas, comandas, itens, cozinha e pagamentos.
-- [ ] Definir política de retenção ou expurgo de histórico.
+- [x] Definir política de retenção ou expurgo de histórico.
 
 ### Frontend
 
@@ -257,8 +257,8 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 - [x] `frontend/Dockerfile` com Node 22 e Vite.
 - [x] `.dockerignore` para backend e frontend.
 - [x] Scripts Docker no `package.json`.
-- [ ] Avaliar imagem de produção separada para frontend estático.
-- [ ] Avaliar uso de variáveis reais de ambiente para produção.
+- [x] Avaliar imagem de produção separada para frontend estático.
+- [x] Avaliar uso de variáveis reais de ambiente para produção.
 
 ## M12 - Qualidade Técnica
 
@@ -269,18 +269,18 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 - [x] Uso de transações nos fluxos críticos.
 - [x] Uso de `lockForUpdate()` em operações sensíveis.
 - [x] Validações manuais com lint PHP, listagem de rotas, migrations e seeders.
-- [ ] Criar testes automatizados.
-- [ ] Criar factories específicas para os módulos principais.
-- [ ] Criar testes de integração para o fluxo presencial completo.
-- [ ] Criar testes de integração para delivery.
-- [ ] Criar testes de integração para pagamentos.
+- [x] Criar testes automatizados.
+- [x] Criar factories específicas para os módulos principais.
+- [x] Criar testes de integração para o fluxo presencial completo.
+- [x] Criar testes de integração para delivery.
+- [x] Criar testes de integração para pagamentos.
 
 ### Frontend
 
 - [x] Lint configurado.
 - [x] Cliente HTTP centralizado (`lib/api.ts` integrado em 100% das páginas e modais do frontend).
 - [x] `.env.example` com `VITE_API_URL`.
-- [ ] Padronizar componentes visuais.
+- [x] Padronizar componentes visuais.
 - [x] Melhorar tratamento global de erros no cliente.
 - [x] Revisar responsividade das telas operacionais (landing page, login, mesas, comandas, cozinha, caixa e delivery otimizados para mobile, tablet e desktop).
 

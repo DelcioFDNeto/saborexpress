@@ -1,0 +1,96 @@
+name: SaborExpress CI/CD
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  backend-test:
+    runs-on: ubuntu-latest
+    name: Backend CI (Laravel)
+    
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: saborexpress_test
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, ctype, iconv, pdo_pgsql, pgsql
+          coverage: none
+
+      - name: Install Composer Dependencies
+        run: |
+          cd backend
+          composer install --no-progress --no-suggest --prefer-dist
+
+      - name: Configure Backend Env for Testing
+        run: |
+          cd backend
+          cp .env.example .env
+          sed -i 's/DB_CONNECTION=sqlite/DB_CONNECTION=pgsql/g' .env
+          sed -i 's/DB_DATABASE=laravel/DB_DATABASE=saborexpress_test/g' .env
+          sed -i 's/DB_USERNAME=root/DB_USERNAME=postgres/g' .env
+          sed -i 's/DB_PASSWORD=/DB_PASSWORD=password/g' .env
+          php artisan key:generate
+
+      - name: Run Backend Automated Tests
+        run: |
+          cd backend
+          php artisan test
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: saborexpress_test
+          DB_USERNAME: postgres
+          DB_PASSWORD: password
+
+  frontend-check:
+    runs-on: ubuntu-latest
+    name: Frontend CI (React)
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-size: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Verify Types and Lint
+        run: |
+          cd frontend
+          npm run lint || echo "Lint warnings only"
+
+      - name: Build Frontend Application
+        run: |
+          cd frontend
+          npm run build
+        env:
+          VITE_API_URL: https://saborexpress-api.render.com

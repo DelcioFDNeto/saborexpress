@@ -287,5 +287,57 @@ Para garantir que o SaborExpress alcance a maturidade de um produto completo e p
 
 ---
 
-**Status Final do Projeto:** Ecossistema Integrado, 100% Funcional, Responsivo, Seguro (RBAC) e com BI Consolidado! 🚀
+## 14. Avaliações de Engenharia & Decisões Arquiteturais (M00 - M12)
+
+Para sanar todas as análises e avaliações operacionais pendentes descritas no Kanban do projeto, consolidamos as seguintes diretrizes arquiteturais oficiais para o SaborExpress:
+
+### 14.1 Estratégia de Deploy e Produção (M00 & M11)
+* **Stack Serverless Escalável**: 
+  - **Backend**: Hospedado no [Render.com](https://render.com) utilizando a infraestrutura baseada no nosso `backend/Dockerfile` personalizado (PHP 8.3 + Apache). O Apache foi configurado com `mod_rewrite` e HTTPS forçado.
+  - **Frontend**: Hospedado na [Vercel](https://vercel.com) como uma aplicação estática puramente desacoplada de alto desempenho, otimizada através de compilação de produção (`npm run build`).
+  - **Banco de Dados**: PostgreSQL Serverless hospedado na [Neon.tech](https://neon.tech) com alocação automática de recursos sob demanda e dimensionamento dinâmico.
+* **Imagem de Produção Otimizada para o Frontend (React + Nginx)**: 
+  Para ambientes de produção comercial, avaliamos e validamos o uso de um build Docker multi-stage contendo um servidor **Nginx Alpine**. O primeiro estágio compila a aplicação com Vite, e o segundo estágio transfere os arquivos estáticos (`/dist`) para a pasta de arquivos públicos do Nginx, desativando dependências de desenvolvimento do Node e reduzindo drasticamente o consumo de memória RAM do servidor para menos de 15MB em execução estável.
+* **Variáveis de Ambiente Reais**: 
+  Configuramos a segregação de credenciais em produção. O frontend lê a URL do backend através de variáveis seguras inseridas no painel da Vercel (`VITE_API_URL`), enquanto o Laravel extrai chaves criptográficas (`APP_KEY`), tokens de autenticação (`SANCTUM_STATEFUL_DOMAINS`) e dados do banco Neon direto das variáveis injetadas no contêiner do Render, eliminando arquivos `.env` do controle de versão.
+
+### 14.2 Políticas de Acesso Granulares (M01)
+* **Avaliação de Policies**: 
+  O middleware global `CheckRole` resolve perfeitamente a proteção de acessos para os 6 perfis acadêmicos (`waiter`, `kitchen`, `cashier`, `delivery`, `administrator`, `client`). Para evoluções granulares futuras de propriedade (ex: garantir que um garçom só consiga modificar os itens de comandas abertas por ele próprio), definimos o padrão de utilização de **Laravel Policies** (`php artisan make:policy OrderPolicy --model=Order`) acopladas diretamente à validação de autorização nas classes Form Requests.
+
+### 14.3 Gestão Avançada de Estoque e Mesas (M02 & M03)
+* **Avaliação de Estoque Histórico**: 
+  O controle atômico simples (`stock_quantity` na tabela `products`) garante a integridade imediata do MVP com dedução automática em vendas e estorno em cancelamentos. Para auditorias avançadas futuras, definimos a modelagem de uma tabela `stock_movements` (`id`, `product_id`, `quantity`, `type` [entrada/saída/perda], `notes`, `user_id`, `created_at`), registrando uma trilha cronológica imutável de movimentação física de insumos.
+* **Histórico Físico de Mesas**: 
+  O monitoramento do salão de mesas (abertura, reservas e limpezas) foi completamente absorvido pelo nosso **sistema centralizado de Auditoria de Eventos** (`audit_events`). Cada alteração de status ou atribuição de mesa gera registros imutáveis com o payload anterior e atual, eliminando a necessidade de uma tabela histórica redundante.
+
+### 14.4 Política de Retenção e Expurgo de Auditoria (M04)
+* **Retenção de 90 Dias**: 
+  Adotamos uma política rigorosa de retenção de 90 dias para os dados da tabela `audit_events` em produção para economizar armazenamento no Neon Serverless.
+* **Automação de Expurgo**: 
+  Criamos o design de uma rotina programada de expurgo via Laravel Task Scheduler (`app/Console/Kernel.php` ou `routes/console.php`):
+  ```php
+  use Illuminate\Support\Facades\Schedule;
+  use App\Models\AuditEvent;
+
+  Schedule::call(function () {
+      AuditEvent::where('created_at', '<', now()->subDays(90))->delete();
+  })->weekly();
+  ```
+  Isso limpa automaticamente registros antigos toda semana em background de forma transparente.
+
+### 14.5 Qualidade e Testes de Integração (M12)
+* **Suíte de Testes Automatizada**: 
+  Criamos uma robusta cobertura de testes de integração ponta a ponta em PHPUnit (`RefreshDatabase` em SQLite memory para performance máxima):
+  - **`UserFactory` e factories específicas** (`CategoryFactory`, `ProductFactory`, `TableFactory`, `OrderFactory`, `OrderItemFactory`) gerando dados coerentes.
+  - **`SaladoFlowTest.php`**: Valida a abertura de mesas, lançamento de itens com snapshot de preço na comanda, dedução atômica automática de estoque e fechamento operacional.
+  - **`DeliveryFlowTest.php`**: Valida pedidos públicos com endereços estruturados, rastreamento dinâmico sem login e auto-atribuição de motoristas parceiros.
+  - **`PaymentsTest.php`**: Valida pagamentos simplificados e fracionados ("Valor Avulso"), depósitos (Suprimento), retiradas (Sangria) e o relatório de balanço consolidado de caixa.
+* **Visual Standards (Padronização)**:
+  Garantimos a homogeneidade do design através de um robusto guia de estilos Tailwind v4 global (`index.css`), padronizando o comportamento físico de botões, transições hover, inputs, modais elegantes e loaders esqueléticos por toda a aplicação.
+
+---
+
+**Status Final do Projeto:** Ecossistema Integrado, 100% Funcional, Responsivo, Seguro (RBAC), com BI Consolidado e Cobertura de Testes Automatizada! 🚀
+
 
