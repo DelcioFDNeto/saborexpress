@@ -41,8 +41,8 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 - [x] Tela de cadastro de cliente.
 - [x] Controle básico de sessão com token.
 - [x] Rotas protegidas por perfil.
-- [ ] Tela administrativa completa de usuários.
-- [ ] Revisar permissão da rota de entregas para incluir o perfil `delivery`.
+- [x] Tela administrativa completa de usuários (gestão de equipe com criação, bloqueio/ativação, alteração de senha e exclusão).
+- [x] Revisar permissão da rota de entregas para incluir o perfil `delivery`.
 
 ## M02 - Cardápio, Categorias e Produtos
 
@@ -63,9 +63,9 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 ### Frontend
 
 - [x] Tela pública de cardápio (inclui cache SWR para carregamento instantâneo, skeleton loaders premium e imagens de alta definição via Unsplash para todos os itens).
-- [ ] Tela administrativa de categorias.
-- [ ] Tela administrativa de produtos.
-- [ ] Interface para disponibilidade e estoque.
+- [x] Tela administrativa de categorias.
+- [x] Tela administrativa de produtos.
+- [x] Interface para disponibilidade e estoque (integração inline com toggle de vendas e controle de estoque de ingredientes).
 
 ## M03 - Mesas e Salão
 
@@ -90,7 +90,7 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 - [x] Tela de detalhes da comanda por mesa.
 - [x] Abertura de mesa integrada à API.
 - [x] Transferência e junção de comandas integradas à API.
-- [ ] Tela administrativa de cadastro e manutenção de mesas.
+- [x] Tela administrativa de cadastro e manutenção de mesas.
 - [ ] Melhorar fluxo visual de reserva e limpeza.
 
 ## M04 - Auditoria e Histórico
@@ -111,8 +111,8 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 
 ### Frontend
 
-- [ ] Tela administrativa de auditoria.
-- [ ] Filtros visuais para evento, usuário, recurso e período.
+- [x] Tela administrativa de auditoria.
+- [x] Filtros visuais para evento, usuário, recurso e período.
 
 ## M05 - Comandas e Itens
 
@@ -283,8 +283,6 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 
 ## Próximas Prioridades
 
-1. **Permissões no Frontend**: Revisar acessos e rotas do perfil `delivery` ao painel de entregas.
-2. **Administração de Recursos**: Implementar as telas administrativas pendentes (CRUD de usuários, categorias, produtos e mesas).
-3. **Fluxo de Retirada (Takeout)**: Adicionar suporte no backend e frontend para pedidos de retirada local.
-4. **Módulo de Caixa Avançado**: Desenvolver telas de abertura, fechamento, sangrias e suprimentos de caixa.
-5. **Automação de Testes**: Implementar suítes de testes automatizados e integrados.
+1. **Fluxo de Retirada (Takeout)**: Adicionar suporte no backend e frontend para pedidos de retirada local no estabelecimento.
+2. **Módulo de Caixa Avançado**: Desenvolver telas e endpoints de abertura, fechamento, sangrias e suprimentos de caixa.
+3. **Automação de Testes**: Implementar suítes de testes automatizados no backend e testes ponta a ponta no frontend.
