@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: saborexpress-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: saborexpress
+      POSTGRES_USER: saborexpress
+      POSTGRES_PASSWORD: saborexpress
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U saborexpress -d saborexpress"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-data:

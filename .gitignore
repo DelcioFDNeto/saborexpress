@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Build outputs
+dist/
+build/
+.vite/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Local files ignored by Git
+.ignore/
+
+# Logs and caches
+*.log
+.phpunit.result.cache
+.eslintcache
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

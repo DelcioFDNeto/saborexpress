@@ -1,0 +1,29 @@
+{
+  "name": "saborexpress",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Monorepo do SaborExpress com backend Laravel e frontend React/Vite.",
+  "scripts": {
+    "dev": "npm run dev:all",
+    "dev:all": "npx --yes concurrently -n backend,frontend -c blue,green \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "cd backend && php artisan serve",
+    "dev:db": "docker compose up -d postgres",
+    "install:frontend": "npm --prefix frontend install",
+    "install:backend": "cd backend && composer install",
+    "build": "npm run build:frontend",
+    "build:frontend": "npm --prefix frontend run build",
+    "lint": "npm run lint:frontend",
+    "lint:frontend": "npm --prefix frontend run lint",
+    "format:backend": "cd backend && vendor/bin/pint",
+    "migrate": "cd backend && php artisan migrate",
+    "seed": "cd backend && php artisan db:seed",
+    "fresh": "cd backend && php artisan migrate:fresh --seed",
+    "api:routes": "cd backend && php artisan route:list --path=api"
+  },
+  "engines": {
+    "node": ">=22",
+    "npm": ">=10",
+    "php": ">=8.2"
+  }
+}

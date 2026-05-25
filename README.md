@@ -1,103 +1,170 @@
-# SaborExpress 🍕
+# SaborExpress
 
-> **Aviso Acadêmico:** Este é um projeto desenvolvido exclusivamente para fins acadêmicos, como parte da disciplina de **Arquitetura de Software**.
+SaborExpress é um sistema acadêmico para gestão de restaurantes. O projeto contempla cardápio, controle de mesas, autenticação por perfil e a base de comandas para registrar itens consumidos em uma mesa.
 
-O **SaborExpress** é um sistema completo e moderno para a gestão de restaurantes, englobando desde o cardápio e controle de estoque até a gestão atômica do salão (mapa de mesas), comandas e integração com a cozinha. 
+O objetivo principal é demonstrar uma arquitetura desacoplada, com backend responsável pelas regras de negócio e pela persistência dos dados, enquanto o frontend consome a API e apresenta as telas operacionais.
 
-O projeto foi rigorosamente estruturado utilizando o padrão arquitetural **MVC Desacoplado**, garantindo a separação total de responsabilidades entre o Backend (API REST) e o Frontend (Client-side Rendering).
+## Arquitetura
 
----
+O projeto segue uma arquitetura cliente-servidor em formato de monorepo.
 
-## 🏗 Arquitetura do Sistema
+O backend é uma API REST construída com Laravel. Ele concentra autenticação, autorização, validações, regras de negócio, transações, migrations, seeders e acesso ao banco de dados.
 
-### Backend (Laravel 11 - API RESTful)
-Atua como o núcleo lógico e de segurança da aplicação.
-- **Linguagem:** PHP 8.3
-- **Framework:** Laravel 11
-- **Banco de Dados:** PostgreSQL (Serverless via NeonDB)
-- **Princípios Aplicados:**
-  - **Transações Atômicas (`DB::transaction`):** Garantia de consistência de dados (ex: uma mesa só muda de status se a comanda atrelada a ela for gerada com sucesso).
-  - **FormRequests & Resources:** Blindagem de segurança na entrada de dados e padronização (JSON) na saída.
-  - **Middlewares de Acesso:** Proteção de rotas baseada no Perfil de Usuário (`user_role`), implementando regras de autorização para Gerentes e Garçons.
-  - **Containerização:** Preparado para deploy via `Dockerfile` (Otimizado com Apache e `libpq-dev` nativo para suporte a conexões seguras SNI).
+O frontend é uma aplicação React com Vite. Ele consome a API HTTP, mantém estado de interface e apresenta as telas de cardápio, login e mapa de mesas.
 
-### Frontend (React + Vite)
-Responsável por consumir a API de forma reativa e fornecer a interface para os usuários (Clientes e Garçons).
-- **Linguagem:** TypeScript
-- **Framework:** React com Vite
-- **Estilização:** TailwindCSS
-- **Roteamento:** React Router DOM
-- **Princípios Aplicados:**
-  - **Componentização:** Telas construídas com componentes modulares e responsivos (Cardápio, Mapa de Mesas).
-  - **Gestão de Estado Reativa:** Filtragem de categorias e visualização de itens ocorrem em tempo real na memória do cliente (browser) para evitar sobrecarga de requisições na API.
-
----
-
-## 🚀 Módulos Implementados
-
-### M00: Base Técnica e Infraestrutura
-- Configuração completa do banco de dados PostgreSQL.
-- Sistema de migrações e chaves estrangeiras com regras de negócio rigorosas (Cascade/Restrict).
-- Implementação de Dockerfile para deploy na nuvem.
-
-### M01: Cardápio e Estoque
-- CRUD completo de Produtos e Categorias.
-- Interface web com filtros em tempo real simulando um tablet de exibição para os clientes ou caixas.
-- Implementação do conceito de **"Snapshot Imutável de Preço"**: Os itens do cardápio salvam o valor estático no momento do pedido, impedindo que flutuações futuras de preço retroajam e corrompam o financeiro do restaurante.
-
-### M02: Mesas e Salão
-- Mapa digital e interativo do salão de mesas.
-- Fluxo atômico de abertura de mesas vinculado à criação automática de comandas.
-- Indicadores visuais do status de ocupação (Livre, Ocupada, Em Fechamento) em tempo real.
-
----
-
-## 🛠 Como Executar Localmente
-
-### Requisitos
-- PHP 8.2+
-- Composer
-- Node.js & npm
-- PostgreSQL
-
-### 1. Clonando o Repositório
-```bash
-git clone https://github.com/DelcioFDNeto/saborexpress.git
-cd saborexpress
+```text
+saborexpress/
+  backend/        API Laravel
+  frontend/       Aplicação React com Vite
+  docs/           Documentação técnica e acompanhamento do projeto
+  docker-compose.yml
+  package.json    Scripts de apoio do monorepo
 ```
 
-### 2. Configurando o Backend (Laravel)
+## Monorepo
+
+Este repositório mantém backend e frontend no mesmo projeto, mesmo usando tecnologias diferentes. Cada aplicação preserva suas próprias dependências, comandos e arquivos de configuração, enquanto a raiz centraliza tarefas comuns de desenvolvimento.
+
+Essa organização facilita:
+
+- executar comandos a partir da raiz;
+- manter documentação única do projeto;
+- versionar backend e frontend de forma coordenada;
+- compartilhar infraestrutura local, como o banco PostgreSQL via Docker Compose;
+- acompanhar a evolução dos módulos em um único fluxo.
+
+## Tecnologias
+
+### Backend
+
+- PHP 8.2 ou superior
+- Laravel 12
+- Laravel Sanctum
+- PostgreSQL
+- Eloquent ORM
+- Repository pattern
+- Form Requests
+- API Resources
+- Docker para deploy e ambiente local auxiliar
+
+### Frontend
+
+- Node.js 22 ou superior
+- React 19
+- Vite
+- TypeScript
+- Tailwind CSS 4
+- Axios
+- React Router
+
+## Funcionalidades atuais
+
+- Autenticação via Laravel Sanctum.
+- Perfis de usuário: administrador, garçom, cozinha, caixa, entrega e cliente.
+- Controle de acesso por perfil no backend.
+- Cardápio público para leitura de categorias e produtos.
+- Operações protegidas para criação, edição e remoção de categorias e produtos.
+- Cadastro e consulta de mesas.
+- Abertura de mesa com criação transacional de comanda.
+- Base backend do módulo de comandas, com inclusão, atualização e remoção de itens.
+- Snapshot de preço no item da comanda.
+- Recálculo do total da comanda no backend.
+- Telas frontend de cardápio, login e mapa de mesas.
+
+## Requisitos
+
+- Node.js 22 ou superior
+- npm 10 ou superior
+- PHP 8.2 ou superior
+- Composer
+- Docker, caso deseje usar o PostgreSQL local via Docker Compose
+
+## Executando o projeto
+
+### Banco de dados local
+
+Na raiz do projeto, execute:
+
+```bash
+npm run dev:db
+```
+
+Esse comando sobe um PostgreSQL local com as seguintes credenciais:
+
+```env
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=saborexpress
+DB_USERNAME=saborexpress
+DB_PASSWORD=saborexpress
+```
+
+### Backend
+
 ```bash
 cd backend
 composer install
 cp .env.example .env
 php artisan key:generate
-```
-*Configure o seu `.env` com as credenciais do banco de dados PostgreSQL e rode as tabelas e dados iniciais:*
-```bash
 php artisan migrate:fresh --seed
 php artisan serve
 ```
 
-### 3. Configurando o Frontend (React)
+No Windows PowerShell, use:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+### Frontend
+
 ```bash
-cd ../frontend
+cd frontend
 npm install
-```
-*Crie um arquivo `.env` na pasta frontend com o link do seu backend:*
-```env
-VITE_API_URL=http://localhost:8000
-```
-*Inicie o servidor de desenvolvimento:*
-```bash
+cp .env.example .env
 npm run dev
 ```
 
----
+No Windows PowerShell, use:
 
-## 🌐 Deploy (Produção)
-- **Backend:** Hospedado via Docker na Render (`https://render.com`).
-- **Frontend:** Hospedado via Vercel (`https://vercel.com`).
-- **Branch Strategy:** O desenvolvimento ocorre na branch `dev`, enquanto a `prod` atua como fonte da verdade (Main) e gatilho de Continuous Deployment.
+```powershell
+Copy-Item .env.example .env
+```
 
-*Desenvolvido em 2026 como projeto de avaliação acadêmica.*
+Por padrão, o frontend espera a API em:
+
+```env
+VITE_API_URL=http://localhost:8000
+```
+
+## Scripts da raiz
+
+```bash
+npm run dev          # executa backend e frontend em paralelo
+npm run dev:backend  # executa php artisan serve em backend/
+npm run dev:frontend # executa Vite em frontend/
+npm run dev:db       # sobe o PostgreSQL local
+npm run build        # gera build do frontend
+npm run lint         # executa lint do frontend
+npm run migrate      # executa migrations do Laravel
+npm run seed         # executa seeders do Laravel
+npm run fresh        # recria o banco e executa seeders
+npm run api:routes   # lista rotas da API
+```
+
+## Documentação
+
+- [API atual](docs/API.md)
+- [Kanban do projeto](docs/kanban.md)
+
+A API também possui uma especificação OpenAPI em `backend/public/openapi.yaml`. Com o backend em execução, a documentação interativa pode ser acessada em:
+
+```text
+http://localhost:8000/docs/api
+```
+
+## Observações
+
+O projeto ainda está em desenvolvimento. Algumas áreas, como cozinha, caixa, delivery, fechamento de conta e pagamento, ainda não possuem fluxo completo.
+
+Como houve padronização de enums em migrations existentes, bancos locais criados anteriormente podem precisar ser recriados com `php artisan migrate:fresh --seed`.
