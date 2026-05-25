@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { api } from '../lib/api';
 
 interface Product {
   id: number;
@@ -33,9 +33,8 @@ export default function Kitchen() {
 
   const fetchItems = async () => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      const res = await axios.get(`${apiUrl}/api/order-items`);
-      setItems(res.data);
+      const res = await api.get('/kitchen/order-items');
+      setItems(res.data.data || res.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -45,14 +44,18 @@ export default function Kitchen() {
 
   useEffect(() => {
     fetchItems();
-    const interval = setInterval(fetchItems, 10000); // Poll every 10 seconds
+    const interval = setInterval(fetchItems, 10000);
     return () => clearInterval(interval);
   }, []);
 
   const updateStatus = async (id: number, newStatus: string) => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      await axios.put(`${apiUrl}/api/order-items/${id}`, { status: newStatus });
+      if (newStatus === 'Entregue') {
+        await api.patch(`/kitchen/order-items/${id}/deliver`);
+      } else {
+        const endpoint = newStatus === 'Em Preparo' ? 'start' : 'mark-ready';
+        await api.patch(`/kitchen/order-items/${id}/${endpoint}`);
+      }
       fetchItems();
     } catch (err) {
       console.error('Failed to update status', err);
@@ -89,7 +92,7 @@ export default function Kitchen() {
               </span>
             )}
             <span className={`text-xs font-bold ${minutesWaiting > 15 ? 'text-rose-500' : 'text-gray-500'}`}>
-              ⏱ {minutesWaiting} min
+              Tempo: {minutesWaiting} min
             </span>
           </div>
           <span className="text-xl font-black text-gray-400">#{item.id}</span>
@@ -102,7 +105,7 @@ export default function Kitchen() {
           </h3>
           {item.notes && (
             <div className="mt-2 bg-amber-50 border border-amber-100 text-amber-800 text-sm px-3 py-2 rounded-lg font-medium">
-              ⚠️ {item.notes}
+              Aviso: {item.notes}
             </div>
           )}
         </div>

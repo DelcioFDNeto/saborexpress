@@ -121,12 +121,13 @@ Este documento acompanha o estado atual do SaborExpress por módulos.
 - Fila agrupada por comanda em `GET /api/kitchen/orders`.
 - Início de preparo.
 - Marcação de item como pronto.
+- Entrega de item pronto ao salão pela rota `/api/kitchen/order-items/{orderItem}/deliver`.
 - Cancelamento de item antes da entrega.
 - Evento Laravel `OrderItemMarkedReady` ao marcar item como pronto.
+- Painel da cozinha no frontend conectado às rotas reais.
 
 ### Pendente
 
-- Criar painel da cozinha no frontend.
 - Adicionar listener real para notificação em tempo real, caso o projeto use WebSocket ou broadcast.
 
 ## M07 - Pagamentos e Caixa
@@ -134,15 +135,14 @@ Este documento acompanha o estado atual do SaborExpress por módulos.
 ### Concluído
 
 - Registro de pagamento integral.
+- Pagamento simplificado ou parcial pela rota `/api/orders/{order}/pay`.
+- Simulação de divisão de conta integral, igual ou por itens.
 - Listagem e consulta de pagamentos.
 - Comanda muda para `Paga` após pagamento integral.
 - Mesa pode ser liberada para limpeza após pagamento.
 
 ### Pendente
 
-- Pagamento parcial.
-- Divisão de conta por valor.
-- Divisão de conta por itens.
 - Abertura e fechamento de caixa.
 - Sangria, suprimento, estorno e relatórios financeiros.
 
@@ -152,13 +152,16 @@ Este documento acompanha o estado atual do SaborExpress por módulos.
 
 - Enum `OrderType` já prevê `Delivery` e `Takeout`.
 - A tabela `orders` já possui campos básicos para pedido sem mesa.
+- Endpoint público `POST /api/orders/delivery`.
+- Endpoint `PUT /api/orders/{order}/delivery-status`.
+- Painel de entregas no frontend.
+- Tela pública de pedido delivery no frontend.
 
 ### Pendente
 
-- Endpoints próprios para delivery e retirada.
+- Endpoints próprios para retirada.
 - Endereço estruturado.
 - Atribuição de entregador.
-- Status de entrega.
 - Acompanhamento pelo cliente.
 
 ## M09 - Documentação
@@ -168,11 +171,10 @@ Este documento acompanha o estado atual do SaborExpress por módulos.
 - `README.md` com visão geral do projeto.
 - `docs/API.md` atualizado com as rotas atuais.
 - Scalar disponível em `/docs/api`.
-- OpenAPI em `backend/public/openapi.yaml` com schemas e endpoints de auditoria.
+- OpenAPI em `backend/public/openapi.yaml` com schemas e endpoints de autenticação, cardápio, mesas, comandas, cozinha, pagamentos, delivery, dashboard e auditoria.
 
 ### Pendente
 
-- Expandir OpenAPI para cobrir todos os endpoints novos de usuários, mesas, cozinha e cardápio.
 - Documentar exemplos completos de fluxo ponta a ponta.
 
 ## M10 - Qualidade Técnica
@@ -192,8 +194,8 @@ Este documento acompanha o estado atual do SaborExpress por módulos.
 
 ## Próximas Prioridades
 
-1. Implementar pagamento parcial e divisão de conta.
-2. Implementar delivery e retirada.
+1. Corrigir telas administrativas ausentes no frontend.
+2. Implementar retirada.
 3. Criar fluxo completo de caixa.
-4. Conectar o frontend às rotas já existentes do backend.
-5. Expandir a especificação OpenAPI para todos os endpoints novos.
+4. Documentar exemplos ponta a ponta.
+5. Criar testes automatizados dos fluxos críticos.

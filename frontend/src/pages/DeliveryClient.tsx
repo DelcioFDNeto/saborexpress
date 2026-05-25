@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { useEffect, useState } from 'react';
+import type { FormEvent } from 'react';
+import { api } from '../lib/api';
 
 interface Category {
   id: number;
@@ -29,7 +30,6 @@ export default function DeliveryClient() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCheckout, setIsCheckout] = useState(false);
   
-  // Form State
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
@@ -39,10 +39,9 @@ export default function DeliveryClient() {
   useEffect(() => {
     const fetchMenu = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
         const [catRes, prodRes] = await Promise.all([
-          axios.get(`${apiUrl}/api/categories`),
-          axios.get(`${apiUrl}/api/products`)
+          api.get('/categories'),
+          api.get('/products')
         ]);
         setCategories(catRes.data.data || catRes.data || []);
         setProducts(prodRes.data.data || prodRes.data || []);
@@ -71,12 +70,11 @@ export default function DeliveryClient() {
     setCart(cart.map(item => item.product.id === productId ? { ...item, quantity: q } : item));
   };
 
-  const submitOrder = async (e: React.FormEvent) => {
+  const submitOrder = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      await axios.post(`${apiUrl}/api/orders/delivery`, {
+      await api.post('/orders/delivery', {
         customer_name: customerName,
         customer_phone: customerPhone,
         delivery_address: deliveryAddress,

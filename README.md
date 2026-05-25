@@ -74,7 +74,7 @@ Essa organização facilita:
 - Módulo backend de comandas, com inclusão, atualização e remoção de itens.
 - Snapshot de preço no item da comanda.
 - Recálculo do total da comanda no backend.
-- Fluxo de cozinha para listar itens pendentes, agrupar por comanda, iniciar preparo, marcar item como pronto e cancelar item.
+- Fluxo de cozinha para listar itens pendentes, agrupar por comanda, iniciar preparo, marcar item como pronto, entregar ao salão e cancelar item.
 - Entrega de item pronto na mesa.
 - Solicitação de fechamento da comanda.
 - Cancelamento de comanda aberta.
@@ -188,6 +188,6 @@ Esses dados permitem testar autenticação, cardápio, abertura de mesa, comanda
 
 ## Observações
 
-O projeto ainda está em desenvolvimento. O backend já possui base operacional para autenticação, usuários, cardápio, mesas, comandas, cozinha, entrega na mesa, fechamento, pagamento integral, auditoria e tratamento global de erros. Ainda faltam evoluções como pagamento parcial, divisão de conta, relatórios, fluxo completo de delivery/retirada, caixa completo e integração dessas novas rotas no frontend.
+O projeto ainda está em desenvolvimento. O backend já possui base operacional para autenticação, usuários, cardápio, mesas, comandas, cozinha, entrega na mesa, fechamento, pagamento integral, pagamento simplificado/parcial, divisão de conta, delivery, dashboard, auditoria e tratamento global de erros. Ainda faltam evoluções como retirada, relatórios financeiros avançados, fluxo completo de caixa e telas administrativas dedicadas para todos os módulos.
 
 Como houve padronização de enums em migrations existentes, bancos locais criados anteriormente podem precisar ser recriados com `php artisan migrate:fresh --seed`.

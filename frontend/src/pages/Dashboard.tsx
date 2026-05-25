@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { isAxiosError } from 'axios';
+import { api } from '../lib/api';
 
 interface KPIs {
   gross_revenue: number;
@@ -37,16 +38,12 @@ export default function Dashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-      
-      const res = await axios.get(`${apiUrl}/api/dashboard`, { headers });
+      const res = await api.get('/dashboard');
       setKpis(res.data.kpis);
       setAbcCurve(res.data.abc_curve);
       
-      const usersRes = await axios.get(`${apiUrl}/api/users`, { headers });
-      setUsers(usersRes.data);
+      const usersRes = await api.get('/users');
+      setUsers(usersRes.data.data || usersRes.data);
     } catch (err) {
       console.error(err);
       alert('Erro ao carregar dados do painel gerencial.');
@@ -98,7 +95,7 @@ export default function Dashboard() {
               <div className="mt-4 text-xs font-bold text-indigo-600 bg-indigo-50 w-fit px-2 py-1 rounded-md z-10">Por comanda</div>
             </div>
 
-            {/* Comandas Finalizadas */}
+            {/* Comandas Pagas */}
             <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col relative overflow-hidden">
               <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-4 -mt-4 opacity-50 z-0"></div>
               <span className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 z-10">Contas Pagas</span>
@@ -179,23 +176,20 @@ export default function Dashboard() {
                 e.preventDefault();
                 setIsCreatingUser(true);
                 try {
-                  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-                  const token = localStorage.getItem('token');
-                  await axios.post(`${apiUrl}/api/users`, {
+                  await api.post('/users', {
                     name: newUserName,
                     email: newUserEmail,
                     password: newUserPassword,
                     role: newUserRole
-                  }, {
-                    headers: { Authorization: `Bearer ${token}` }
                   });
                   alert('Usuário criado com sucesso!');
                   setNewUserName('');
                   setNewUserEmail('');
                   setNewUserPassword('');
                   fetchDashboardData();
-                } catch (err: any) {
-                  alert('Erro ao criar usuário: ' + (err.response?.data?.message || 'Falha na requisição.'));
+                } catch (err: unknown) {
+                  const message = isAxiosError<{ message?: string }>(err) ? err.response?.data.message : null;
+                  alert('Erro ao criar usuário: ' + (message || 'Falha na requisição.'));
                 } finally {
                   setIsCreatingUser(false);
                 }

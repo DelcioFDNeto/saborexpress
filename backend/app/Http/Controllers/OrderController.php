@@ -12,7 +12,6 @@ use App\Http\Requests\Orders\AddOrderItemRequest;
 use App\Http\Requests\Orders\UpdateOrderStatusRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
-use App\Models\Product;
 use App\Models\Table;
 use App\Repositories\Orders\OrderRepositoryInterface;
 use Illuminate\Http\Request;
@@ -37,7 +36,7 @@ class OrderController extends Controller
         abort(405, 'Orders are opened through table operations.');
     }
 
-    public function storeDelivery(Request $request)
+    public function storeDelivery(Request $request, AddOrderItemAction $addOrderItem)
     {
         $validated = $request->validate([
             'customer_name' => ['required', 'string', 'max:255'],
@@ -49,7 +48,7 @@ class OrderController extends Controller
             'items.*.notes' => ['nullable', 'string'],
         ]);
 
-        $order = DB::transaction(function () use ($validated) {
+        $order = DB::transaction(function () use ($validated, $addOrderItem) {
             $order = $this->orders->create([
                 'type' => 'Delivery',
                 'status' => OrderStatus::Open->value,
@@ -57,27 +56,15 @@ class OrderController extends Controller
                 'customer_name' => $validated['customer_name'],
                 'customer_phone' => $validated['customer_phone'],
                 'delivery_address' => $validated['delivery_address'],
-                'user_id' => 1,
             ]);
 
-            $totalAmount = 0;
-
             foreach ($validated['items'] as $itemData) {
-                $product = Product::findOrFail($itemData['product_id']);
-
-                $order->items()->create([
-                    'product_id' => $product->id,
+                $order = $addOrderItem->execute($order, [
+                    'product_id' => $itemData['product_id'],
                     'quantity' => $itemData['quantity'],
-                    'unit_price' => $product->price,
                     'notes' => $itemData['notes'] ?? null,
-                    'status' => 'Pendente',
                 ]);
-
-                $totalAmount += (float) $product->price * $itemData['quantity'];
             }
-
-            $order->total_amount = number_format($totalAmount, 2, '.', '');
-            $order->save();
 
             return $order;
         });

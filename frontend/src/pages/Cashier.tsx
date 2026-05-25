@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { api } from '../lib/api';
 
 interface OrderItem {
   id: number;
@@ -20,24 +20,26 @@ interface Order {
   items: OrderItem[];
 }
 
+interface SplitSimulation {
+  message?: string;
+  installments?: number[];
+}
+
 export default function Cashier() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   
-  // Payment Simulation State
   const [splitType, setSplitType] = useState<'integral' | 'equal' | 'items'>('integral');
   const [numPeople, setNumPeople] = useState(1);
   const [selectedItemIds, setSelectedItemIds] = useState<number[]>([]);
-  const [simulation, setSimulation] = useState<any>(null);
-  const [paidTotal, setPaidTotal] = useState(0);
+  const [simulation, setSimulation] = useState<SplitSimulation | null>(null);
 
   const fetchOrders = async () => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      const res = await axios.get(`${apiUrl}/api/orders`);
+      const res = await api.get('/orders');
       const actionable = res.data.data ? res.data.data : res.data;
       const filtered = actionable.filter((o: Order) => 
-        (o.type === 'Mesa' && o.status === 'Fechada') || 
+        (o.type === 'Mesa' && o.status === 'Fechamento') ||
         (o.type === 'Delivery' && o.status === 'Aberta')
       );
       setOrders(filtered);
@@ -61,17 +63,15 @@ export default function Cashier() {
   useEffect(() => {
     if (!selectedOrder) return;
     
-    // Simulate Split
     const simulateSplit = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-        const res = await axios.post(`${apiUrl}/api/orders/${selectedOrder.id}/split`, {
+        const res = await api.post(`/orders/${selectedOrder.id}/split`, {
           split_type: splitType,
           num_people: numPeople,
           item_ids: selectedItemIds
         });
         setSimulation(res.data);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error(err);
         setSimulation(null);
       }
@@ -82,8 +82,7 @@ export default function Cashier() {
 
   const handlePay = async (amount: number, method: string) => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      await axios.post(`${apiUrl}/api/orders/${selectedOrder?.id}/pay`, {
+      await api.post(`/orders/${selectedOrder?.id}/pay`, {
         amount,
         method
       });
@@ -120,7 +119,7 @@ export default function Cashier() {
               <div className="flex justify-between items-start mb-2">
                 <div>
                   <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded ${order.type === 'Mesa' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
-                    {order.type} {order.table ? `• Mesa ${order.table.number}` : ''}
+                    {order.type} {order.table ? `* Mesa ${order.table.number}` : ''}
                   </span>
                   <h3 className="font-bold text-gray-900 mt-1">Comanda #{order.id}</h3>
                 </div>
@@ -269,7 +268,7 @@ export default function Cashier() {
                           </div>
                           <div className="flex gap-2">
                             <button onClick={() => handlePay(amount, 'PIX')} className="px-3 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 rounded-lg transition-colors">PIX</button>
-                            <button onClick={() => handlePay(amount, 'Cartão')} className="px-3 py-1.5 text-xs font-bold text-indigo-700 bg-indigo-100 hover:bg-indigo-200 rounded-lg transition-colors">Cartão</button>
+                            <button onClick={() => handlePay(amount, 'Cartao')} className="px-3 py-1.5 text-xs font-bold text-indigo-700 bg-indigo-100 hover:bg-indigo-200 rounded-lg transition-colors">Cartão</button>
                             <button onClick={() => handlePay(amount, 'Dinheiro')} className="px-3 py-1.5 text-xs font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 rounded-lg transition-colors">Dinheiro</button>
                           </div>
                         </div>

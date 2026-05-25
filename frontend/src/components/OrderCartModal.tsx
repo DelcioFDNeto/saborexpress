@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { isAxiosError } from 'axios';
+import { api } from '../lib/api';
 
 interface Category {
   id: number;
@@ -30,6 +31,9 @@ export default function OrderCartModal({ orderId, isOpen, onClose, onItemAdded }
   
   const [loading, setLoading] = useState(false);
   const [addingProductId, setAddingProductId] = useState<number | null>(null);
+  const [expandedProductId, setExpandedProductId] = useState<number | null>(null);
+  const [currentNote, setCurrentNote] = useState('');
+  const [currentQuantity, setCurrentQuantity] = useState(1);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -37,10 +41,9 @@ export default function OrderCartModal({ orderId, isOpen, onClose, onItemAdded }
     const fetchMenu = async () => {
       setLoading(true);
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
         const [catRes, prodRes] = await Promise.all([
-          axios.get(`${apiUrl}/api/categories`),
-          axios.get(`${apiUrl}/api/products`)
+          api.get('/categories'),
+          api.get('/products')
         ]);
         setCategories(catRes.data.data || catRes.data || []);
         setProducts(prodRes.data.data || prodRes.data || []);
@@ -55,10 +58,6 @@ export default function OrderCartModal({ orderId, isOpen, onClose, onItemAdded }
 
   if (!isOpen) return null;
 
-  const [expandedProductId, setExpandedProductId] = useState<number | null>(null);
-  const [currentNote, setCurrentNote] = useState('');
-  const [currentQuantity, setCurrentQuantity] = useState(1);
-
   const handleExpand = (productId: number) => {
     if (expandedProductId === productId) {
       setExpandedProductId(null);
@@ -72,17 +71,17 @@ export default function OrderCartModal({ orderId, isOpen, onClose, onItemAdded }
   const handleAddItem = async (productId: number) => {
     setAddingProductId(productId);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      await axios.post(`${apiUrl}/api/orders/${orderId}/items`, {
+      await api.post(`/orders/${orderId}/items`, {
         product_id: productId,
         quantity: currentQuantity,
         notes: currentNote
       });
       onItemAdded();
       setExpandedProductId(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to add item', err);
-      alert(err.response?.data?.message || 'Erro ao adicionar produto');
+      const message = isAxiosError<{ message?: string }>(err) ? err.response?.data.message : null;
+      alert(message || 'Erro ao adicionar produto');
     } finally {
       setAddingProductId(null);
     }

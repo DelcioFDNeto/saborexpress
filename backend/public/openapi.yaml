@@ -29,6 +29,8 @@ tags:
     description: Fila operacional da cozinha.
   - name: Payments
     description: Pagamentos e fechamento financeiro.
+  - name: Dashboard
+    description: Indicadores gerenciais.
   - name: Audit
     description: Auditoria e histórico operacional.
 security:
@@ -55,6 +57,28 @@ paths:
       responses:
         '200':
           description: Login realizado com sucesso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /register:
+    post:
+      tags:
+        - Auth
+      summary: Cadastra um cliente.
+      operationId: registerClient
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterClientRequest'
+      responses:
+        '201':
+          description: Cliente cadastrado e autenticado.
           content:
             application/json:
               schema:
@@ -106,6 +130,24 @@ paths:
                 $ref: '#/components/schemas/MessageResponse'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+  /dashboard:
+    get:
+      tags:
+        - Dashboard
+      summary: Retorna indicadores gerenciais.
+      operationId: getDashboard
+      description: Exige perfil `administrator`.
+      responses:
+        '200':
+          description: Indicadores gerenciais.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /categories:
     get:
       tags:
@@ -604,6 +646,28 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /orders/delivery:
+    post:
+      tags:
+        - Orders
+      summary: Cria um pedido de delivery público.
+      operationId: createDeliveryOrder
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliveryOrderRequest'
+      responses:
+        '201':
+          description: Pedido de delivery criado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResourceResponse'
+        '422':
+          $ref: '#/components/responses/ValidationError'
   /orders/{order}:
     parameters:
       - $ref: '#/components/parameters/OrderId'
@@ -682,6 +746,34 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /orders/{order}/delivery-status:
+    parameters:
+      - $ref: '#/components/parameters/OrderId'
+    put:
+      tags:
+        - Orders
+      summary: Atualiza o status de entrega.
+      operationId: updateDeliveryStatus
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDeliveryStatusRequest'
+      responses:
+        '200':
+          description: Status de entrega atualizado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResourceResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/ValidationError'
   /orders/{order}/request-closing:
@@ -763,6 +855,64 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /orders/{order}/split:
+    parameters:
+      - $ref: '#/components/parameters/OrderId'
+    post:
+      tags:
+        - Payments
+        - Orders
+      summary: Simula divisão de conta.
+      operationId: simulateOrderSplit
+      description: Exige perfil `administrator` ou `cashier`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SplitPaymentRequest'
+      responses:
+        '200':
+          description: Simulação calculada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SplitPaymentResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /orders/{order}/pay:
+    parameters:
+      - $ref: '#/components/parameters/OrderId'
+    post:
+      tags:
+        - Payments
+        - Orders
+      summary: Registra pagamento simplificado ou parcial.
+      operationId: payOrder
+      description: Exige perfil `administrator` ou `cashier`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimplePaymentRequest'
+      responses:
+        '200':
+          description: Pagamento registrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '422':
           $ref: '#/components/responses/ValidationError'
   /orders/{order}/items:
@@ -1001,6 +1151,30 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+  /kitchen/order-items/{orderItem}/deliver:
+    parameters:
+      - $ref: '#/components/parameters/OrderItemId'
+    patch:
+      tags:
+        - Kitchen
+      summary: Entrega um item pronto ao salão.
+      operationId: deliverKitchenOrderItem
+      description: Exige perfil `administrator` ou `kitchen`. Transiciona o item de `Pronto` para `Entregue`.
+      responses:
+        '200':
+          description: Item entregue.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderItemResourceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /audit-events:
     get:
       tags:
@@ -1197,6 +1371,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/MessageResponse'
+    BadRequest:
+      description: Requisição inconsistente para o estado do recurso.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MessageResponse'
     ValidationError:
       description: Erro de validação.
       content:
@@ -1216,6 +1396,24 @@ components:
         password:
           type: string
           format: password
+    RegisterClientRequest:
+      type: object
+      required:
+        - name
+        - email
+        - password
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        password:
+          type: string
+          format: password
+          minLength: 6
     LoginResponse:
       type: object
       required:
@@ -1517,7 +1715,9 @@ components:
             - integer
             - 'null'
         user_id:
-          type: integer
+          type:
+            - integer
+            - 'null'
         status:
           $ref: '#/components/schemas/OrderStatus'
         type:
@@ -1538,6 +1738,15 @@ components:
           type:
             - string
             - 'null'
+        delivery_status:
+          type:
+            - string
+            - 'null'
+          enum:
+            - Aguardando
+            - Em Rota
+            - Entregue
+            - null
         total_amount:
           type: string
           example: '84.50'
@@ -1687,6 +1896,126 @@ components:
         - Pix
         - Cartao
         - Dinheiro
+    DeliveryOrderRequest:
+      type: object
+      required:
+        - customer_name
+        - customer_phone
+        - delivery_address
+        - items
+      properties:
+        customer_name:
+          type: string
+          maxLength: 255
+        customer_phone:
+          type: string
+          maxLength: 30
+        delivery_address:
+          type: string
+          maxLength: 500
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required:
+              - product_id
+              - quantity
+            properties:
+              product_id:
+                type: integer
+              quantity:
+                type: integer
+                minimum: 1
+              notes:
+                type:
+                  - string
+                  - 'null'
+    UpdateDeliveryStatusRequest:
+      type: object
+      required:
+        - delivery_status
+      properties:
+        delivery_status:
+          type: string
+          enum:
+            - Aguardando
+            - Em Rota
+            - Entregue
+    SplitPaymentRequest:
+      type: object
+      required:
+        - split_type
+      properties:
+        split_type:
+          type: string
+          enum:
+            - integral
+            - equal
+            - items
+        num_people:
+          type: integer
+          minimum: 1
+        item_ids:
+          type: array
+          items:
+            type: integer
+    SplitPaymentResponse:
+      type: object
+      properties:
+        type:
+          type: string
+        installments:
+          type: array
+          items:
+            type: number
+            format: float
+        message:
+          type: string
+        remaining:
+          type: number
+          format: float
+    SimplePaymentRequest:
+      type: object
+      required:
+        - method
+        - amount
+      properties:
+        method:
+          $ref: '#/components/schemas/PaymentMethod'
+        amount:
+          type: number
+          format: float
+          minimum: 0.01
+    DashboardResponse:
+      type: object
+      properties:
+        kpis:
+          type: object
+          properties:
+            gross_revenue:
+              type: number
+              format: float
+            average_ticket:
+              type: number
+              format: float
+            completed_orders:
+              type: integer
+            active_orders:
+              type: integer
+        abc_curve:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+              total_sold:
+                type: number
+              total_revenue:
+                type: number
     PaymentStatus:
       type: string
       enum:

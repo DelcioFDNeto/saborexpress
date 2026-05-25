@@ -1,7 +1,9 @@
-import React, { useState, useContext } from 'react';
+import { useState, useContext } from 'react';
+import type { FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import { isAxiosError } from 'axios';
 import { AuthContext } from '../contexts/AuthContext';
+import { api } from '../lib/api';
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -12,14 +14,13 @@ export default function Register() {
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      const res = await axios.post(`${apiUrl}/api/register`, {
+      const res = await api.post('/register', {
         name,
         email,
         password
@@ -28,13 +29,12 @@ export default function Register() {
       const token = res.data.access_token;
       const userData = res.data.user;
       
-      login(userData, token);
+      login(token, userData);
       navigate('/cardapio');
       
-    } catch (err: any) {
-      if (err.response && err.response.data.errors) {
-        // Validation errors
-        const firstError = Object.values(err.response.data.errors)[0] as string[];
+    } catch (err: unknown) {
+      if (isAxiosError<{ errors?: Record<string, string[]> }>(err) && err.response?.data.errors) {
+        const firstError = Object.values(err.response.data.errors)[0];
         setError(firstError[0]);
       } else {
         setError('Erro ao realizar o cadastro. Tente novamente.');

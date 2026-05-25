@@ -8,6 +8,13 @@ use Illuminate\Validation\Rule;
 
 class RegisterPaymentRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if ($this->input('method') === 'Cartão') {
+            $this->merge(['method' => 'Cartao']);
+        }
+    }
+
     public function authorize(): bool
     {
         return true;

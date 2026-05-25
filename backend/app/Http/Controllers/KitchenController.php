@@ -6,6 +6,7 @@ use App\Actions\Audit\RecordAuditEventAction;
 use App\Actions\Kitchen\MarkOrderItemReadyAction;
 use App\Actions\Kitchen\StartOrderItemPreparationAction;
 use App\Actions\Orders\CancelOrderItemAction;
+use App\Actions\Orders\DeliverOrderItemAction;
 use App\Enums\AuditEventType;
 use App\Http\Requests\Kitchen\ListKitchenOrderItemsRequest;
 use App\Http\Requests\Kitchen\ListKitchenOrdersRequest;
@@ -56,6 +57,16 @@ class KitchenController extends Controller
     {
         $orderItem = $markOrderItemReady->execute($orderItem);
         $this->recordAuditEvent->execute($request->user(), AuditEventType::KitchenItemReady, $orderItem, [
+            'order_id' => $orderItem->order_id,
+        ]);
+
+        return new OrderItemResource($orderItem);
+    }
+
+    public function deliverOrderItem(Request $request, OrderItem $orderItem, DeliverOrderItemAction $deliverOrderItem)
+    {
+        $orderItem = $deliverOrderItem->execute($orderItem);
+        $this->recordAuditEvent->execute($request->user(), AuditEventType::OrderItemDelivered, $orderItem, [
             'order_id' => $orderItem->order_id,
         ]);
 

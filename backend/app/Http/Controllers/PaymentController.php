@@ -126,8 +126,10 @@ class PaymentController extends Controller
     {
         $validated = $request->validate([
             'amount' => ['required', 'numeric', 'min:0.01'],
-            'method' => ['required', 'in:Pix,Cartao,Dinheiro'],
+            'method' => ['required', 'in:Pix,Cartao,Cartão,Dinheiro'],
         ]);
+
+        $validated['method'] = $validated['method'] === 'Cartão' ? 'Cartao' : $validated['method'];
 
         DB::transaction(function () use ($order, $validated, $request) {
             $payment = $this->payments->create([

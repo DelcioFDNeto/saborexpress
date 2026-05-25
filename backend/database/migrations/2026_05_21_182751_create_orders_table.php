@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->foreignId('table_id')->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('user_id')->constrained();
+            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
             $table->enum('status', ['Aberta', 'Fechamento', 'Paga', 'Cancelada'])->default('Aberta');
             $table->enum('type', ['Mesa', 'Delivery', 'Takeout'])->default('Mesa');
             $table->string('customer_name')->nullable();

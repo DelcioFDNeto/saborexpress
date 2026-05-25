@@ -22,6 +22,7 @@ class Order extends Model
         'customer_name',
         'customer_phone',
         'delivery_address',
+        'delivery_status',
         'total_amount',
         'discount',
         'service_fee',

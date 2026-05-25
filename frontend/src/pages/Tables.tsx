@@ -1,12 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-
-interface ActiveOrder {
-  id: number;
-  customer_name: string | null;
-  status: string;
-}
+import { api } from '../lib/api';
 
 interface Table {
   id: number;
@@ -28,9 +22,8 @@ export default function Tables() {
 
   const fetchTables = async () => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      const res = await axios.get(`${apiUrl}/api/tables`);
-      setTables(res.data);
+      const res = await api.get('/tables');
+      setTables(res.data.data || res.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -47,12 +40,10 @@ export default function Tables() {
     setActionLoading(true);
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      await axios.post(`${apiUrl}/api/tables/${selectedTable.id}/open`, {
+      await api.post(`/tables/${selectedTable.id}/open`, {
         customer_name: customerName,
         customer_phone: customerPhone,
       });
-      // Refresh
       await fetchTables();
       closeModal();
     } catch (err) {

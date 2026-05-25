@@ -75,6 +75,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('kitchen/order-items', [KitchenController::class, 'orderItems']);
         Route::patch('kitchen/order-items/{orderItem}/start', [KitchenController::class, 'startOrderItem']);
         Route::patch('kitchen/order-items/{orderItem}/mark-ready', [KitchenController::class, 'markOrderItemReady']);
+        Route::patch('kitchen/order-items/{orderItem}/deliver', [KitchenController::class, 'deliverOrderItem']);
         Route::patch('kitchen/order-items/{orderItem}/cancel', [KitchenController::class, 'cancelOrderItem']);
     });
 });
