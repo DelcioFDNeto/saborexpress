@@ -11,6 +11,7 @@ use App\Http\Requests\Payments\RegisterPaymentRequest;
 use App\Http\Resources\PaymentResource;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\CashMovement;
 use App\Repositories\Orders\OrderRepositoryInterface;
 use App\Repositories\Payments\PaymentRepositoryInterface;
 use Illuminate\Http\Request;
@@ -141,6 +142,15 @@ class PaymentController extends Controller
                 'paid_at' => now(),
             ]);
 
+            CashMovement::create([
+                'user_id' => $request->user()->id,
+                'type' => 'Sale',
+                'amount' => $validated['amount'],
+                'method' => $validated['method'],
+                'order_id' => $order->id,
+                'description' => 'Pagamento de Comanda #' . $order->id,
+            ]);
+
             $subtotal = (float) $order->total_amount;
             $serviceFee = (float) $order->service_fee;
             $discount = (float) $order->discount;
@@ -166,5 +176,39 @@ class PaymentController extends Controller
             'message' => 'Pagamento registrado com sucesso',
             'order_status' => $order->fresh()->status,
         ]);
+    }
+
+    public function refund(Request $request, Payment $payment)
+    {
+        if ($payment->status === PaymentStatus::Refunded->value) {
+            return response()->json(['message' => 'Pagamento já foi estornado.'], 422);
+        }
+
+        DB::transaction(function () use ($payment, $request) {
+            $payment->update(['status' => PaymentStatus::Refunded->value]);
+
+            CashMovement::create([
+                'user_id' => $request->user()->id,
+                'type' => 'Refund',
+                'amount' => $payment->amount,
+                'method' => $payment->method,
+                'order_id' => $payment->order_id,
+                'description' => 'Estorno de Pagamento #' . $payment->id,
+            ]);
+
+            $order = $payment->order;
+            if ($order && $order->status === OrderStatus::Paid->value) {
+                // If the order was fully paid, and we refunded something, it might not be paid anymore.
+                // Simplified: just set it back to Open if there was a refund.
+                $this->orders->updateStatus($order, OrderStatus::Open->value);
+            }
+
+            $this->recordAuditEvent->execute($request->user(), AuditEventType::PaymentRegistered, $payment, [
+                'action' => 'refund',
+                'payment_id' => $payment->id,
+            ]);
+        });
+
+        return response()->json(['message' => 'Estorno realizado com sucesso.']);
     }
 }

@@ -82,6 +82,7 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 - [x] Transferência de comanda entre mesas.
 - [x] Junção de comandas entre mesas abertas.
 - [x] Status de mesa: `Livre`, `Ocupada`, `Reservada`, `Fechamento`, `Limpeza`.
+- [x] Múltiplas reservas com histórico via tabela `table_reservations` (backend robusto).
 - [ ] Definir histórico detalhado de movimentações de mesa, caso o escopo exija auditoria operacional específica.
 
 ### Frontend
@@ -91,6 +92,7 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 - [x] Abertura de mesa integrada à API.
 - [x] Transferência e junção de comandas integradas à API.
 - [x] Tela administrativa de cadastro e manutenção de mesas.
+- [x] Portal Público do Cliente para criação e acompanhamento de reservas online (`/minhas-reservas`).
 - [x] Melhorar fluxo visual de reserva e limpeza (inclui suporte visual a mesas em Limpeza e Reservadas com ações de liberação, cancelamento e ocupação imediata).
 
 ## M04 - Auditoria e Histórico
@@ -172,21 +174,22 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 - [x] Listagem e consulta de pagamentos.
 - [x] Comanda muda para `Paga` após pagamento integral.
 - [x] Mesa pode ser liberada para limpeza após pagamento.
-- [ ] Abertura de caixa.
-- [ ] Fechamento de caixa.
-- [ ] Sangria.
-- [ ] Suprimento.
-- [ ] Estorno.
-- [ ] Relatórios financeiros.
+- [x] Histórico de movimentações de caixa contínuo.
+- [x] Sangria (com validação de limite).
+- [x] Suprimento.
+- [x] Estorno de pagamento com registro de auditoria e ajuste de saldo.
+- [ ] Relatórios financeiros fechados.
 
 ### Frontend
 
 - [x] Tela de caixa.
 - [x] Listagem de comandas em fechamento.
 - [x] Ação de pagamento simplificado.
+- [x] Histórico de Gaveta com Saldo em tempo real.
+- [x] Modais de Sangria e Suprimento.
+- [x] Funcionalidade visual de estorno de transações do dia.
 - [ ] Fluxo visual completo de pagamentos parciais.
 - [ ] Interface de divisão de conta por pessoas ou itens.
-- [ ] Telas de abertura, fechamento, sangria, suprimento e estorno.
 
 ## M08 - Delivery e Retirada
 
@@ -283,6 +286,6 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 
 ## Próximas Prioridades
 
-1. **Fluxo de Retirada (Takeout)**: Adicionar suporte no backend e frontend para pedidos de retirada local no estabelecimento.
-2. **Módulo de Caixa Avançado**: Desenvolver telas e endpoints de abertura, fechamento, sangrias e suprimentos de caixa.
+1. **Aprimoramento de Interface (UI/UX)**: Refinar os modais e implementar mais validações de divisão de conta e pagamentos parciais.
+2. **Relatórios Financeiros Avançados**: Criar fechamentos diários ou relatórios de vendas exportáveis.
 3. **Automação de Testes**: Implementar suítes de testes automatizados no backend e testes ponta a ponta no frontend.

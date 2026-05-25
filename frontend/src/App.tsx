@@ -11,6 +11,7 @@ import Cashier from './pages/Cashier';
 import DeliveryClient from './pages/DeliveryClient';
 import DeliveryPanel from './pages/DeliveryPanel';
 import Dashboard from './pages/Dashboard';
+import ClientReservations from './pages/ClientReservations';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider, AuthContext } from './contexts/AuthContext';
 import { Toaster } from 'sonner';
@@ -55,6 +56,10 @@ function Navigation() {
             <Link to="/dashboard" className="text-amber-700 font-extrabold text-xs md:text-sm hover:text-amber-800 transition-colors bg-amber-100 px-3 py-1.5 rounded-lg shrink-0">Painel</Link>
           )}
 
+          {isAuthenticated && user?.role === 'client' && (
+            <Link to="/minhas-reservas" className="text-gray-700 font-bold text-sm md:text-base hover:text-sabor-primary transition-colors shrink-0">Minhas Reservas</Link>
+          )}
+
           {isAuthenticated ? (
             <div className="flex items-center gap-4 ml-2 pl-2 md:ml-4 md:pl-4 border-l border-gray-200 shrink-0">
               <span className="text-sm md:text-base text-gray-600 font-bold truncate max-w-[150px]">{user?.name}</span>
@@ -90,6 +95,10 @@ function App() {
               <Route path="/delivery" element={<DeliveryClient />} />
 
               {/* Protected Routes */}
+              <Route element={<ProtectedRoute allowedRoles={['client']} />}>
+                <Route path="/minhas-reservas" element={<ClientReservations />} />
+              </Route>
+
               <Route element={<ProtectedRoute allowedRoles={['administrator']} />}>
                 <Route path="/dashboard" element={<Dashboard />} />
               </Route>

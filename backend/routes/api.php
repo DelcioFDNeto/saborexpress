@@ -10,7 +10,9 @@ use App\Http\Controllers\OrderItemController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\TableController;
+use App\Http\Controllers\TableReservationController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\CashMovementController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -29,6 +31,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    // Rotas de Reserva para o Cliente
+    Route::middleware('role:client')->group(function () {
+        Route::get('client/reservations', [TableReservationController::class, 'index']);
+        Route::post('client/reservations', [TableReservationController::class, 'store']);
+        Route::delete('client/reservations/{tableReservation}', [TableReservationController::class, 'destroy']);
+        Route::get('client/tables', [TableController::class, 'index']); // Permitir ver as mesas para reservar
+    });
 
     Route::middleware('role:administrator')->group(function () {
         Route::apiResource('users', UserController::class);
@@ -69,6 +79,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('orders/{order}/payments', [PaymentController::class, 'store']);
         Route::post('orders/{order}/split', [PaymentController::class, 'simulateSplit']);
         Route::post('orders/{order}/pay', [PaymentController::class, 'pay']);
+        Route::post('payments/{payment}/refund', [PaymentController::class, 'refund']);
+
+        Route::get('cash/movements', [CashMovementController::class, 'index']);
+        Route::post('cash/movements', [CashMovementController::class, 'store']);
     });
 
     Route::middleware('role:administrator,kitchen')->group(function () {

@@ -24,6 +24,12 @@ interface Order {
 export default function Cashier() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [movements, setMovements] = useState<any[]>([]);
+  const [cashSummary, setCashSummary] = useState({ total_in: 0, total_out: 0, balance: 0 });
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [movementModal, setMovementModal] = useState<'Sangria' | 'Suprimento' | null>(null);
+  const [movementAmount, setMovementAmount] = useState('');
+  const [movementDesc, setMovementDesc] = useState('');
   
   // Payment Simulation State
   const [splitType, setSplitType] = useState<'integral' | 'equal' | 'items'>('integral');
@@ -51,8 +57,19 @@ export default function Cashier() {
     }
   };
 
+  const fetchCash = async () => {
+    try {
+      const res = await api.get('/cash/movements');
+      setMovements(res.data.data);
+      setCashSummary(res.data.summary);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     fetchOrders();
+    fetchCash();
     
     // WebSockets via Laravel Echo
     const channel = window.Echo.channel('orders');
@@ -96,11 +113,44 @@ export default function Cashier() {
       toast.success('Pagamento registrado com sucesso!');
       
       fetchOrders();
+      fetchCash();
       setSplitType('integral');
       setSelectedItemIds([]);
     } catch (err) {
       console.error(err);
       toast.error('Erro ao registrar pagamento.');
+    }
+  };
+
+  const handleMovement = async () => {
+    if (!movementAmount || !movementDesc) {
+      toast.error('Preencha valor e descrição.');
+      return;
+    }
+    try {
+      await api.post('/cash/movements', {
+        type: movementModal,
+        amount: parseFloat(movementAmount),
+        description: movementDesc,
+      });
+      toast.success(movementModal + ' registrada com sucesso!');
+      setMovementModal(null);
+      setMovementAmount('');
+      setMovementDesc('');
+      fetchCash();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Erro ao registrar movimentação.');
+    }
+  };
+
+  const handleRefund = async (paymentId: number) => {
+    try {
+      await api.post(`/payments/${paymentId}/refund`);
+      toast.success('Estorno realizado com sucesso!');
+      fetchCash();
+      fetchOrders();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Erro ao realizar estorno.');
     }
   };
 
@@ -142,6 +192,15 @@ export default function Cashier() {
               Nenhuma conta aguardando pagamento no momento.
             </div>
           )}
+        </div>
+
+        <div className="p-4 border-t border-gray-200">
+          <button 
+            onClick={() => setIsDrawerOpen(true)}
+            className="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold rounded-xl transition-colors border border-gray-300"
+          >
+            Abrir Gaveta / Histórico
+          </button>
         </div>
       </div>
 
@@ -289,6 +348,109 @@ export default function Cashier() {
           </div>
         )}
       </div>
+
+      {/* Drawer/Modal de Gaveta */}
+      {isDrawerOpen && (
+        <div className="fixed inset-0 z-50 flex">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsDrawerOpen(false)}></div>
+          <div className="relative w-full max-w-md h-full bg-white shadow-2xl ml-auto flex flex-col animate-slide-left">
+            <div className="p-6 bg-gray-900 text-white flex justify-between items-center">
+              <h2 className="text-xl font-bold">Gaveta de Dinheiro</h2>
+              <button onClick={() => setIsDrawerOpen(false)} className="text-gray-400 hover:text-white">✕</button>
+            </div>
+            
+            <div className="p-6 border-b border-gray-100 flex gap-4">
+              <div className="flex-1">
+                <p className="text-xs text-gray-500 uppercase font-bold">Saldo em Dinheiro</p>
+                <p className="text-2xl font-black text-emerald-600">R$ {cashSummary.balance.toFixed(2)}</p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <button onClick={() => setMovementModal('Suprimento')} className="text-xs font-bold bg-blue-100 text-blue-700 py-1.5 px-3 rounded-lg hover:bg-blue-200">+ Suprimento</button>
+                <button onClick={() => setMovementModal('Sangria')} className="text-xs font-bold bg-red-100 text-red-700 py-1.5 px-3 rounded-lg hover:bg-red-200">- Sangria</button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 bg-gray-50 custom-scrollbar">
+              <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Movimentações de Hoje</h3>
+              <div className="space-y-3">
+                {movements.map((mov) => (
+                  <div key={mov.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${
+                          mov.type === 'Sale' || mov.type === 'Suprimento' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+                        }`}>
+                          {mov.type}
+                        </span>
+                        <p className="text-sm font-bold text-gray-800 mt-1">{mov.description}</p>
+                        <p className="text-xs text-gray-400">{new Date(mov.created_at).toLocaleTimeString()}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className={`font-black ${mov.type === 'Sale' || mov.type === 'Suprimento' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                          {mov.type === 'Sale' || mov.type === 'Suprimento' ? '+' : '-'} R$ {Number(mov.amount).toFixed(2)}
+                        </p>
+                        {mov.type === 'Sale' && (
+                          <button onClick={() => handleRefund(mov.order_id)} className="text-xs text-red-500 hover:underline mt-1">Estornar</button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {movements.length === 0 && (
+                  <p className="text-center text-gray-400 mt-10 text-sm">Nenhuma movimentação hoje.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Movement Modal (Sangria/Suprimento) */}
+      {movementModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl">
+            <h2 className="text-xl font-bold mb-4">{movementModal}</h2>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Valor (R$)</label>
+                <input 
+                  type="number" 
+                  className="w-full border-gray-300 rounded-xl focus:ring-sabor-primary focus:border-sabor-primary"
+                  value={movementAmount}
+                  onChange={(e) => setMovementAmount(e.target.value)}
+                  placeholder="0.00"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Descrição / Motivo</label>
+                <input 
+                  type="text" 
+                  className="w-full border-gray-300 rounded-xl focus:ring-sabor-primary focus:border-sabor-primary"
+                  value={movementDesc}
+                  onChange={(e) => setMovementDesc(e.target.value)}
+                  placeholder="Ex: Troco inicial"
+                />
+              </div>
+            </div>
+            
+            <div className="flex gap-3 mt-6">
+              <button 
+                onClick={() => setMovementModal(null)}
+                className="flex-1 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold transition-colors"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={handleMovement}
+                className={`flex-1 py-2 text-white rounded-xl font-bold transition-colors ${movementModal === 'Sangria' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

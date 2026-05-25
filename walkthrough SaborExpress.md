@@ -160,6 +160,13 @@ Implementamos a ponte entre o garçom no salão e o caixa interno.
 Com a implantação da divisão de contas, KDS logístico e pré-fechamento, o fluxo de vida do restaurante encontra-se **100% holístico e automatizado**:
 `Auto-atendimento / Garçom` ➔ `KDS da Cozinha` ➔ `Dashboard do Caixa` ➔ `Painel do Entregador`!
 
+### Gaveta de Caixa e Movimentações Financeiras
+Para assegurar a conciliação financeira do restaurante, foi integrado um painel de Gaveta (Histórico de Caixa):
+- **Sangria:** Retiradas do caixa devidamente auditadas e subtrativas do saldo do dia.
+- **Suprimento:** Adições de troco contabilizadas.
+- **Estorno de Vendas:** Caso um pagamento tenha sido lançado errado, o operador pode acionar um botão na timeline de movimentações diárias para gerar um refund e devolver a conta para aberto.
+- O sistema calcula o saldo líquido em tempo real de todas as vendas e retiradas.
+
 > [!IMPORTANT]
 > **Conclusão Geral:** O **SaborExpress** agora é um ecossistema full-stack fechado. Ele abrange perfeitamente desde o Delivery e o Salão de Mesas, passando pela tela KDS da Cozinha, controle rigoroso financeiro no Caixa, painel logístico do Entregador, até o Dashboard Gerencial!
 
@@ -232,6 +239,16 @@ Para ampliar os canais de atendimento, implementamos o fluxo de **Retirada no Es
 * **Backend**: Criada a rota `POST /api/orders/takeout` e implementado o método `storeTakeout` no `OrderController.php`, que abre comandas sem exigir CEP ou endereço físico, utilizando a tag `'Takeout'` e setando o status inicial como `'Aguardando Retirada'`.
 * **Frontend**: Incluído um seletor visual animado no checkout (`DeliveryClient.tsx`) que oculta condicionalmente todos os inputs de preenchimento e busca do CEP, simplificando a compra para o cliente final.
 * **Automação do Banco**: Atualizado o `DatabaseSeeder.php` para utilizar o `MenuSeeder` de forma nativa. O comando `php artisan migrate:fresh --seed` agora recria todo o banco e popula o cardápio automaticamente com as fotos de altíssima qualidade vindas do Unsplash, além de todas as 12 mesas e usuários de testes acadêmicos.
+
+---
+
+## 12. Autoatendimento e Reservas Online
+
+O ecossistema se expandiu para oferecer poder diretamente às mãos dos clientes fiéis.
+
+- **Painel do Cliente (`Minhas Reservas`)**: Clientes devidamente cadastrados logados com seu perfil têm acesso a uma interface web intuitiva onde conseguem enxergar o mapa de mesas do salão.
+- **Reserva Online Real-time**: Com um clique de calendário, os clientes podem reservar previamente mesas, adicionando notas e pedidos especiais (Ex: cadeiras de bebê).
+- O backend processa validações complexas, negando choques de horário (com 2 horas de tolerância entre ocupantes da mesma mesa), e as informações chegam na mesma tela dos recepcionistas do restaurante.
 
 ---
 **Status Final do Projeto:** Ecossistema Integrado, 100% Funcional, Responsivo e Escalável! 🚀
