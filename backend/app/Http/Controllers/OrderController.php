@@ -209,6 +209,12 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
+        $user = auth()->user();
+
+        if ($user && $user->role === \App\Enums\UserRole::Client->value && $order->user_id !== $user->id) {
+            abort(403, 'Você não tem permissão para visualizar este pedido.');
+        }
+
         return new OrderResource($this->orders->loadDetails($order));
     }
 

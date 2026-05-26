@@ -16,11 +16,10 @@ use App\Http\Controllers\CashMovementController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:3,1');
 Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
 Route::apiResource('products', ProductController::class)->only(['index', 'show']);
-Route::get('orders/{order}/track', [OrderController::class, 'show']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
@@ -29,6 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('orders/{order}/track', [OrderController::class, 'show']);
 
     // Rotas exclusivas de autoatendimento e controle de reservas do Cliente
     Route::middleware('role:client')->group(function () {

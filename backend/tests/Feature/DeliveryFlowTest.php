@@ -25,7 +25,11 @@ class DeliveryFlowTest extends TestCase
             'is_available' => true
         ]);
 
-        // 2. Place a delivery order (public endpoint)
+        // 1.5 Create and authenticate client user
+        $client = User::factory()->create(['role' => 'client', 'is_active' => true]);
+        Sanctum::actingAs($client);
+
+        // 2. Place a delivery order (authenticated endpoint)
         $deliveryResponse = $this->postJson('/api/orders/delivery', [
             'customer_name' => 'John Doe',
             'customer_phone' => '91988888888',
@@ -35,6 +39,8 @@ class DeliveryFlowTest extends TestCase
             'cep' => '66055-260',
             'reference' => 'Ao lado do banco',
             'delivery_address' => 'Av. Governador Jose Malcher, 1200 - Nazare',
+            'payment_type' => 'delivery',
+            'payment_method' => 'Dinheiro',
             'items' => [
                 [
                     'product_id' => $product->id,

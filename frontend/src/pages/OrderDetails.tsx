@@ -56,6 +56,10 @@ export default function OrderDetails() {
   const [editNotes, setEditNotes] = useState<string>('');
   const [itemActionLoading, setItemActionLoading] = useState(false);
 
+  const [isTableActionModalOpen, setIsTableActionModalOpen] = useState(false);
+  const [tableActionType, setTableActionType] = useState<'transfer' | 'merge'>('transfer');
+  const [availableTables, setAvailableTables] = useState<Table[]>([]);
+
   const fetchOrderDetails = async () => {
     setLoading(true);
     try {      
@@ -113,10 +117,6 @@ export default function OrderDetails() {
   if (!order) return null;
 
   const hasReadyItems = order.items.some(item => item.status === 'Pronto');
-
-  const [isTableActionModalOpen, setIsTableActionModalOpen] = useState(false);
-  const [tableActionType, setTableActionType] = useState<'transfer' | 'merge'>('transfer');
-  const [availableTables, setAvailableTables] = useState<Table[]>([]);
 
   // Fixed close request call! Points to orders/{order.id}/request-closing
   const handleCloseRequest = async () => {

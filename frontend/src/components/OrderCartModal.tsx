@@ -30,6 +30,9 @@ export default function OrderCartModal({ orderId, isOpen, onClose, onItemAdded }
   
   const [loading, setLoading] = useState(false);
   const [addingProductId, setAddingProductId] = useState<number | null>(null);
+  const [expandedProductId, setExpandedProductId] = useState<number | null>(null);
+  const [currentNote, setCurrentNote] = useState('');
+  const [currentQuantity, setCurrentQuantity] = useState(1);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -52,10 +55,6 @@ export default function OrderCartModal({ orderId, isOpen, onClose, onItemAdded }
   }, [isOpen]);
 
   if (!isOpen) return null;
-
-  const [expandedProductId, setExpandedProductId] = useState<number | null>(null);
-  const [currentNote, setCurrentNote] = useState('');
-  const [currentQuantity, setCurrentQuantity] = useState(1);
 
   const handleExpand = (productId: number) => {
     if (expandedProductId === productId) {
