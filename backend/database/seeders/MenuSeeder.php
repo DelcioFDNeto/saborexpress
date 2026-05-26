@@ -178,7 +178,6 @@ class MenuSeeder extends Seeder
             'name' => 'Combo Pajé Guerreiro (Tacacá + Cerpa)', 
             'description' => 'Super promoção de happy hour: 1 Tacacá Vulcânico com Camarões Gigantes + 1 Cerveja Cerpa Export geladíssima por um preço especial.', 
             'price' => 45.00, // 38 + 12 = 50 (10% desconto)
-            'is_available' => true,
             'image_url' => 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=600&auto=format&fit=crop'
         ]);
         Product::create([
@@ -186,7 +185,6 @@ class MenuSeeder extends Seeder
             'name' => 'Banquete da Tribo (Serve 2 Pessoas)', 
             'description' => 'Banquete completo: 1 Isca de Filhote Crocante (Entrada) + 2 Maniçobas Celestiais do Pajé (Principal) + 1 O Segredo da Floresta para compartilhar!', 
             'price' => 129.90, // 59.90 + 96 + 19.90 = 175.80 (26% de desconto!)
-            'is_available' => true,
             'image_url' => 'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=600&auto=format&fit=crop'
         ]);
         Product::create([
@@ -194,7 +192,6 @@ class MenuSeeder extends Seeder
             'name' => 'Combo Casal Amazônico', 
             'description' => 'Dois Tacacás Vulcânicos com Camarões Gigantes + 1 Taça de Sorvete Cairu Mestiço para finalizar a noite perfeita de forma doce.', 
             'price' => 79.90, // 38*2 + 20 = 96 (17% de desconto)
-            'is_available' => true,
             'image_url' => 'https://images.unsplash.com/photo-1488477181946-6428a0291777?q=80&w=600&auto=format&fit=crop'
         ]);
         Product::create([
@@ -202,7 +199,6 @@ class MenuSeeder extends Seeder
             'name' => 'Promoção Treme e Adoça', 
             'description' => 'O clássico de Belém: 1 Tacacá Vulcânico Individual + 1 Creme Manjar de Pupunha com Caramelo de Jambu.', 
             'price' => 49.00, // 38 + 17.50 = 55.50 (12% de desconto)
-            'is_available' => true,
             'image_url' => 'https://images.unsplash.com/photo-1547592180-85f173990554?q=80&w=600&auto=format&fit=crop'
         ]);
     }
