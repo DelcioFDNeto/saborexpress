@@ -221,15 +221,23 @@ export default function Cashier() {
         <div className="p-4 border-t border-gray-200 space-y-2">
           <button 
             onClick={() => setIsDrawerOpen(true)}
-            className="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold rounded-xl transition-colors border border-gray-300"
+            className="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold rounded-xl transition-colors border border-gray-300 flex items-center justify-center gap-1.5"
           >
-            📂 Abrir Gaveta / Histórico
+            <svg className="w-4 h-4 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
+            </svg>
+            <span>Abrir Gaveta / Histórico</span>
           </button>
           <button 
             onClick={fetchReport}
-            className="w-full py-3 bg-sabor-primary text-sabor-dark font-black rounded-xl hover:bg-sabor-primary/90 transition-all shadow-sm"
+            className="w-full py-3 bg-sabor-primary text-sabor-dark font-black rounded-xl hover:bg-sabor-primary/90 transition-all shadow-sm flex items-center justify-center gap-1.5"
           >
-            📊 Resumo do Turno (Fechamento)
+            <svg className="w-4 h-4 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10" />
+              <line x1="12" y1="20" x2="12" y2="4" />
+              <line x1="6" y1="20" x2="6" y2="14" />
+            </svg>
+            <span>Resumo do Turno (Fechamento)</span>
           </button>
         </div>
       </div>
@@ -567,15 +575,34 @@ export default function Cashier() {
               <h3 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider">Detalhamento por Meio (Vendas)</h3>
               <div className="space-y-2">
                 <div className="flex justify-between items-center bg-gray-50 px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700">
-                  <span className="flex items-center gap-2">📱 PIX</span>
+                  <span className="flex items-center gap-2">
+                    <svg className="w-4 h-4 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                      <line x1="12" y1="18" x2="12.01" y2="18" />
+                    </svg>
+                    <span>PIX</span>
+                  </span>
                   <span className="font-extrabold">R$ {reportData.methods.pix.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center bg-gray-50 px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700">
-                  <span className="flex items-center gap-2">💳 Cartões</span>
+                  <span className="flex items-center gap-2">
+                    <svg className="w-4 h-4 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="5" width="20" height="14" rx="2" />
+                      <line x1="2" y1="10" x2="22" y2="10" />
+                    </svg>
+                    <span>Cartões</span>
+                  </span>
                   <span className="font-extrabold">R$ {reportData.methods.card.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center bg-gray-50 px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700">
-                  <span className="flex items-center gap-2">💵 Dinheiro</span>
+                  <span className="flex items-center gap-2">
+                    <svg className="w-4 h-4 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="6" width="20" height="12" rx="2" />
+                      <circle cx="12" cy="12" r="2" />
+                      <path d="M6 12h.01M18 12h.01" />
+                    </svg>
+                    <span>Dinheiro</span>
+                  </span>
                   <span className="font-extrabold">R$ {reportData.methods.cash.toFixed(2)}</span>
                 </div>
               </div>
@@ -606,7 +633,12 @@ export default function Cashier() {
                 }}
                 className="flex-1 py-3 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 transition-colors flex items-center justify-center gap-1.5"
               >
-                🖨️ Imprimir
+                <svg className="w-4 h-4 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 6 2 18 2 18 9" />
+                  <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" />
+                  <rect x="6" y="14" width="12" height="8" />
+                </svg>
+                <span>Imprimir</span>
               </button>
               <button 
                 onClick={() => setIsReportOpen(false)}

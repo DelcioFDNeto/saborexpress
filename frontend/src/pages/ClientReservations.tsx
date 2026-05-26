@@ -135,7 +135,13 @@ export default function ClientReservations() {
           {/* Reservation Booking Form Card */}
           <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
             <h2 className="text-xl font-black text-gray-900 mb-6 flex items-center gap-2">
-              <span>📅</span> Nova Reserva
+              <svg className="w-5 h-5 stroke-current fill-none text-sabor-dark" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+              <span>Nova Reserva</span>
             </h2>
             
             <form onSubmit={handleReserve} className="space-y-4">
@@ -215,7 +221,10 @@ export default function ClientReservations() {
           {/* Customer Past/Future Reservations Card */}
           <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100">
             <h2 className="text-xl font-black text-gray-900 mb-6 flex items-center gap-2">
-              <span>🎟️</span> Suas Próximas Reservas
+              <svg className="w-5 h-5 stroke-current fill-none text-sabor-dark" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 9a3 3 0 010-6h16a3 3 0 010 6 2 2 0 000 4 2 2 0 000 4 3 3 0 010 6H2a3 3 0 010-6 2 2 0 000-4 2 2 0 000-4z" />
+              </svg>
+              <span>Suas Próximas Reservas</span>
             </h2>
             
             {reservations.length === 0 ? (
@@ -229,10 +238,23 @@ export default function ClientReservations() {
                     <div>
                       <h3 className="font-extrabold text-gray-900 text-base">Mesa {res.table?.number}</h3>
                       <p className="text-xs text-gray-600 mt-1 font-semibold flex items-center gap-1">
-                        <span>📅</span>
-                        {new Date(res.reservation_date).toLocaleDateString('pt-BR')} às {new Date(res.reservation_date).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}
+                        <svg className="w-3.5 h-3.5 stroke-current fill-none text-gray-400" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                          <line x1="16" y1="2" x2="16" y2="6" />
+                          <line x1="8" y1="2" x2="8" y2="6" />
+                          <line x1="3" y1="10" x2="21" y2="10" />
+                        </svg>
+                        <span>{new Date(res.reservation_date).toLocaleDateString('pt-BR')} às {new Date(res.reservation_date).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}</span>
                       </p>
-                      <p className="text-[11px] text-gray-400 font-bold mt-1">👥 {res.guests} pessoas</p>
+                      <p className="text-[11px] text-gray-400 font-bold mt-1 flex items-center gap-1">
+                        <svg className="w-3.5 h-3.5 stroke-current fill-none text-gray-400" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                          <circle cx="9" cy="7" r="4" />
+                          <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                          <path d="M16 3.13a4 4 0 010 7.75" />
+                        </svg>
+                        <span>{res.guests} pessoas</span>
+                      </p>
                       {res.status === 'Cancelled' ? (
                         <span className="inline-block mt-2.5 px-2.5 py-0.5 bg-rose-100 text-rose-800 text-[10px] font-black uppercase rounded-full">
                           Cancelada
@@ -263,7 +285,11 @@ export default function ClientReservations() {
           
           <div className="mb-6">
             <h2 className="text-xl font-black text-gray-900 flex items-center gap-2">
-              <span>📍</span> Selecione sua Mesa no Salão
+              <svg className="w-5 h-5 stroke-current fill-none text-sabor-dark" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              <span>Selecione sua Mesa no Salão</span>
             </h2>
             <p className="text-gray-500 text-xs mt-1">
               Veja o estado atual de cada mesa e clique no card correspondente para selecioná-la.
@@ -335,7 +361,15 @@ export default function ClientReservations() {
                   {/* Details */}
                   <div className="space-y-1">
                     <h3 className="font-extrabold text-sm text-gray-900">Mesa {t.number}</h3>
-                    <p className="text-gray-500 text-[10px] sm:text-[11px] font-bold">👥 Até {t.capacity} pessoas</p>
+                    <p className="text-gray-500 text-[10px] sm:text-[11px] font-bold flex items-center gap-1">
+                      <svg className="w-3.5 h-3.5 stroke-current fill-none text-gray-400" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                        <path d="M16 3.13a4 4 0 010 7.75" />
+                      </svg>
+                      <span>Até {t.capacity} pessoas</span>
+                    </p>
                   </div>
 
                   {/* Real-time Status Badge */}

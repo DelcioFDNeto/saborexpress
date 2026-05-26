@@ -157,7 +157,9 @@ export default function OrderTracking() {
                   <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shrink-0 z-10 ${
                     currentStep >= 1 ? 'bg-sabor-primary text-white shadow-md' : 'bg-gray-100 text-gray-400'
                   }`}>
-                    📝
+                    <svg className="w-4 h-4 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
                   </div>
                   <div>
                     <h3 className="font-extrabold text-gray-900 text-base">Pedido Recebido</h3>
@@ -170,7 +172,9 @@ export default function OrderTracking() {
                   <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shrink-0 z-10 ${
                     currentStep >= 2 ? 'bg-amber-500 text-white shadow-md' : 'bg-gray-100 text-gray-400'
                   }`}>
-                    🍳
+                    <svg className="w-4 h-4 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 2v4M17 2v4M7 2v4M2 12c0 4.418 4.477 8 10 8s10-3.582 10-8H2z" />
+                    </svg>
                   </div>
                   <div>
                     <h3 className="font-extrabold text-gray-900 text-base">Na Cozinha</h3>
@@ -183,7 +187,18 @@ export default function OrderTracking() {
                   <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shrink-0 z-10 ${
                     currentStep >= 3 ? 'bg-indigo-600 text-white shadow-md animate-bounce' : 'bg-gray-100 text-gray-400'
                   }`}>
-                    {isTakeout ? '🛍️' : '🛵'}
+                    {isTakeout ? (
+                      <svg className="w-4 h-4 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="1" y="3" width="15" height="13" />
+                        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+                        <circle cx="5.5" cy="18.5" r="2.5" />
+                        <circle cx="18.5" cy="18.5" r="2.5" />
+                      </svg>
+                    )}
                   </div>
                   <div>
                     <h3 className="font-extrabold text-gray-900 text-base">
@@ -204,7 +219,9 @@ export default function OrderTracking() {
                   <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shrink-0 z-10 ${
                     currentStep >= 4 ? 'bg-emerald-600 text-white shadow-md' : 'bg-gray-100 text-gray-400'
                   }`}>
-                    🎉
+                    <svg className="w-4 h-4 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 13l4 4L19 7" />
+                    </svg>
                   </div>
                   <div>
                     <h3 className="font-extrabold text-gray-900 text-base">
@@ -226,7 +243,10 @@ export default function OrderTracking() {
               <h3 className="font-extrabold text-gray-900 text-lg mb-4">Informações de Envio</h3>
               {isTakeout ? (
                 <div className="flex items-start gap-3 bg-amber-50 p-5 rounded-2xl border border-amber-100 text-sm text-amber-800 font-bold leading-relaxed">
-                  <span className="text-2xl">📍</span>
+                  <svg className="w-5 h-5 stroke-current fill-none shrink-0" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
                   <div>
                     <p className="text-base text-amber-900 font-black">Local para Retirada</p>
                     <p className="font-medium mt-1">Av. Nazaré, 452 - Nazaré (Próximo à Praça Santuário)</p>

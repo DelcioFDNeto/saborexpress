@@ -230,9 +230,12 @@ export default function DeliveryClient() {
           {createdOrderId && (
             <Link 
               to={`/acompanhar-pedido/${createdOrderId}`}
-              className="w-full py-4 bg-indigo-600 text-white rounded-xl font-black text-sm block mb-3 text-center hover:bg-indigo-700 transition-colors shadow-md hover:shadow-lg"
+              className="w-full py-4 bg-indigo-600 text-white rounded-xl font-black text-sm block mb-3 text-center hover:bg-indigo-700 transition-colors shadow-md hover:shadow-lg flex items-center justify-center gap-1.5"
             >
-              🛵 Acompanhar em Tempo Real
+              <svg className="w-4 h-4 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+              <span>Acompanhar em Tempo Real</span>
             </Link>
           )}
           <button 
@@ -429,7 +432,13 @@ export default function DeliveryClient() {
                         : 'text-gray-500 hover:text-gray-800'
                     }`}
                   >
-                    🚚 Entrega
+                    <svg className="w-3.5 h-3.5 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="1" y="3" width="15" height="13" />
+                      <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+                      <circle cx="5.5" cy="18.5" r="2.5" />
+                      <circle cx="18.5" cy="18.5" r="2.5" />
+                    </svg>
+                    <span>Entrega</span>
                   </button>
                   <button 
                     type="button"
@@ -440,7 +449,10 @@ export default function DeliveryClient() {
                         : 'text-gray-500 hover:text-gray-800'
                     }`}
                   >
-                    🛍️ Retirada
+                    <svg className="w-3.5 h-3.5 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                    <span>Retirada</span>
                   </button>
                 </div>
 
@@ -522,7 +534,12 @@ export default function DeliveryClient() {
                           : 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50'
                       }`}
                     >
-                      <span className="text-lg">🛵</span>
+                      <svg className="w-5 h-5 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="1" y="3" width="15" height="13" />
+                        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+                        <circle cx="5.5" cy="18.5" r="2.5" />
+                        <circle cx="18.5" cy="18.5" r="2.5" />
+                      </svg>
                       <span>No ato da entrega</span>
                     </button>
                     <button
@@ -534,7 +551,11 @@ export default function DeliveryClient() {
                           : 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50'
                       }`}
                     >
-                      <span className="text-lg">💻</span>
+                      <svg className="w-5 h-5 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                        <line x1="8" y1="21" x2="16" y2="21" />
+                        <line x1="12" y1="17" x2="12" y2="21" />
+                      </svg>
                       <span>Pelo site (Online)</span>
                     </button>
                   </div>

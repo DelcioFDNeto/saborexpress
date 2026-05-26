@@ -266,8 +266,11 @@ export default function DigitalMenu() {
       return (
         <div className="max-w-md mx-auto p-6 md:p-10 font-sans min-h-[75vh] flex flex-col justify-center animate-fade-in">
           <div className="bg-white p-8 rounded-3xl shadow-xl border border-rose-100 text-center flex flex-col items-center">
-            <div className="w-20 h-20 rounded-full bg-rose-50 text-rose-500 font-black text-3xl flex items-center justify-center mb-6 border border-rose-100 shadow-inner">
-              🔒
+            <div className="w-20 h-20 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mb-6 border border-rose-100 shadow-inner">
+              <svg className="w-10 h-10 stroke-rose-500 fill-none" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0110 0v4" />
+              </svg>
             </div>
             
             <h1 className="text-2xl font-black text-gray-900 mb-2">Tablet Bloqueado</h1>
@@ -275,15 +278,23 @@ export default function DigitalMenu() {
               Este dispositivo de autoatendimento ainda não foi configurado e vinculado a uma mesa física pelo restaurante.
             </p>
             
-            <div className="bg-amber-50 border border-amber-100 text-amber-800 text-xs font-bold p-4 rounded-xl leading-relaxed mb-6">
-              ⚠️ Apenas garçons, gerentes ou administradores com credenciais ativas podem vincular este tablet a uma mesa.
+            <div className="bg-amber-50 border border-amber-100 text-amber-800 text-xs font-bold p-4 rounded-xl leading-relaxed mb-6 flex items-start gap-2.5">
+              <svg className="w-4 h-4 stroke-amber-700 fill-none shrink-0 mt-0.5" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+              <span>Apenas garçons, gerentes ou administradores com credenciais ativas podem vincular este tablet a uma mesa.</span>
             </div>
 
             <Link 
               to="/login?redirect=/cardapio-digital" 
-              className="w-full py-4 bg-sabor-primary hover:bg-sabor-primary/95 text-sabor-dark font-black text-base rounded-2xl transition-all shadow-[0_8px_25px_rgba(74,222,128,0.2)] block text-center"
+              className="w-full py-4 bg-sabor-primary hover:bg-sabor-primary/95 text-sabor-dark font-black text-base rounded-2xl transition-all shadow-[0_8px_25px_rgba(74,222,128,0.2)] flex items-center justify-center gap-2"
             >
-              Fazer Login de Garçom 🔑
+              <span>Fazer Login de Garçom</span>
+              <svg className="w-5 h-5 stroke-sabor-dark fill-none" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
+              </svg>
             </Link>
           </div>
         </div>
@@ -294,8 +305,12 @@ export default function DigitalMenu() {
     return (
       <div className="max-w-5xl mx-auto p-6 md:p-12 font-sans animate-fade-in">
         <header className="text-center mb-10 bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-          <span className="bg-sabor-light text-sabor-dark border border-sabor-primary/30 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider">
-            Painel do Garçom: Configuração ⚙️
+          <span className="bg-sabor-light text-sabor-dark border border-sabor-primary/30 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 max-w-fit mx-auto">
+            <svg className="w-3.5 h-3.5 stroke-sabor-dark fill-none" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+            </svg>
+            <span>Painel do Garçom: Configuração</span>
           </span>
           <h1 className="text-3xl font-black text-gray-900 mt-3">Vincular Tablet a uma Mesa</h1>
           <p className="text-gray-500 text-xs sm:text-sm mt-2 max-w-lg mx-auto">
@@ -314,7 +329,15 @@ export default function DigitalMenu() {
                 {t.number}
               </div>
               <h3 className="font-extrabold text-gray-900 text-base">Mesa {t.number}</h3>
-              <p className="text-xs text-gray-400 font-semibold mt-1">👥 {t.capacity} lugares</p>
+              <p className="text-xs text-gray-400 font-semibold mt-1 flex items-center justify-center gap-1">
+                <svg className="w-3 h-3 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                  <path d="M16 3.13a4 4 0 010 7.75" />
+                </svg>
+                <span>{t.capacity} lugares</span>
+              </p>
               
               <div className="mt-4">
                 {t.status === 'Livre' ? (
@@ -467,8 +490,11 @@ export default function DigitalMenu() {
                   className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col group relative"
                 >
                   {isCombo && (
-                    <span className="absolute top-4 left-4 z-10 bg-amber-500 text-white text-[9px] font-black uppercase px-2.5 py-1 rounded-full shadow-md tracking-wider">
-                      PROMOÇÃO 🔥
+                    <span className="absolute top-4 left-4 z-10 bg-amber-500 text-white text-[9px] font-black uppercase px-2.5 py-1 rounded-full shadow-md tracking-wider flex items-center gap-0.5">
+                      <svg className="w-2.5 h-2.5 stroke-white fill-none" viewBox="0 0 24 24" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z" />
+                      </svg>
+                      PROMOÇÃO
                     </span>
                   )}
 
@@ -481,8 +507,10 @@ export default function DigitalMenu() {
                         loading="lazy"
                       />
                     ) : (
-                      <div className="text-sabor-primary bg-sabor-light w-full h-full flex items-center justify-center font-bold">
-                        🥣
+                      <div className="text-sabor-primary bg-sabor-light w-full h-full flex items-center justify-center">
+                        <svg className="w-10 h-10 stroke-sabor-primary fill-none opacity-30" viewBox="0 0 24 24" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 2v4M17 2v4M7 2v4M2 12c0 4.418 4.477 8 10 8s10-3.582 10-8H2z"></path>
+                        </svg>
                       </div>
                     )}
                     {!product.is_available && (
@@ -504,9 +532,13 @@ export default function DigitalMenu() {
                     <button 
                       disabled={!product.is_available}
                       onClick={() => setTargetProduct(product)}
-                      className="w-full py-3 bg-sabor-light text-sabor-dark font-extrabold text-sm rounded-xl hover:bg-sabor-primary transition-all disabled:opacity-45 mt-auto flex items-center justify-center gap-1.5"
+                      className="w-full py-3 bg-sabor-light text-sabor-dark font-extrabold text-sm rounded-xl hover:bg-sabor-primary hover:text-sabor-dark transition-all disabled:opacity-45 mt-auto flex items-center justify-center gap-1.5"
                     >
-                      <span>➕</span> Pedir Prato
+                      <svg className="w-4 h-4 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                      <span>Pedir Prato</span>
                     </button>
                   </div>
                 </div>

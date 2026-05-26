@@ -127,8 +127,11 @@ export default function Index() {
                   alt="Tacacá" 
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
-                <span className="absolute top-4 left-4 bg-sabor-primary text-sabor-dark text-xs font-black uppercase px-3 py-1.5 rounded-full shadow-md">
-                  Mais Pedido 🔥
+                <span className="absolute top-4 left-4 bg-sabor-primary text-sabor-dark text-xs font-black uppercase px-3 py-1.5 rounded-full shadow-md flex items-center gap-1">
+                  <svg className="w-3.5 h-3.5 stroke-sabor-dark fill-none" viewBox="0 0 24 24" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z" />
+                  </svg>
+                  <span>Mais Pedido</span>
                 </span>
               </div>
               <div className="p-6 flex-1 flex flex-col justify-between">

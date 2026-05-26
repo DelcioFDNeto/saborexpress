@@ -850,7 +850,23 @@ export default function Dashboard() {
                             <div key={c.channel}>
                               <div className="flex justify-between text-sm font-semibold text-gray-700 mb-1.5">
                                 <span className="flex items-center gap-1.5">
-                                  {c.channel === 'Mesa' ? '🍽️' : c.channel === 'Delivery' ? '🚚' : '🛍️'} {c.channel}
+                                  {c.channel === 'Mesa' ? (
+                                    <svg className="w-4 h-4 stroke-blue-500 fill-none" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2M7 2v4M21 15V2v0a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v6M12 2v20" />
+                                    </svg>
+                                  ) : c.channel === 'Delivery' ? (
+                                    <svg className="w-4 h-4 stroke-purple-500 fill-none" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                      <rect x="1" y="3" width="15" height="13" />
+                                      <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+                                      <circle cx="5.5" cy="18.5" r="2.5" />
+                                      <circle cx="18.5" cy="18.5" r="2.5" />
+                                    </svg>
+                                  ) : (
+                                    <svg className="w-4 h-4 stroke-amber-500 fill-none" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                    </svg>
+                                  )}
+                                  <span>{c.channel}</span>
                                 </span>
                                 <span>{formatCurrency(c.total)} ({percent.toFixed(0)}%)</span>
                               </div>
@@ -882,7 +898,24 @@ export default function Dashboard() {
                             <div key={m.method}>
                               <div className="flex justify-between text-sm font-semibold text-gray-700 mb-1.5">
                                 <span className="flex items-center gap-1.5">
-                                  {m.method === 'Pix' ? '📱' : m.method === 'Dinheiro' ? '💵' : '💳'} {m.method}
+                                  {m.method === 'Pix' ? (
+                                    <svg className="w-4 h-4 stroke-emerald-600 fill-none" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                      <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                                      <line x1="12" y1="18" x2="12.01" y2="18" />
+                                    </svg>
+                                  ) : m.method === 'Dinheiro' ? (
+                                    <svg className="w-4 h-4 stroke-green-600 fill-none" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                      <rect x="2" y="6" width="20" height="12" rx="2" />
+                                      <circle cx="12" cy="12" r="2" />
+                                      <path d="M6 12h.01M18 12h.01" />
+                                    </svg>
+                                  ) : (
+                                    <svg className="w-4 h-4 stroke-indigo-600 fill-none" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                      <rect x="2" y="5" width="20" height="14" rx="2" />
+                                      <line x1="2" y1="10" x2="22" y2="10" />
+                                    </svg>
+                                  )}
+                                  <span>{m.method}</span>
                                 </span>
                                 <span>{formatCurrency(m.total)} ({percent.toFixed(0)}%)</span>
                               </div>
@@ -1281,7 +1314,12 @@ export default function Dashboard() {
                       </div>
 
                       <div className="bg-slate-50/50 border border-slate-100 rounded-2xl p-4 flex items-center gap-2.5 mb-6">
-                        <span className="text-lg">👥</span>
+                        <svg className="w-5 h-5 stroke-slate-500 fill-none" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                          <circle cx="9" cy="7" r="4" />
+                          <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                          <path d="M16 3.13a4 4 0 010 7.75" />
+                        </svg>
                         <div>
                           <span className="text-slate-400 font-bold text-[9px] uppercase tracking-wider block">Capacidade</span>
                           <span className="text-slate-700 font-bold text-xs block">{t.capacity} pessoas</span>
@@ -1333,7 +1371,12 @@ export default function Dashboard() {
             {editingUser && (
               <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] flex items-center justify-center p-4">
                 <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl animate-fade-in">
-                  <h3 className="text-xl font-black text-gray-900 mb-2">🔑 Alterar Senha</h3>
+                  <h3 className="text-xl font-black text-gray-900 mb-2 flex items-center gap-2">
+                    <svg className="w-5 h-5 stroke-gray-900 fill-none" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
+                    </svg>
+                    <span>Alterar Senha</span>
+                  </h3>
                   <p className="text-sm text-gray-500 mb-4">Atualizar senha de <span className="font-bold text-gray-900">{editingUser.name}</span></p>
                   <form onSubmit={handleUpdatePassword} className="space-y-4">
                     <div>
@@ -1474,10 +1517,20 @@ export default function Dashboard() {
                                       <td className="px-6 py-5 text-right whitespace-nowrap">
                                         <div className="flex items-center justify-end gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
                                           <button onClick={() => setEditingUser(u)} title="Alterar Senha" className="p-2 hover:bg-slate-100 rounded-xl text-slate-500 hover:text-slate-800 transition-colors">
-                                            🔑
+                                            <svg className="w-4 h-4 stroke-current fill-none mx-auto" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" /></svg>
                                           </button>
                                           <button onClick={() => handleToggleUserStatus(u)} title={u.is_active ? "Inativar Conta" : "Ativar Conta"} className={`p-2 hover:bg-slate-100 rounded-xl transition-colors ${u.is_active ? 'text-amber-500 hover:text-amber-700' : 'text-emerald-500 hover:text-emerald-700'}`}>
-                                            {u.is_active ? '🚫' : '✅'}
+                                            u.is_active ? (
+                                                <svg className="w-4 h-4 stroke-current fill-none mx-auto" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                  <circle cx="12" cy="12" r="10" />
+                                                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                                                </svg>
+                                              ) : (
+                                                <svg className="w-4 h-4 stroke-current fill-none mx-auto" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                  <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                                                  <polyline points="22 4 12 14.01 9 11.01" />
+                                                </svg>
+                                              )
                                           </button>
                                           <button onClick={() => handleDeleteUser(u)} title="Excluir Conta Permanentemente" className="p-2 hover:bg-rose-50 rounded-xl text-rose-500 hover:text-rose-700 transition-colors">
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
@@ -1515,7 +1568,12 @@ export default function Dashboard() {
             {editingUser && (
               <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] flex items-center justify-center p-4">
                 <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl animate-fade-in">
-                  <h3 className="text-xl font-black text-gray-900 mb-2">🔑 Alterar Senha</h3>
+                  <h3 className="text-xl font-black text-gray-900 mb-2 flex items-center gap-2">
+                    <svg className="w-5 h-5 stroke-gray-900 fill-none" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
+                    </svg>
+                    <span>Alterar Senha</span>
+                  </h3>
                   <p className="text-sm text-gray-500 mb-4">Atualizar senha de <span className="font-bold text-gray-900">{editingUser.name}</span></p>
                   <form onSubmit={handleUpdatePassword} className="space-y-4">
                     <div>
@@ -1553,7 +1611,9 @@ export default function Dashboard() {
                         </div>
                         
                         <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 flex items-center gap-3.5 z-10">
-                          <span className="text-2xl">🛍️</span>
+                          <svg className="w-6 h-6 stroke-slate-600 fill-none" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                          </svg>
                           <div>
                             <span className="text-slate-400 font-bold text-[9px] uppercase tracking-wider block">Canal de Compras</span>
                             <span className="text-slate-700 font-extrabold text-xs block">Portal do Cliente</span>
@@ -1618,10 +1678,20 @@ export default function Dashboard() {
                                       <td className="px-6 py-5 text-right whitespace-nowrap">
                                         <div className="flex items-center justify-end gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
                                           <button onClick={() => setEditingUser(u)} title="Alterar Senha" className="p-2 hover:bg-slate-100 rounded-xl text-slate-500 hover:text-slate-800 transition-colors">
-                                            🔑
+                                            <svg className="w-4 h-4 stroke-current fill-none mx-auto" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" /></svg>
                                           </button>
                                           <button onClick={() => handleToggleUserStatus(u)} title={u.is_active ? "Inativar Conta" : "Ativar Conta"} className={`p-2 hover:bg-slate-100 rounded-xl transition-colors ${u.is_active ? 'text-amber-500 hover:text-amber-700' : 'text-emerald-500 hover:text-emerald-700'}`}>
-                                            {u.is_active ? '🚫' : '✅'}
+                                            u.is_active ? (
+                                                <svg className="w-4 h-4 stroke-current fill-none mx-auto" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                  <circle cx="12" cy="12" r="10" />
+                                                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                                                </svg>
+                                              ) : (
+                                                <svg className="w-4 h-4 stroke-current fill-none mx-auto" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                  <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                                                  <polyline points="22 4 12 14.01 9 11.01" />
+                                                </svg>
+                                              )
                                           </button>
                                           <button onClick={() => handleDeleteUser(u)} title="Excluir Conta Permanentemente" className="p-2 hover:bg-rose-50 rounded-xl text-rose-500 hover:text-rose-700 transition-colors">
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
