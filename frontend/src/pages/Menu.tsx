@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../lib/api';
 import { toast } from 'sonner';
+import { AuthContext } from '../contexts/AuthContext';
 
 interface Category {
   id: number;
@@ -33,6 +34,8 @@ export default function Menu() {
   const [products, setProducts] = useState<Product[]>([]);
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const { isAuthenticated } = useContext(AuthContext);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   // Guest Cart State
   const [cart, setCart] = useState<CartItem[]>(() => {
@@ -93,6 +96,33 @@ export default function Menu() {
     }
     setCart(newCart);
     toast.success(`${product.name} adicionado à sua sacola! 🛍️`);
+  };
+
+  const updateQuantity = (productId: number, delta: number) => {
+    const updated = cart.map(item => {
+      if (item.product.id === productId) {
+        const newQty = item.quantity + delta;
+        return newQty > 0 ? { ...item, quantity: newQty } : null;
+      }
+      return item;
+    }).filter(Boolean) as CartItem[];
+    setCart(updated);
+  };
+
+  const updateNotes = (productId: number, notes: string) => {
+    const updated = cart.map(item => {
+      if (item.product.id === productId) {
+        return { ...item, notes };
+      }
+      return item;
+    });
+    setCart(updated);
+  };
+
+  const removeFromCart = (productId: number) => {
+    const updated = cart.filter(item => item.product.id !== productId);
+    setCart(updated);
+    toast.error('Item removido da sacola.');
   };
 
   // Filtro de pratos (compara categoria selecionada e texto da busca)
@@ -276,9 +306,12 @@ export default function Menu() {
         </>
       )}
 
-      {/* Floating Cart Indicator Bar for Unauthenticated Users (Guest Flow) */}
+      {/* Floating Cart Indicator Bar */}
       {totalItems > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 max-w-md w-[92%] bg-sabor-dark/95 backdrop-blur-md text-white border border-sabor-primary/30 p-4 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] z-50 flex items-center justify-between gap-4 animate-scale-in">
+        <div 
+          onClick={() => setIsCartOpen(true)}
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 max-w-md w-[92%] bg-sabor-dark/95 backdrop-blur-md text-white border border-sabor-primary/30 p-4 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] z-[90] flex items-center justify-between gap-4 cursor-pointer hover:bg-sabor-dark transition-all duration-300 transform hover:scale-[1.02] animate-scale-in"
+        >
           <div>
             <p className="text-xs font-bold text-sabor-primary uppercase tracking-wider">Sua Sacola</p>
             <p className="text-sm font-black mt-0.5">
@@ -287,11 +320,158 @@ export default function Menu() {
           </div>
           
           <button 
-            onClick={() => navigate('/delivery')}
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsCartOpen(true);
+            }}
             className="px-5 py-2.5 bg-sabor-primary hover:bg-sabor-primary/90 text-sabor-dark font-black text-xs rounded-xl shadow-md transition-all hover:scale-102 flex items-center gap-1 shrink-0"
           >
-            Finalizar Pedido 🛵
+            Ver Sacola 🛍️
           </button>
+        </div>
+      )}
+
+      {/* Cart Drawer / Side Panel */}
+      {isCartOpen && (
+        <div className="fixed inset-0 z-[100] flex justify-end">
+          {/* Backdrop Overlay */}
+          <div 
+            onClick={() => setIsCartOpen(false)}
+            className="absolute inset-0 bg-black/60 backdrop-blur-xs transition-opacity duration-300 animate-fade-in"
+          ></div>
+          
+          {/* Drawer Content */}
+          <div className="relative w-full max-w-md bg-white h-full shadow-2xl flex flex-col z-10 transition-transform duration-300 animate-slide-in-right">
+            {/* Header */}
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+              <div>
+                <h2 className="text-xl font-black text-gray-900 tracking-tight flex items-center gap-2">
+                  <span>Sua Sacola</span>
+                  <span className="bg-sabor-light text-sabor-dark px-2.5 py-0.5 rounded-full text-xs font-black">
+                    {totalItems}
+                  </span>
+                </h2>
+                <p className="text-xs text-gray-500 font-medium mt-0.5">Revise seus pratos antes do checkout.</p>
+              </div>
+              <button 
+                onClick={() => setIsCartOpen(false)} 
+                className="w-10 h-10 bg-white border border-gray-200 rounded-full hover:bg-gray-100 transition-colors flex items-center justify-center text-gray-600 shadow-sm"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+            </div>
+
+            {/* List of Cart Items */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin">
+              {cart.map((item) => (
+                <div key={item.product.id} className="bg-gray-50 border border-gray-100 rounded-2xl p-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    {item.product.image_url ? (
+                      <img 
+                        src={item.product.image_url} 
+                        alt={item.product.name} 
+                        className="w-14 h-14 object-cover rounded-xl shadow-sm border border-gray-200 shrink-0" 
+                      />
+                    ) : (
+                      <div className="w-14 h-14 bg-sabor-light text-sabor-dark rounded-xl flex items-center justify-center font-bold text-lg border border-gray-200 shrink-0">
+                        🥣
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-extrabold text-gray-900 text-sm tracking-tight truncate">{item.product.name}</h4>
+                      <p className="text-xs text-sabor-dark font-black mt-0.5">R$ {Number(item.product.price).toFixed(2)}</p>
+                    </div>
+
+                    {/* Quantity selectors */}
+                    <div className="flex items-center gap-2 bg-white rounded-lg p-0.5 border border-gray-200 shadow-sm shrink-0">
+                      <button 
+                        onClick={() => updateQuantity(item.product.id, -1)} 
+                        className="w-7 h-7 flex items-center justify-center text-gray-600 hover:bg-gray-50 rounded-md font-bold text-xs"
+                      >
+                        -
+                      </button>
+                      <span className="font-black w-4 text-center text-xs text-gray-900">{item.quantity}</span>
+                      <button 
+                        onClick={() => updateQuantity(item.product.id, 1)} 
+                        className="w-7 h-7 flex items-center justify-center text-gray-600 hover:bg-gray-50 rounded-md font-bold text-xs"
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    {/* Delete button */}
+                    <button 
+                      onClick={() => removeFromCart(item.product.id)}
+                      className="p-2 hover:bg-rose-50 rounded-xl text-rose-500 hover:text-rose-700 transition-colors shrink-0"
+                      title="Remover Item"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                  </div>
+
+                  {/* Item Preparation Notes */}
+                  <div className="pt-2 border-t border-gray-200/50">
+                    <input 
+                      type="text" 
+                      placeholder="Observações (ex: sem cebola, ponto da carne...)" 
+                      value={item.notes}
+                      onChange={e => updateNotes(item.product.id, e.target.value)}
+                      className="w-full text-[11px] border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-sabor-primary focus:border-sabor-primary transition-all font-medium"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Footer Summary & Checkout */}
+            <div className="p-6 border-t border-gray-100 bg-gray-50 space-y-4">
+              <div className="space-y-1.5 text-xs text-gray-600 font-medium">
+                <div className="flex justify-between">
+                  <span>Subtotal:</span>
+                  <span className="font-extrabold text-gray-900">R$ {totalPrice.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Taxa de Entrega:</span>
+                  <span className="text-gray-400 text-right">Calculada no checkout</span>
+                </div>
+                <div className="flex justify-between text-sm pt-2 border-t border-gray-200">
+                  <span className="font-black text-gray-900">Total:</span>
+                  <span className="font-black text-sabor-dark text-base">R$ {totalPrice.toFixed(2)}</span>
+                </div>
+              </div>
+
+              {/* Checkout CTA Button */}
+              {isAuthenticated ? (
+                <button 
+                  onClick={() => {
+                    setIsCartOpen(false);
+                    navigate('/delivery');
+                  }}
+                  className="w-full py-3.5 bg-sabor-primary hover:bg-sabor-primary/95 text-sabor-dark font-black text-sm rounded-2xl shadow-md transition-all hover:scale-[1.02] flex items-center justify-center gap-1"
+                >
+                  Confirmar e Ir para o Checkout 🛵
+                </button>
+              ) : (
+                <button 
+                  onClick={() => {
+                    setIsCartOpen(false);
+                    toast.info('Faça login ou crie uma conta para finalizar seu pedido! 🛵');
+                    navigate('/login?redirect=%2Fdelivery');
+                  }}
+                  className="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-black text-sm rounded-2xl shadow-md transition-all hover:scale-[1.02] flex items-center justify-center gap-1.5"
+                >
+                  Entrar e Finalizar Pedido 🔑
+                </button>
+              )}
+
+              <button 
+                onClick={() => setIsCartOpen(false)}
+                className="w-full text-center text-xs font-bold text-gray-500 hover:text-gray-800 py-1 transition-colors"
+              >
+                Continuar Comprando
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

@@ -617,4 +617,18 @@ Transformamos radicalmente o console gerencial do SaborExpress, solucionando gar
 
 ---
 
-**Status Final do Projeto:** Ecossistema Integrado, 100% Funcional, com Cardápio Digital Autônomo para Mesa, Guest checkout dinâmico, Console Gerencial Ultra-Premium com Carga Zero e Cobertura de Testes Automatizada! 🚀
+---
+
+## 17. Sacola de Compras para Visitantes (Sem Login) e Fluxo de Checkout Inteligente
+
+Expandimos a experiência de compra do cliente final, eliminando qualquer fricção no processo de seleção de pratos e combos do cardápio:
+
+* **Sacola e Carrinho Sem Autenticação**: Clientes visitantes/guests (sem login) podem agora navegar livremente pelo cardápio público (`/cardapio` / [Menu.tsx](file:///c:/Users/ShinerayADM/Projetos/saborexpress/frontend/src/pages/Menu.tsx)), adicionar itens, combos e bebidas à sua sacola, editar quantidades e digitar observações de preparo customizadas (como "Sem cebola" ou "Ponto da carne") sem serem forçados a realizar login ou cadastro inicial.
+* **Barra Flutuante Regional Reativa**: Quando há itens na sacola, uma belíssima barra flutuante resplandece na parte inferior do navegador mostrando a quantidade de itens e o valor acumulado em tempo real.
+* **Drawer Deslizante Premium (Sacola de Compras)**: Ao clicar no botão de sacola, um painel lateral direito imersivo e elegante desliza com efeitos visuais modernos e hardware-accelerated (`animate-slide-in-right`). Ele exibe fotos miniaturas, botões de incrementação e remoção de produtos, campo aberto para edição de observações e o somatório preciso do subtotal e total.
+* **Barreira de Login Apenas no Fechamento**: O visitante é livre para montar o carrinho que desejar. A restrição de login é aplicada de forma limpa e estratégica apenas quando o usuário clica no botão "Entrar e Finalizar Pedido" para seguir ao checkout.
+* **Redirecionamento Inteligente Pós-Autenticação**: Ao clicar no fechamento sem login, o usuário é direcionado para a rota `/login?redirect=%2Fdelivery`. Assim que insere suas credenciais ou faz um novo registro de cliente, ele é automaticamente redirecionado à página de fechamento de pedido (`/delivery`) com todos os itens do carrinho e observações 100% mantidos no `localStorage` sob a chave `'saborexpress_cart'`, assegurando latência zero e nenhuma perda de dados.
+
+---
+
+**Status Final do Projeto:** Ecossistema Integrado, 100% Funcional, com Cardápio Digital Autônomo para Mesa, Guest checkout dinâmico com Drawer de sacola reativo, Console Gerencial Ultra-Premium com Carga Zero e Cobertura de Testes Automatizada! 🚀
