@@ -108,11 +108,15 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null;
             }
 
-            return $error($e->getMessage() ?: 'Internal server error.', 'internal_server_error', 500, [
-                'exception' => get_class($e),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'trace' => array_slice(explode("\n", $e->getTraceAsString()), 0, 10),
-            ]);
+            if (config('app.debug')) {
+                return $error($e->getMessage() ?: 'Internal server error.', 'internal_server_error', 500, [
+                    'exception' => get_class($e),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => array_slice(explode("\n", $e->getTraceAsString()), 0, 10),
+                ]);
+            }
+
+            return $error('Internal server error.', 'internal_server_error', 500);
         });
     })->create();
