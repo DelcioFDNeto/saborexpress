@@ -6,9 +6,16 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [env('FRONTEND_URL', 'http://localhost:5173')],
+    'allowed_origins' => [
+        env('FRONTEND_URL', 'http://localhost:5173')
+    ],
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => [
+        '#^https?://saborexpress-[a-z0-9-]+\.vercel\.app$#',
+        '#^https?://saborexpress\.vercel\.app$#',
+        '#^https?://localhost:\d+$#',
+        '#^https?://127\.0\.0\.1:\d+$#',
+    ],
 
     'allowed_headers' => ['*'],
 
