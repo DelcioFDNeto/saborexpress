@@ -93,4 +93,4 @@ jobs:
           cd frontend
           npm run build
         env:
-          VITE_API_URL: https://saborexpress-api.render.com
+          VITE_API_URL: https://saborexpress-snsq.onrender.com
