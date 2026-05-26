@@ -5,6 +5,7 @@ namespace App\Actions\Payments;
 use App\Actions\Orders\RecalculateOrderTotalAction;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
+use App\Models\CashMovement;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\User;
@@ -22,36 +23,35 @@ class RegisterOrderPaymentAction
         private readonly PaymentRepositoryInterface $payments,
     ) {}
 
-    public function execute(Order $order, User $cashier, array $data): Payment
+    /**
+     * Register a payment for an order, creating the corresponding CashMovement
+     * and releasing the table when the order is fully paid.
+     *
+     * Supports both full and partial (split) payments.
+     *
+     * @param bool $recalculate Whether to recalculate order total from items before payment.
+     *                          Set to false for split-payment flows where total is already known.
+     */
+    public function execute(Order $order, User $cashier, array $data, bool $recalculate = true): Payment
     {
-        return DB::transaction(function () use ($order, $cashier, $data) {
+        return DB::transaction(function () use ($order, $cashier, $data, $recalculate) {
             $lockedOrder = $this->orders->lockById($order->id);
 
             if ($lockedOrder->status === OrderStatus::Paid->value) {
-                throw new ConflictHttpException('Order is already paid.');
+                throw new ConflictHttpException('Este pedido já foi pago.');
             }
 
             if ($lockedOrder->status === OrderStatus::Canceled->value) {
-                throw new ConflictHttpException('Canceled orders cannot be paid.');
+                throw new ConflictHttpException('Pedidos cancelados não podem ser pagos.');
             }
 
-            if ($lockedOrder->status !== OrderStatus::Closing->value) {
-                throw new ConflictHttpException('Order must be in closing before payment.');
+            if ($recalculate) {
+                $lockedOrder = $this->recalculateOrderTotal->execute($lockedOrder);
             }
 
-            $lockedOrder = $this->recalculateOrderTotal->execute($lockedOrder);
-
-            if ($this->payments->hasPaidPayment($lockedOrder)) {
-                throw new ConflictHttpException('Order already has a paid payment.');
-            }
-
-            $expectedAmount = number_format((float) $lockedOrder->total_amount, 2, '.', '');
             $receivedAmount = number_format((float) $data['amount'], 2, '.', '');
 
-            if ($expectedAmount !== $receivedAmount) {
-                throw new UnprocessableEntityHttpException('Payment amount must match the order total.');
-            }
-
+            // Create the payment record
             $payment = $this->payments->create([
                 'order_id' => $lockedOrder->id,
                 'user_id' => $cashier->id,
@@ -62,7 +62,31 @@ class RegisterOrderPaymentAction
                 'notes' => $data['notes'] ?? null,
             ]);
 
-            $this->orders->updateStatus($lockedOrder, OrderStatus::Paid->value);
+            // Create corresponding CashMovement for financial tracking
+            CashMovement::create([
+                'user_id' => $cashier->id,
+                'type' => 'Sale',
+                'amount' => $receivedAmount,
+                'method' => $data['method'],
+                'order_id' => $lockedOrder->id,
+                'description' => 'Pagamento de Comanda #' . $lockedOrder->id,
+            ]);
+
+            // Check if the order is now fully paid (supports split payments)
+            $subtotal = (float) $lockedOrder->total_amount;
+            $serviceFee = (float) $lockedOrder->service_fee;
+            $discount = (float) $lockedOrder->discount;
+            $total = $subtotal + $serviceFee - $discount;
+            $paid = (float) $this->payments->paidTotalForOrder($lockedOrder);
+
+            if ($paid >= $total - 0.01) {
+                $this->orders->updateStatus($lockedOrder, OrderStatus::Paid->value);
+
+                // Release the table when the order is fully paid
+                if ($lockedOrder->table_id) {
+                    $lockedOrder->table()->update(['status' => 'Livre']);
+                }
+            }
 
             return $this->payments->loadDetails($payment->fresh());
         });

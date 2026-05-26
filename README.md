@@ -241,6 +241,6 @@ Esses dados permitem testar autenticação, cardápio, abertura de mesa, comanda
 
 ## Observações
 
-O projeto ainda está em desenvolvimento. O backend já possui base operacional para autenticação, usuários, cardápio, mesas, comandas, cozinha, entrega na mesa, fechamento, pagamento integral, pagamento simplificado/parcial, divisão de conta, delivery, dashboard, auditoria e tratamento global de erros. Ainda faltam evoluções como retirada, relatórios financeiros avançados, fluxo completo de caixa e telas administrativas dedicadas para todos os módulos.
+O projeto possui um backend operacional completo cobrindo autenticação, gestão de usuários, cardápio, mesas (abertura, transferência e merge), comandas, cozinha com KDS em tempo real, entrega na mesa, delivery com rastreamento, fechamento de conta, pagamento integral e split (por pessoa/por item), fluxo completo de caixa (suprimento, sangria, relatórios financeiros), reservas de mesa, dashboard administrativo com KPIs e curva ABC, e auditoria completa de eventos.
 
 Como houve padronização de enums em migrations existentes, bancos locais criados anteriormente podem precisar ser recriados com `php artisan migrate:fresh --seed`.

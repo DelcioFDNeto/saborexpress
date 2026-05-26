@@ -4,8 +4,12 @@ namespace App\Providers;
 
 use App\Repositories\AuditEvents\AuditEventRepositoryInterface;
 use App\Repositories\AuditEvents\EloquentAuditEventRepository;
+use App\Repositories\CashMovements\CashMovementRepositoryInterface;
+use App\Repositories\CashMovements\EloquentCashMovementRepository;
 use App\Repositories\Categories\CategoryRepositoryInterface;
 use App\Repositories\Categories\EloquentCategoryRepository;
+use App\Repositories\Dashboard\DashboardRepositoryInterface;
+use App\Repositories\Dashboard\EloquentDashboardRepository;
 use App\Repositories\OrderItems\EloquentOrderItemRepository;
 use App\Repositories\OrderItems\OrderItemRepositoryInterface;
 use App\Repositories\Orders\EloquentOrderRepository;
@@ -16,6 +20,8 @@ use App\Repositories\Products\EloquentProductRepository;
 use App\Repositories\Products\ProductRepositoryInterface;
 use App\Repositories\Tables\EloquentTableRepository;
 use App\Repositories\Tables\TableRepositoryInterface;
+use App\Repositories\TableReservations\EloquentTableReservationRepository;
+use App\Repositories\TableReservations\TableReservationRepositoryInterface;
 use App\Repositories\Users\EloquentUserRepository;
 use App\Repositories\Users\UserRepositoryInterface;
 use Illuminate\Support\ServiceProvider;
@@ -32,6 +38,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(PaymentRepositoryInterface::class, EloquentPaymentRepository::class);
         $this->app->bind(UserRepositoryInterface::class, EloquentUserRepository::class);
         $this->app->bind(AuditEventRepositoryInterface::class, EloquentAuditEventRepository::class);
+        $this->app->bind(TableReservationRepositoryInterface::class, EloquentTableReservationRepository::class);
+        $this->app->bind(CashMovementRepositoryInterface::class, EloquentCashMovementRepository::class);
+        $this->app->bind(DashboardRepositoryInterface::class, EloquentDashboardRepository::class);
     }
 
     public function boot(): void {}

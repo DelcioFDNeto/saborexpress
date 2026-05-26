@@ -16,6 +16,14 @@ class EloquentOrderRepository implements OrderRepositoryInterface
             ->paginate($perPage);
     }
 
+    public function paginateForUser(int $userId, int $perPage = 15): LengthAwarePaginator
+    {
+        return Order::where('user_id', $userId)
+            ->with(['items.product', 'payments'])
+            ->latest()
+            ->paginate($perPage);
+    }
+
     public function loadDetails(Order $order): Order
     {
         return $order->load(['table', 'items.product.category', 'payments.user', 'deliveryDriver']);

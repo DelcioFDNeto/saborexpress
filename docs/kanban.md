@@ -17,6 +17,10 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 - [x] Definir estratégia de deploy.
 - [x] Criar configuração de produção.
 - [x] Criar pipeline de CI/CD.
+- [x] `composer.json` renomeado para `saborexpress/backend`.
+- [x] `backend/README.md` e `frontend/README.md` com conteúdo próprio.
+- [x] Token Sanctum com expiração configurada (43200 min / 12h).
+- [x] Rate limiting: login `throttle:5,1`, register `throttle:3,1`.
 
 ## M01 - Autenticação, RBAC e Usuários
 
@@ -34,6 +38,7 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 - [x] Filtros de usuários por papel, status ativo e busca textual.
 - [x] `UserResource` sem vazamento de senha ou token.
 - [x] Avaliar uso de Policies quando houver regras por recurso.
+- [x] `AuthController::register()` passou a usar Repository e senha `min:8` + `confirmed`.
 
 ### Frontend
 
@@ -172,6 +177,8 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 - [x] Registro de pagamento integral.
 - [x] Pagamento simplificado ou parcial pela rota `/api/orders/{order}/pay`.
 - [x] Simulação de divisão de conta integral, igual ou por itens.
+- [x] Extração de `SimulatePaymentSplitAction` e `RefundPaymentAction` para Actions dedicadas.
+- [x] Extração de `RegisterOrderPaymentAction` para fluxo unificado de pagamento.
 - [x] Listagem e consulta de pagamentos.
 - [x] Comanda muda para `Paga` após pagamento integral.
 - [x] Mesa pode ser liberada para limpeza após pagamento.
@@ -206,7 +213,8 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 - [x] Processamento atômico de pagamentos online na criação de pedidos de delivery e retirada.
 - [x] Endereço estruturado (rua, número, bairro, CEP, referência na migration e banco).
 - [x] Atribuição de entregador (auto-assumir entrega na API e painel).
-- [x] Acompanhamento pelo cliente (endpoint público `orders/{order}/track`).
+- [x] Acompanhamento pelo cliente (endpoint `orders/{order}/track` sob `auth:sanctum`).
+- [x] Extração de `CreateDeliveryOrderAction` e `CreateTakeoutOrderAction` para Actions dedicadas.
 
 ### Frontend
 
@@ -228,6 +236,7 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 - [x] Curva ABC baseada em pedidos pagos.
 - [x] Relatórios financeiros avançados (daily curves, channels, payment methods, operators).
 - [x] Indicadores por período, operador, forma de pagamento e canal.
+- [x] Extração do `DashboardController` para usar `DashboardRepositoryInterface` (~195 linhas → 27 linhas).
 
 ### Frontend
 
@@ -247,6 +256,8 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 - [x] Documentar exemplos completos de fluxo ponta a ponta.
 - [x] Documentar credenciais dos usuários seedados.
 - [x] Documentar decisões arquiteturais relevantes.
+- [x] Sincronizar `docs/API.md` com rotas reais (corrigido público → autenticado para delivery/takeout/track).
+- [x] Sincronizar `walkthrough SaborExpress.md` com versão real do Laravel (11 → 12), CORS e RBAC do register.
 
 ## M11 - Docker e Ambiente Local
 
@@ -278,20 +289,63 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 - [x] Criar testes de integração para o fluxo presencial completo.
 - [x] Criar testes de integração para delivery.
 - [x] Criar testes de integração para pagamentos.
+- [x] Criar testes de integração para dashboard (acesso admin e não-admin).
+- [x] Criar testes de integração para reservas de cliente.
+- [x] Criar testes de integração para split de pagamento (integral, igual, por itens, refund duplicado).
 
 ### Frontend
 
 - [x] Lint configurado.
 - [x] Cliente HTTP centralizado (`lib/api.ts` integrado em 100% das páginas e modais do frontend).
 - [x] `.env.example` com `VITE_API_URL`.
+- [x] `Navigation` extraído do `App.tsx` para componente dedicado.
+- [x] `echo.ts` exporta instância em vez de poluir `window`.
 - [x] Padronizar componentes visuais.
 - [x] Melhorar tratamento global de erros no cliente.
 - [x] Revisar responsividade das telas operacionais (landing page, login, mesas, comandas, cozinha, caixa e delivery otimizados para mobile, tablet e desktop).
+- [x] Corrigir `hover:scale-[1.02]` (substituir `hover:scale-102` em todo o frontend).
+- [x] Normalizar `Cartao`/`Cartão`: controllers usam `Cartao`, validações normalizam `Cartão` → `Cartao`.
+
+## M13 - Refatoração de Arquitetura (Padrão Repository/Action)
+
+### Backend
+
+- [x] `DashboardController` extraído de 195 linhas inline para 27 linhas com `DashboardRepositoryInterface`.
+- [x] `EloquentDashboardRepository` implementa consultas de KPIs, curva ABC, revenue chart e rankings.
+- [x] `CreateDeliveryOrderAction` — lógica de criação de pedido delivery extraída do controller.
+- [x] `CreateTakeoutOrderAction` — lógica de criação de pedido retirada extraída do controller.
+- [x] `SimulatePaymentSplitAction` — lógica de split (integral, igual, por itens) extraída do controller.
+- [x] `RefundPaymentAction` — lógica de estono extraída do controller.
+- [x] `RegisterOrderPaymentAction` — fluxo unificado de pagamento (cria Payment + CashMovement + libera mesa).
+- [x] `StoreDeliveryOrderRequest`, `StoreTakeoutOrderRequest` — Form Requests para substituir validação inline.
+- [x] `SimulateSplitRequest`, `PayRequest` — Form Requests para validação de pagamentos.
+- [x] `CashMovementController` migrado para `CashMovementRepositoryInterface` + `CreateCashMovementAction`.
+- [x] `TableReservationController` migrado para `TableReservationRepositoryInterface` + Actions.
+- [x] `OrderController::myOrders()` usa `$this->orders->paginateForUser()`.
+- [x] CORS `supports_credentials` corrigido para `true`.
+- [x] Rota `/orders/{order}/track` movida para dentro de `auth:sanctum`.
+
+## M14 - Identidade Visual e Branding
+
+### Frontend
+
+- [x] Metatags completas: `lang=pt`, description, Open Graph, Twitter Card, theme-color, `favicon.svg`.
+- [x] Paleta de cores expandida: `sabor-50` a `sabor-950`, `accent-express-*` (âmbar), `surf-*` (ciano).
+- [x] Background temático global: geometric grid verde sutil no `body`.
+- [x] Scrollbar customizada nas cores da marca.
+- [x] `::selection` com cor verde da marca.
+- [x] `scroll-behavior: smooth` no HTML.
+- [x] SplashScreen com logo animada, slogans rotativos amazônicos e loading bar.
+- [x] Classe utilitária `bg-sabor-grid` para uso pontual.
 
 ## Próximas Prioridades
 
-1. **Aprimoramento de Interface (UI/UX)**: Refinar os modais e implementar mais validações de divisão de conta e pagamentos parciais.
-2. **Relatórios Financeiros Avançados**: Criar fechamentos diários ou relatórios de vendas exportáveis.
-3. **Automação de Testes**: Implementar suítes de testes automatizados no backend e testes ponta a ponta no frontend.
-4. **Otimização e Redesenho do Painel Gerencial (Concluído ✅)**: Redesenhar a interface do dashboard para acabar com o layout espremido (Cards interativos de mesas, avatares de funcionários, tabelas espaçosas, sem quebras de preço descuidadas) e acelerar a carga de dados de cardápio, mesas e equipe com cache local SWR e skeletons integrados.
+1. **Error Boundary no Frontend**: Adicionar React Error Boundary no `App.tsx` para evitar tela branca em caso de crash.
+2. **Validação Client-side de Senha**: Adicionar verificação de confirmação de senha no Register antes do submit.
+3. **Remover `alert()` do `OrderCartModal`**: Substituir chamada de `alert()` por `toast.error()` do sonner.
+4. **Cobertura de Testes**: Expandir testes unitários para Actions e Repositories; adicionar testes de autorização e validação.
+5. **Relatórios Financeiros**: Implementar exportação de relatórios (CSV/PDF) para o dashboard e caixa.
+6. **Componentes Reutilizáveis**: Criar componentes `EmptyState` e `LoadingSpinner` padronizados.
+7. **Acess Mobile do Caixa**: Revisar layout responsivo da tela de caixa (sidebar + conteúdo).
+8. **Cache Local SWR**: Expandir padrão SWR para demais páginas (cardápio digital, cozinha, entregas).
 

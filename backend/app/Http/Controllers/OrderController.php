@@ -5,19 +5,21 @@ namespace App\Http\Controllers;
 use App\Actions\Audit\RecordAuditEventAction;
 use App\Actions\Orders\AddOrderItemAction;
 use App\Actions\Orders\CancelOrderAction;
+use App\Actions\Orders\CreateDeliveryOrderAction;
+use App\Actions\Orders\CreateTakeoutOrderAction;
 use App\Actions\Orders\RequestOrderClosingAction;
 use App\Enums\AuditEventType;
 use App\Enums\OrderStatus;
 use App\Http\Requests\Orders\AddOrderItemRequest;
+use App\Http\Requests\Orders\StoreDeliveryOrderRequest;
+use App\Http\Requests\Orders\StoreTakeoutOrderRequest;
+use App\Http\Requests\Orders\UpdateDeliveryStatusRequest;
 use App\Http\Requests\Orders\UpdateOrderStatusRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
 use App\Models\Table;
-use App\Models\Payment;
-use App\Models\CashMovement;
 use App\Repositories\Orders\OrderRepositoryInterface;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -38,147 +40,27 @@ class OrderController extends Controller
         abort(405, 'Orders are opened through table operations.');
     }
 
-    public function storeDelivery(Request $request, AddOrderItemAction $addOrderItem)
-    {
-        $validated = $request->validate([
-            'customer_name' => ['required', 'string', 'max:255'],
-            'customer_phone' => ['required', 'string', 'max:30'],
-            'delivery_address' => ['required', 'string', 'max:500'],
-            'street' => ['nullable', 'string', 'max:255'],
-            'number' => ['nullable', 'string', 'max:50'],
-            'neighborhood' => ['nullable', 'string', 'max:255'],
-            'cep' => ['nullable', 'string', 'max:20'],
-            'reference' => ['nullable', 'string', 'max:255'],
-            'payment_type' => ['required', 'in:delivery,online'],
-            'payment_method' => ['required', 'in:Pix,Cartao,Dinheiro'],
-            'items' => ['required', 'array', 'min:1'],
-            'items.*.product_id' => ['required', 'exists:products,id'],
-            'items.*.quantity' => ['required', 'integer', 'min:1'],
-            'items.*.notes' => ['nullable', 'string'],
-        ]);
-
-        $order = DB::transaction(function () use ($validated, $addOrderItem) {
-            $order = $this->orders->create([
-                'type' => 'Delivery',
-                'status' => OrderStatus::Open->value,
-                'delivery_status' => 'Aguardando',
-                'customer_name' => $validated['customer_name'],
-                'customer_phone' => $validated['customer_phone'],
-                'delivery_address' => $validated['delivery_address'],
-                'street' => $validated['street'] ?? null,
-                'number' => $validated['number'] ?? null,
-                'neighborhood' => $validated['neighborhood'] ?? null,
-                'cep' => $validated['cep'] ?? null,
-                'reference' => $validated['reference'] ?? null,
-                'user_id' => auth()->id(),
-            ]);
-
-            foreach ($validated['items'] as $itemData) {
-                $order = $addOrderItem->execute($order, [
-                    'product_id' => $itemData['product_id'],
-                    'quantity' => $itemData['quantity'],
-                    'notes' => $itemData['notes'] ?? null,
-                ]);
-            }
-
-            // Registrar pagamento online caso selecionado pelo cliente
-            if ($validated['payment_type'] === 'online') {
-                Payment::create([
-                    'order_id' => $order->id,
-                    'user_id' => auth()->id(),
-                    'amount' => $order->total_amount,
-                    'method' => $validated['payment_method'],
-                    'status' => 'Paga',
-                    'paid_at' => now(),
-                ]);
-
-                CashMovement::create([
-                    'user_id' => auth()->id(),
-                    'type' => 'Sale',
-                    'amount' => $order->total_amount,
-                    'method' => $validated['payment_method'],
-                    'order_id' => $order->id,
-                    'description' => 'Pagamento Online de Pedido Delivery #' . $order->id,
-                ]);
-
-                $order->status = OrderStatus::Paid->value;
-                $order->save();
-            }
-
-            return $order;
-        });
+    public function storeDelivery(
+        StoreDeliveryOrderRequest $request,
+        CreateDeliveryOrderAction $createDeliveryOrder
+    ) {
+        $order = $createDeliveryOrder->execute($request->validated(), auth()->id());
 
         return (new OrderResource($this->orders->loadDetails($order)))->response()->setStatusCode(201);
     }
 
-    public function storeTakeout(Request $request, AddOrderItemAction $addOrderItem)
-    {
-        $validated = $request->validate([
-            'customer_name' => ['required', 'string', 'max:255'],
-            'customer_phone' => ['required', 'string', 'max:30'],
-            'payment_type' => ['required', 'in:delivery,online'],
-            'payment_method' => ['required', 'in:Pix,Cartao,Dinheiro'],
-            'items' => ['required', 'array', 'min:1'],
-            'items.*.product_id' => ['required', 'exists:products,id'],
-            'items.*.quantity' => ['required', 'integer', 'min:1'],
-            'items.*.notes' => ['nullable', 'string'],
-        ]);
-
-        $order = DB::transaction(function () use ($validated, $addOrderItem) {
-            $order = $this->orders->create([
-                'type' => 'Takeout',
-                'status' => OrderStatus::Open->value,
-                'delivery_status' => 'Aguardando Retirada',
-                'customer_name' => $validated['customer_name'],
-                'customer_phone' => $validated['customer_phone'],
-                'delivery_address' => 'Retirada no Estabelecimento',
-                'user_id' => auth()->id(),
-            ]);
-
-            foreach ($validated['items'] as $itemData) {
-                $order = $addOrderItem->execute($order, [
-                    'product_id' => $itemData['product_id'],
-                    'quantity' => $itemData['quantity'],
-                    'notes' => $itemData['notes'] ?? null,
-                ]);
-            }
-
-            // Registrar pagamento online caso selecionado pelo cliente
-            if ($validated['payment_type'] === 'online') {
-                Payment::create([
-                    'order_id' => $order->id,
-                    'user_id' => auth()->id(),
-                    'amount' => $order->total_amount,
-                    'method' => $validated['payment_method'],
-                    'status' => 'Paga',
-                    'paid_at' => now(),
-                ]);
-
-                CashMovement::create([
-                    'user_id' => auth()->id(),
-                    'type' => 'Sale',
-                    'amount' => $order->total_amount,
-                    'method' => $validated['payment_method'],
-                    'order_id' => $order->id,
-                    'description' => 'Pagamento Online de Pedido Retirada #' . $order->id,
-                ]);
-
-                $order->status = OrderStatus::Paid->value;
-                $order->save();
-            }
-
-            return $order;
-        });
+    public function storeTakeout(
+        StoreTakeoutOrderRequest $request,
+        CreateTakeoutOrderAction $createTakeoutOrder
+    ) {
+        $order = $createTakeoutOrder->execute($request->validated(), auth()->id());
 
         return (new OrderResource($this->orders->loadDetails($order)))->response()->setStatusCode(201);
     }
 
     public function myOrders(Request $request)
     {
-        $orders = Order::where('user_id', $request->user()->id)
-            ->with(['items.product'])
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $orders = $this->orders->paginateForUser($request->user()->id);
         return OrderResource::collection($orders);
     }
 
@@ -243,17 +125,13 @@ class OrderController extends Controller
         throw new ConflictHttpException('Use dedicated operations to change this order status.');
     }
 
-    public function updateDeliveryStatus(Request $request, Order $order)
+    public function updateDeliveryStatus(UpdateDeliveryStatusRequest $request, Order $order)
     {
-        $validated = $request->validate([
-            'delivery_status' => ['required', 'in:Aguardando,Em Rota,Entregue'],
-        ]);
-
         if ($order->type !== 'Delivery') {
             abort(400, 'This order is not a delivery order.');
         }
 
-        $order->delivery_status = $validated['delivery_status'];
+        $order->delivery_status = $request->validated('delivery_status');
         $order->save();
 
         // Broadcast Reverb Update!

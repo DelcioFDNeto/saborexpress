@@ -60,7 +60,7 @@ Produtos aceitam filtros por busca, categoria, disponibilidade, faixa de preço,
 
 ## Mesas e Comandas
 
-Exigem `administrator`, `waiter` ou `cashier`.
+Exigem `administrator`, `waiter` ou `cashier`. As rotas `GET /orders` e `GET /orders/{order}` também são acessíveis ao perfil `delivery`.
 
 - `GET /tables`
 - `GET /tables/{table}`
@@ -133,8 +133,8 @@ Exigem `administrator` ou `cashier`.
 - `PUT /orders/{order}/delivery-status`
 - `PATCH /orders/{order}/assign-driver`
 
-`POST /orders/delivery` é público e cria pedido sem mesa (salva CEP e endereço estruturado). `POST /orders/takeout` é público para pedidos de retirada.
-`GET /orders/{order}/track` é um endpoint público para rastreamento online em tempo real (timeline do cliente guest).
+`POST /orders/delivery` exige autenticação de cliente (`role:client`) e cria pedido sem mesa (salva CEP e endereço estruturado). `POST /orders/takeout` exige autenticação de cliente (`role:client`) para pedidos de retirada.
+`GET /orders/{order}/track` exige autenticação e é usado para rastreamento online em tempo real (timeline do cliente logado).
 `PUT /orders/{order}/delivery-status` atualiza o status entre `Aguardando`, `Em Rota` e `Entregue` (exige `delivery` ou `administrator`).
 `PATCH /orders/{order}/assign-driver` permite que entregadores parceiros (ou administradores) aceitem e se auto-atribuam a uma entrega expressa (exige `delivery` ou `administrator`).
 

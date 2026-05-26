@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { useSearchParams, Link, useNavigate } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { api } from '../lib/api';
 import { AuthContext } from '../contexts/AuthContext';
 import { toast } from 'sonner';
@@ -46,7 +46,6 @@ interface Table {
 }
 
 export default function DigitalMenu() {
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const tableNumberFromUrl = searchParams.get('table');
 
@@ -93,7 +92,7 @@ export default function DigitalMenu() {
           const parsed = JSON.parse(savedTable) as Table;
           setSelectedTable(parsed);
           fetchActiveOrderForTable(parsed.id);
-        } catch (e) {
+        } catch {
           localStorage.removeItem('saborexpress_tablet_table');
         }
       } else if (tableNumberFromUrl) {
@@ -116,7 +115,7 @@ export default function DigitalMenu() {
     try {
       const res = await api.get(`/tables/${tableId}/active-order`);
       setActiveOrder(res.data.data || res.data);
-    } catch (err: any) {
+    } catch {
       // 404 is normal if the table is free/clean
       setActiveOrder(null);
     }
@@ -160,7 +159,7 @@ export default function DigitalMenu() {
         setSelectedTable(parsed);
         fetchActiveOrderForTable(parsed.id);
         setLoading(false);
-      } catch (e) {
+      } catch {
         localStorage.removeItem('saborexpress_tablet_table');
       }
     }
@@ -195,8 +194,9 @@ export default function DigitalMenu() {
       setSelectedTable({ ...selectedTable, status: 'Ocupada' });
       await fetchActiveOrderForTable(selectedTable.id);
       setCustomerName('');
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Erro ao abrir comanda.');
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } };
+      toast.error(e.response?.data?.message || 'Erro ao abrir comanda.');
     } finally {
       setOpeningComanda(false);
     }
@@ -222,8 +222,9 @@ export default function DigitalMenu() {
       setTargetProduct(null);
       setQuantity(1);
       setNotes('');
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Erro ao lançar item na mesa.');
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } };
+      toast.error(e.response?.data?.message || 'Erro ao lançar item na mesa.');
     } finally {
       setSubmittingItem(false);
     }

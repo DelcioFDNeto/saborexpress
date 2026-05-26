@@ -2,24 +2,28 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TableReservation;
-use App\Models\Table;
+use App\Actions\TableReservations\CancelReservationAction;
+use App\Actions\TableReservations\CreateReservationAction;
+use App\Repositories\TableReservations\TableReservationRepositoryInterface;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
 
 class TableReservationController extends Controller
 {
+    public function __construct(
+        private readonly TableReservationRepositoryInterface $reservations,
+        private readonly CreateReservationAction $createReservation,
+        private readonly CancelReservationAction $cancelReservation,
+    ) {}
+
     public function index(Request $request)
     {
         $user = $request->user();
-        
-        $query = TableReservation::with(['table', 'user']);
 
-        if ($user->role === 'client') {
-            $query->where('user_id', $user->id);
-        }
+        $reservations = $user->role === 'client'
+            ? $this->reservations->listForUser($user)
+            : $this->reservations->listAll();
 
-        return response()->json($query->orderBy('reservation_date', 'asc')->get());
+        return response()->json($reservations);
     }
 
     public function store(Request $request)
@@ -31,41 +35,23 @@ class TableReservationController extends Controller
             'special_requests' => ['nullable', 'string', 'max:255'],
         ]);
 
-        // Check if table is available for that date (simplified check: no other reservation within 2 hours)
-        $date = Carbon::parse($validated['reservation_date']);
-        $conflict = TableReservation::where('table_id', $validated['table_id'])
-            ->where('status', '!=', 'Cancelled')
-            ->whereBetween('reservation_date', [
-                $date->copy()->subHours(2),
-                $date->copy()->addHours(2)
-            ])->exists();
-
-        if ($conflict) {
-            return response()->json(['message' => 'Esta mesa já possui uma reserva próxima a este horário.'], 422);
-        }
-
-        $reservation = TableReservation::create([
+        $reservation = $this->createReservation->execute([
             'table_id' => $validated['table_id'],
             'user_id' => $request->user()->id,
             'reservation_date' => $validated['reservation_date'],
             'guests' => $validated['guests'],
-            'status' => 'Confirmed', // We auto-confirm for simplicity in this project
+            'status' => 'Confirmed',
             'special_requests' => $validated['special_requests'],
         ]);
 
-        return response()->json($reservation->load(['table', 'user']), 201);
+        return response()->json($reservation, 201);
     }
 
     public function destroy(Request $request, $id)
     {
-        $reservation = TableReservation::findOrFail($id);
-        
-        $user = $request->user();
-        if ($user->role === 'client' && $reservation->user_id !== $user->id) {
-            return response()->json(['message' => 'Não autorizado.'], 403);
-        }
+        $reservation = $this->reservations->findOrFail($id);
 
-        $reservation->update(['status' => 'Cancelled']);
+        $this->cancelReservation->execute($reservation, $request->user());
 
         return response()->json(['message' => 'Reserva cancelada com sucesso.']);
     }

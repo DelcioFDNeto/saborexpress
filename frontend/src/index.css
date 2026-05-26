@@ -46,9 +46,48 @@
     --radius-2xl: calc(var(--radius) * 1.8);
     --radius-3xl: calc(var(--radius) * 2.2);
     --radius-4xl: calc(var(--radius) * 2.6);
+
+    /* === SaborExpress Brand Palette === */
+    --color-sabor-50: #f0fdf4;
+    --color-sabor-100: #d1fae5;
+    --color-sabor-200: #a7f3d0;
+    --color-sabor-300: #6ee7b7;
+    --color-sabor-400: #34d399;
+    --color-sabor-500: #10b981;
+    --color-sabor-600: #059669;
+    --color-sabor-700: #047857;
+    --color-sabor-800: #065f46;
+    --color-sabor-900: #064e3b;
+    --color-sabor-950: #022c22;
     --color-sabor-dark: #0f5132;
     --color-sabor-primary: #4ade80;
     --color-sabor-light: #f0fdf4;
+
+    /* === Warm Accent Palette (amber/gold → highlights, badges, CTA) === */
+    --color-accent-express-50: #fffbeb;
+    --color-accent-express-100: #fef3c7;
+    --color-accent-express-200: #fde68a;
+    --color-accent-express-300: #fcd34d;
+    --color-accent-express-400: #fbbf24;
+    --color-accent-express-500: #f59e0b;
+    --color-accent-express-600: #d97706;
+    --color-accent-express-700: #b45309;
+    --color-accent-express-800: #92400e;
+    --color-accent-express-900: #78350f;
+    --color-accent-express-950: #451a03;
+
+    /* === Surf Palette (blue-cyan → digital / freshness accent) === */
+    --color-surf-50: #ecfeff;
+    --color-surf-100: #cffafe;
+    --color-surf-200: #a5f3fc;
+    --color-surf-300: #67e8f9;
+    --color-surf-400: #22d3ee;
+    --color-surf-500: #06b6d4;
+    --color-surf-600: #0891b2;
+    --color-surf-700: #0e7490;
+    --color-surf-800: #155e75;
+    --color-surf-900: #164e63;
+    --color-surf-950: #083344;
 }
 
 :root {
@@ -81,7 +120,7 @@
     --sidebar-primary: oklch(0.205 0 0);
     --sidebar-primary-foreground: oklch(0.985 0 0);
     --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
+    --sidebar-accent-foreground: oklch(0.145 0 0);
     --sidebar-border: oklch(0.922 0 0);
     --sidebar-ring: oklch(0.708 0 0);
 }
@@ -126,10 +165,39 @@
     }
   body {
     @apply bg-background text-foreground;
-    }
+    background-image:
+      radial-gradient(rgba(74, 222, 128, 0.04) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
   html {
     @apply font-sans;
-    }
+    scroll-behavior: smooth;
+  }
+  ::selection {
+    background-color: rgba(15, 81, 50, 0.15);
+    color: var(--color-sabor-900);
+  }
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(15, 81, 50, 0.15);
+    border-radius: 99px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(15, 81, 50, 0.25);
+  }
+}
+
+/* Sabor brand background — geometric grid with subtle green dots */
+.bg-sabor-grid {
+  background-image:
+    radial-gradient(rgba(74, 222, 128, 0.07) 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 
 /* Custom UI Keyframes and Animations */
@@ -158,4 +226,55 @@
 
 .animate-scale-in {
   animation: scaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Premium Pulsing Glows for Table Statuses */
+@keyframes pulseOcupada {
+  0%, 100% { box-shadow: 0 10px 15px -3px rgba(244, 63, 94, 0.05), 0 4px 6px -4px rgba(244, 63, 94, 0.05), 0 0 0 0px rgba(244, 63, 94, 0); }
+  50% { box-shadow: 0 15px 30px -5px rgba(244, 63, 94, 0.15), 0 0 12px 3px rgba(244, 63, 94, 0.2); }
+}
+
+@keyframes pulseReservada {
+  0%, 100% { box-shadow: 0 10px 15px -3px rgba(14, 165, 233, 0.05), 0 4px 6px -4px rgba(14, 165, 233, 0.05), 0 0 0 0px rgba(14, 165, 233, 0); }
+  50% { box-shadow: 0 15px 30px -5px rgba(14, 165, 233, 0.15), 0 0 12px 3px rgba(14, 165, 233, 0.2); }
+}
+
+@keyframes pulseFechamento {
+  0%, 100% { box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.05), 0 4px 6px -4px rgba(245, 158, 11, 0.05), 0 0 0 0px rgba(245, 158, 11, 0); }
+  50% { box-shadow: 0 15px 30px -5px rgba(245, 158, 11, 0.15), 0 0 12px 3px rgba(245, 158, 11, 0.2); }
+}
+
+@keyframes pulseLimpeza {
+  0%, 100% { box-shadow: 0 10px 15px -3px rgba(100, 116, 139, 0.05), 0 4px 6px -4px rgba(100, 116, 139, 0.05), 0 0 0 0px rgba(100, 116, 139, 0); }
+  50% { box-shadow: 0 12px 20px -5px rgba(100, 116, 139, 0.12), 0 0 8px 2px rgba(100, 116, 139, 0.15); }
+}
+
+.shadow-pulse-ocupada {
+  animation: pulseOcupada 3s infinite ease-in-out;
+}
+
+.shadow-pulse-reservada {
+  animation: pulseReservada 3s infinite ease-in-out;
+}
+
+.shadow-pulse-fechamento {
+  animation: pulseFechamento 3s infinite ease-in-out;
+}
+
+.shadow-pulse-limpeza {
+  animation: pulseLimpeza 2.5s infinite ease-in-out;
+}
+
+/* Geometric Tech Grid Background */
+.bg-geometric-grid {
+  background-image: radial-gradient(rgba(74, 222, 128, 0.1) 1.2px, transparent 1.2px);
+  background-size: 24px 24px;
+}
+
+/* Receipt Paper Style */
+.bg-receipt-paper {
+  background-color: #fafbfc;
+  background-image: linear-gradient(rgba(0, 0, 0, 0.015) 1px, transparent 1px);
+  background-size: 100% 28px;
+  line-height: 28px;
 }

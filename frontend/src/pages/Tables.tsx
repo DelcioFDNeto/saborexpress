@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { toast } from 'sonner';
+import { Users, Calendar, Sparkles, Coffee, ShieldAlert, CheckCircle2 } from 'lucide-react';
 
 interface Table {
   id: number;
@@ -56,9 +57,10 @@ export default function Tables() {
       toast.success(`Mesa ${selectedTable.number} aberta com sucesso!`);
       await fetchTables();
       closeModal();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      toast.error(err.response?.data?.message || 'Falha ao abrir a mesa.');
+      const e = err as { response?: { data?: { message?: string } } };
+      toast.error(e.response?.data?.message || 'Falha ao abrir a mesa.');
     } finally {
       setActionLoading(false);
     }
@@ -78,9 +80,10 @@ export default function Tables() {
       toast.success(`Mesa ${selectedTable.number} reservada para ${customerName}!`);
       await fetchTables();
       closeModal();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      toast.error(err.response?.data?.message || 'Falha ao realizar reserva.');
+      const e = err as { response?: { data?: { message?: string } } };
+      toast.error(e.response?.data?.message || 'Falha ao realizar reserva.');
     } finally {
       setActionLoading(false);
     }
@@ -96,7 +99,7 @@ export default function Tables() {
       toast.success('Reserva cancelada com sucesso.');
       await fetchTables();
       closeModal();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       toast.error('Erro ao cancelar reserva.');
     } finally {
@@ -113,7 +116,7 @@ export default function Tables() {
       toast.success(`Mesa ${selectedTable.number} está higienizada e livre para uso!`);
       await fetchTables();
       closeModal();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       toast.error('Erro ao liberar mesa.');
     } finally {
@@ -132,13 +135,57 @@ export default function Tables() {
 
   const getStatusStyle = (status: string) => {
     switch (status) {
-      case 'Livre': return 'bg-sabor-light border-sabor-primary/30 text-sabor-dark hover:shadow-sabor-primary/10';
-      case 'Ocupada': return 'bg-rose-100 border-rose-200 text-rose-800 hover:shadow-rose-500/10';
-      case 'Reservada': return 'bg-sky-100 border-sky-200 text-sky-800 hover:shadow-sky-500/10';
-      case 'Fechamento': return 'bg-amber-100 border-amber-200 text-amber-800 hover:shadow-amber-500/10';
-      case 'Limpeza': return 'bg-slate-100 border-slate-200 text-slate-700 hover:shadow-slate-500/10 animate-pulse';
-      default: return 'bg-gray-100 border-gray-200 text-gray-800';
+      case 'Livre': return 'bg-gradient-to-br from-white to-emerald-50 border-emerald-500/20 text-sabor-dark hover:border-sabor-primary/60';
+      case 'Ocupada': return 'bg-gradient-to-br from-white to-rose-50 border-rose-500/20 text-rose-800 hover:border-rose-400';
+      case 'Reservada': return 'bg-gradient-to-br from-white to-sky-50 border-sky-500/20 text-sky-800 hover:border-sky-400';
+      case 'Fechamento': return 'bg-gradient-to-br from-white to-amber-50 border-amber-500/20 text-amber-800 hover:border-amber-400';
+      case 'Limpeza': return 'bg-gradient-to-br from-white to-slate-50 border-slate-500/25 text-slate-700 hover:border-slate-400';
+      default: return 'bg-white border-gray-200 text-gray-800';
     }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'Livre': return <CheckCircle2 className="w-5 h-5 text-emerald-500" />;
+      case 'Ocupada': return <Coffee className="w-5 h-5 text-rose-500" />;
+      case 'Reservada': return <Calendar className="w-5 h-5 text-sky-500" />;
+      case 'Fechamento': return <ShieldAlert className="w-5 h-5 text-amber-500 animate-pulse" />;
+      case 'Limpeza': return <Sparkles className="w-5 h-5 text-slate-500 animate-spin" style={{ animationDuration: '4s' }} />;
+      default: return null;
+    }
+  };
+
+  const renderChairs = (capacity: number, status: string) => {
+    const chairs = [];
+    const positions = [
+      { top: '-9px', left: 'calc(25% - 8px)' }, // Top Left
+      { top: '-9px', left: 'calc(75% - 8px)' }, // Top Right
+      { bottom: '-9px', left: 'calc(25% - 8px)' }, // Bottom Left
+      { bottom: '-9px', left: 'calc(75% - 8px)' }, // Bottom Right
+      { left: '-9px', top: 'calc(33% - 8px)' }, // Left Upper
+      { left: '-9px', top: 'calc(66% - 8px)' }, // Left Lower
+      { right: '-9px', top: 'calc(33% - 8px)' }, // Right Upper
+      { right: '-9px', top: 'calc(66% - 8px)' }, // Right Lower
+      { top: '-9px', left: 'calc(50% - 8px)' }, // Top Center
+      { bottom: '-9px', left: 'calc(50% - 8px)' }, // Bottom Center
+    ];
+
+    let chairColor = 'bg-emerald-400 border-emerald-500/35';
+    if (status === 'Ocupada') chairColor = 'bg-rose-400 border-rose-500/35';
+    else if (status === 'Reservada') chairColor = 'bg-sky-400 border-sky-500/35';
+    else if (status === 'Fechamento') chairColor = 'bg-amber-400 border-amber-500/35';
+    else if (status === 'Limpeza') chairColor = 'bg-slate-400 border-slate-500/35';
+
+    for (let i = 0; i < Math.min(capacity, positions.length); i++) {
+      chairs.push(
+        <div 
+          key={i} 
+          style={positions[i] as React.CSSProperties}
+          className={`absolute w-4.5 h-4.5 rounded-full border-2 ${chairColor} shadow-inner transition-all duration-300 group-hover:scale-110 z-0`}
+        />
+      );
+    }
+    return chairs;
   };
 
   if (loading) {
@@ -146,26 +193,26 @@ export default function Tables() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 md:p-10 font-sans">
+    <div className="min-h-screen bg-gray-50 p-6 md:p-10 font-sans animate-fade-in">
       <div className="max-w-7xl mx-auto">
         
         {/* Header & Status Indicator */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10 bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100/50">
           <div>
             <h1 className="text-3xl font-black text-gray-900 tracking-tight">Mapa do Salão</h1>
-            <p className="text-gray-500 font-medium mt-1">Gerencie a ocupação, reservas e fluxo operacional de mesas.</p>
+            <p className="text-gray-500 font-semibold text-sm mt-1">Gerencie a ocupação, reservas e serviço operacional de mesas.</p>
           </div>
-          <div className="flex flex-wrap gap-4 text-xs font-bold uppercase tracking-wider bg-white px-5 py-3 rounded-2xl shadow-sm border border-gray-100">
-            <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-sabor-primary"></span> Livre</span>
-            <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-rose-500"></span> Ocupada</span>
-            <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-sky-500"></span> Reservada</span>
-            <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-amber-500"></span> Fechamento</span>
-            <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-slate-500"></span> Limpeza</span>
+          <div className="flex flex-wrap gap-4 text-[10px] font-black uppercase tracking-widest bg-gray-50 px-5 py-3 rounded-2xl border border-gray-100 shadow-inner">
+            <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Livre</span>
+            <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Ocupada</span>
+            <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-sky-500"></span> Reservada</span>
+            <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Fechamento</span>
+            <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-slate-500"></span> Limpeza</span>
           </div>
         </div>
 
         {/* Grid de Mesas */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-8 pb-10">
           {tables.map(table => (
             <div 
               key={table.id} 
@@ -184,20 +231,28 @@ export default function Tables() {
                 }
               }}
               className={`
-                relative p-8 rounded-3xl border-2 flex flex-col items-center justify-center gap-2
-                transition-all duration-300 cursor-pointer hover:shadow-xl hover:-translate-y-1
+                relative p-8 rounded-[2.2rem] border-2 flex flex-col items-center justify-center gap-2.5
+                transition-all duration-300 cursor-pointer hover:shadow-2xl hover:-translate-y-1.5 group select-none bg-white z-10
                 ${getStatusStyle(table.status)}
+                ${table.status === 'Ocupada' ? 'shadow-pulse-ocupada shadow-rose-100/50' : ''}
+                ${table.status === 'Reservada' ? 'shadow-pulse-reservada shadow-sky-100/50' : ''}
+                ${table.status === 'Fechamento' ? 'shadow-pulse-fechamento shadow-amber-100/50' : ''}
+                ${table.status === 'Limpeza' ? 'shadow-pulse-limpeza shadow-slate-100/50' : ''}
               `}
             >
-              <span className="text-4xl font-black tracking-tight">{table.number}</span>
-              <span className="text-xs font-bold opacity-80 uppercase">{table.capacity} Lugares</span>
-              
-              {table.status !== 'Livre' && (
-                <span className="absolute top-3 right-3 flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-current"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-current"></span>
-                </span>
-              )}
+              {/* Seats rendered top-down absolute */}
+              {renderChairs(table.capacity, table.status)}
+
+              {/* Status Icon Badge */}
+              <div className="absolute top-4 right-4 z-10 shrink-0">
+                {getStatusIcon(table.status)}
+              </div>
+
+              <span className="text-4xl font-black tracking-tighter text-gray-900 group-hover:scale-[1.05] transition-transform duration-300 z-10">{table.number}</span>
+              <span className="text-[10px] font-black opacity-80 uppercase tracking-widest flex items-center gap-1 text-gray-500 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded-md z-10">
+                <Users className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                {table.capacity} Lugares
+              </span>
             </div>
           ))}
         </div>
@@ -207,14 +262,14 @@ export default function Tables() {
         {/* ========================================== */}
         {selectedTable && modalType === 'options' && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in">
-            <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl animate-in slide-in-from-bottom-4">
+            <div className="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl animate-in slide-in-from-bottom-4">
               
               {/* Tab Selector inside Modal Header */}
               <div className="flex gap-2 p-1 bg-gray-100 rounded-xl mb-6">
                 <button 
                   type="button"
                   onClick={() => setActionType('open')}
-                  className={`flex-1 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${
+                  className={`flex-1 py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition-all outline-none ${
                     actionType === 'open' ? 'bg-white text-sabor-dark shadow-sm' : 'text-gray-500 hover:text-gray-800'
                   }`}
                 >
@@ -223,7 +278,7 @@ export default function Tables() {
                 <button 
                   type="button"
                   onClick={() => setActionType('reserve')}
-                  className={`flex-1 py-2 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${
+                  className={`flex-1 py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition-all outline-none ${
                     actionType === 'reserve' ? 'bg-white text-sabor-dark shadow-sm' : 'text-gray-500 hover:text-gray-800'
                   }`}
                 >
@@ -240,22 +295,22 @@ export default function Tables() {
                 // Open table form
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Nome do Cliente (Opcional)</label>
+                    <label className="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2">Nome do Cliente (Opcional)</label>
                     <input 
                       type="text" 
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
-                      className="w-full border-gray-300 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-sabor-primary outline-none transition-all text-sm"
+                      className="w-full border-gray-200 bg-gray-50 rounded-xl px-4 py-3 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/60 outline-none transition-all text-sm font-semibold text-gray-700"
                       placeholder="Ex: Clara Nazaré"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Telefone de Contato (Opcional)</label>
+                    <label className="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2">Telefone de Contato (Opcional)</label>
                     <input 
                       type="text" 
                       value={customerPhone}
                       onChange={(e) => setCustomerPhone(e.target.value)}
-                      className="w-full border-gray-300 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-sabor-primary outline-none transition-all text-sm"
+                      className="w-full border-gray-200 bg-gray-50 rounded-xl px-4 py-3 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/60 outline-none transition-all text-sm font-semibold text-gray-700"
                       placeholder="(91) 98765-4321"
                     />
                   </div>
@@ -265,7 +320,7 @@ export default function Tables() {
                     <button 
                       onClick={handleOpenTable}
                       disabled={actionLoading}
-                      className="flex-1 px-4 py-3 rounded-xl bg-sabor-primary text-sabor-dark font-extrabold hover:bg-sabor-primary/95 transition-all text-sm shadow-md"
+                      className="flex-1 px-4 py-3 rounded-xl bg-sabor-primary text-sabor-dark font-black hover:bg-sabor-primary/95 transition-all text-sm shadow-md cursor-pointer disabled:opacity-50"
                     >
                       {actionLoading ? 'Abrindo...' : 'Confirmar Abertura'}
                     </button>
@@ -275,35 +330,35 @@ export default function Tables() {
                 // Reserve table form
                 <form onSubmit={handleReserveTable} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Nome da Reserva</label>
+                    <label className="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2">Nome da Reserva</label>
                     <input 
                       required
                       type="text" 
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
-                      className="w-full border-gray-300 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-sabor-primary outline-none transition-all text-sm"
+                      className="w-full border-gray-200 bg-gray-50 rounded-xl px-4 py-3 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/60 outline-none transition-all text-sm font-semibold text-gray-700"
                       placeholder="Ex: Família Souza"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Telefone de Contato</label>
+                    <label className="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2">Telefone de Contato</label>
                     <input 
                       required
                       type="text" 
                       value={customerPhone}
                       onChange={(e) => setCustomerPhone(e.target.value)}
-                      className="w-full border-gray-300 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-sabor-primary outline-none transition-all text-sm"
+                      className="w-full border-gray-200 bg-gray-50 rounded-xl px-4 py-3 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/60 outline-none transition-all text-sm font-semibold text-gray-700"
                       placeholder="(91) 98111-2222"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Data & Horário da Reserva</label>
+                    <label className="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2">Data & Horário da Reserva</label>
                     <input 
                       required
                       type="datetime-local" 
                       value={reservationTime}
                       onChange={(e) => setReservationTime(e.target.value)}
-                      className="w-full border-gray-300 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-sabor-primary outline-none transition-all text-sm cursor-pointer"
+                      className="w-full border-gray-200 bg-gray-50 rounded-xl px-4 py-3 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/60 outline-none transition-all text-sm font-semibold text-gray-700 cursor-pointer"
                     />
                   </div>
 
@@ -312,7 +367,7 @@ export default function Tables() {
                     <button 
                       type="submit"
                       disabled={actionLoading}
-                      className="flex-1 px-4 py-3 bg-sky-600 text-white rounded-xl font-extrabold hover:bg-sky-700 transition-all text-sm shadow-md"
+                      className="flex-1 px-4 py-3 bg-sky-600 text-white rounded-xl font-extrabold hover:bg-sky-700 transition-all text-sm shadow-md cursor-pointer disabled:opacity-50"
                     >
                       {actionLoading ? 'Reservando...' : 'Confirmar Reserva'}
                     </button>
@@ -328,21 +383,21 @@ export default function Tables() {
         {/* ========================================== */}
         {selectedTable && modalType === 'details' && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in">
-            <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl animate-in slide-in-from-bottom-4">
-              <span className="inline-block bg-sky-50 text-sky-600 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full mb-3">📅 Mesa Reservada</span>
+            <div className="bg-white rounded-[2rem] p-8 max-w-md w-full shadow-2xl animate-in slide-in-from-bottom-4">
+              <span className="inline-flex bg-sky-50 text-sky-600 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full mb-3 border border-sky-200/50">📅 Mesa Reservada</span>
               <h2 className="text-2xl font-black text-gray-950 mb-6">Mesa {selectedTable.number}</h2>
               
               <div className="space-y-4 mb-8">
-                <div className="bg-slate-50 p-4 rounded-2xl">
-                  <span className="block text-xs font-bold text-gray-500 uppercase mb-1">Nome da Reserva</span>
-                  <span className="font-extrabold text-gray-950 text-base">{selectedTable.reservation_name}</span>
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 shadow-inner">
+                  <span className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Nome da Reserva</span>
+                  <span className="font-black text-gray-950 text-base">{selectedTable.reservation_name}</span>
                 </div>
-                <div className="bg-slate-50 p-4 rounded-2xl">
-                  <span className="block text-xs font-bold text-gray-500 uppercase mb-1">Telefone de Contato</span>
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 shadow-inner">
+                  <span className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Telefone de Contato</span>
                   <span className="font-bold text-gray-950 text-sm">{selectedTable.reservation_phone || 'Não informado'}</span>
                 </div>
-                <div className="bg-slate-50 p-4 rounded-2xl">
-                  <span className="block text-xs font-bold text-gray-500 uppercase mb-1">Horário Reservado</span>
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 shadow-inner">
+                  <span className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Horário Reservado</span>
                   <span className="font-bold text-gray-950 text-sm">
                     {selectedTable.reserved_at ? new Date(selectedTable.reserved_at).toLocaleString('pt-BR') : 'Não informado'}
                   </span>
@@ -353,7 +408,7 @@ export default function Tables() {
                 <button 
                   onClick={handleOpenTable}
                   disabled={actionLoading}
-                  className="w-full py-3 bg-sabor-primary text-sabor-dark font-extrabold rounded-xl text-sm shadow hover:bg-sabor-primary/95 transition-all flex items-center justify-center gap-1.5"
+                  className="w-full py-3.5 bg-sabor-primary text-sabor-dark font-black rounded-xl text-sm shadow hover:bg-sabor-primary/95 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   🚀 Ocupar / Iniciar Serviço
                 </button>
@@ -362,7 +417,7 @@ export default function Tables() {
                   <button 
                     onClick={handleCancelReservation}
                     disabled={actionLoading}
-                    className="py-2.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl font-bold text-xs transition-colors"
+                    className="py-2.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl font-bold text-xs transition-colors cursor-pointer"
                   >
                     🚫 Cancelar Reserva
                   </button>
@@ -377,17 +432,17 @@ export default function Tables() {
         {/* ========================================== */}
         {selectedTable && modalType === 'cleaning' && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in">
-            <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center animate-in slide-in-from-bottom-4">
+            <div className="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl text-center animate-in slide-in-from-bottom-4">
               <div className="w-16 h-16 bg-slate-100 text-slate-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl animate-bounce">🧹</div>
               <h2 className="text-xl font-black text-gray-950 mb-2">Limpeza da Mesa {selectedTable.number}</h2>
-              <p className="text-gray-500 mb-6 text-sm font-medium">A mesa já foi higienizada e está pronta para novos clientes?</p>
+              <p className="text-gray-500 mb-6 text-sm font-semibold">A mesa já foi higienizada e está pronta para novos clientes?</p>
               
               <div className="flex gap-3">
                 <button onClick={closeModal} className="flex-1 py-3 border border-gray-200 text-gray-600 rounded-xl font-bold text-sm hover:bg-gray-50 transition-colors">Cancelar</button>
                 <button 
                   onClick={handleMarkFree}
                   disabled={actionLoading}
-                  className="flex-1 py-3 bg-sabor-primary text-sabor-dark font-black rounded-xl text-sm shadow hover:bg-sabor-primary/95 transition-all"
+                  className="flex-1 py-3 bg-sabor-primary text-sabor-dark font-black rounded-xl text-sm shadow hover:bg-sabor-primary/95 transition-all cursor-pointer disabled:opacity-50"
                 >
                   Liberar Mesa
                 </button>

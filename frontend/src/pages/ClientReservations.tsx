@@ -86,8 +86,11 @@ export default function ClientReservations() {
       setSpecialRequests('');
       fetchReservations();
       fetchTables(); // Refresh table statuses in real-time
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Erro ao realizar reserva.');
+    } catch (err: unknown) {
+      const message = err && typeof err === 'object' && 'response' in err
+        ? ((err as Record<string, Record<string, Record<string, string>>>).response?.data?.message || 'Erro ao realizar reserva.')
+        : 'Erro ao realizar reserva.';
+      toast.error(message);
     }
   };
 
@@ -98,7 +101,7 @@ export default function ClientReservations() {
       toast.success('Reserva cancelada com sucesso.');
       fetchReservations();
       fetchTables();
-    } catch (err) {
+    } catch {
       toast.error('Erro ao cancelar a reserva.');
     }
   };

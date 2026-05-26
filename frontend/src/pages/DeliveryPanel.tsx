@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import { api } from '../lib/api';
 import { AuthContext } from '../contexts/AuthContext';
 import { toast } from 'sonner';
@@ -53,9 +53,10 @@ export default function DeliveryPanel() {
       await api.patch(`/orders/${orderId}/assign-driver`);
       toast.success('Você assumiu esta entrega! Ela foi movida para suas entregas ativas.');
       fetchOrders();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      toast.error(err.response?.data?.message || 'Erro ao assumir entrega.');
+      const e = err as { response?: { data?: { message?: string } } };
+      toast.error(e.response?.data?.message || 'Erro ao assumir entrega.');
     }
   };
 
@@ -66,9 +67,10 @@ export default function DeliveryPanel() {
       });
       toast.success(`Pedido #${orderId} atualizado para: ${status}`);
       fetchOrders();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      toast.error(err.response?.data?.message || 'Erro ao atualizar status.');
+      const e = err as { response?: { data?: { message?: string } } };
+      toast.error(e.response?.data?.message || 'Erro ao atualizar status.');
     }
   };
 
@@ -155,7 +157,7 @@ export default function DeliveryPanel() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6 md:p-10 font-sans">
+    <div className="min-h-screen bg-gray-100 p-6 md:p-10 font-sans animate-fade-in">
       <div className="max-w-6xl mx-auto">
         
         <header className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-3xl shadow-sm border border-gray-200/50 gap-4">

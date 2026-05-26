@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 
 interface Category {
@@ -75,9 +75,10 @@ export default function OrderCartModal({ orderId, isOpen, onClose, onItemAdded }
       });
       onItemAdded();
       setExpandedProductId(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to add item', err);
-      alert(err.response?.data?.message || 'Erro ao adicionar produto');
+      const message = err instanceof Error ? err.message : 'Erro ao adicionar produto';
+      alert(err && typeof err === 'object' && 'response' in err ? (err as Record<string, Record<string, Record<string, string>>>).response?.data?.message || message : message);
     } finally {
       setAddingProductId(null);
     }

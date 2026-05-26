@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useContext } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useEffect, useState, useContext } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../lib/api';
 import { toast } from 'sonner';
 import { AuthContext } from '../contexts/AuthContext';
@@ -43,7 +43,7 @@ export default function Menu() {
     if (saved) {
       try {
         return JSON.parse(saved);
-      } catch (e) {
+      } catch {
         return [];
       }
     }
@@ -142,7 +142,7 @@ export default function Menu() {
     <div className="p-4 sm:p-8 max-w-7xl mx-auto font-sans relative pb-24 animate-fade-in">
       
       {/* Banner Superior */}
-      <div className="mb-8 bg-gradient-to-r from-sabor-dark to-emerald-950 p-6 md:p-10 rounded-3xl text-white shadow-md relative overflow-hidden">
+      <div className="mb-8 bg-linear-to-r from-sabor-dark to-emerald-950 p-6 md:p-10 rounded-3xl text-white shadow-md relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-sabor-primary/10 rounded-full blur-[100px] pointer-events-none"></div>
         <span className="text-xs md:text-sm font-bold text-sabor-primary uppercase tracking-widest flex items-center gap-1.5 mb-2">
           <svg className="w-3.5 h-3.5 fill-sabor-primary stroke-none" viewBox="0 0 24 24">
@@ -325,7 +325,7 @@ export default function Menu() {
       {totalItems > 0 && (
         <div 
           onClick={() => setIsCartOpen(true)}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 max-w-md w-[92%] bg-sabor-dark/95 backdrop-blur-md text-white border border-sabor-primary/30 p-4 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] z-[90] flex items-center justify-between gap-4 cursor-pointer hover:bg-sabor-dark transition-all duration-300 transform hover:scale-[1.02] animate-scale-in"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 max-w-md w-[92%] bg-sabor-dark/95 backdrop-blur-md text-white border border-sabor-primary/30 p-4 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] z-90 flex items-center justify-between gap-4 cursor-pointer hover:bg-sabor-dark transition-all duration-300 transform hover:scale-[1.02] animate-scale-in"
         >
           <div>
             <p className="text-xs font-bold text-sabor-primary uppercase tracking-wider">Sua Sacola</p>
@@ -351,7 +351,7 @@ export default function Menu() {
 
       {/* Cart Drawer / Side Panel */}
       {isCartOpen && (
-        <div className="fixed inset-0 z-[100] flex justify-end">
+        <div className="fixed inset-0 z-100 flex justify-end">
           {/* Backdrop Overlay */}
           <div 
             onClick={() => setIsCartOpen(false)}

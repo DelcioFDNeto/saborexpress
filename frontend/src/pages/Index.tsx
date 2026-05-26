@@ -1,13 +1,13 @@
-import React from 'react';
+
 import { Link } from 'react-router-dom';
 
 export default function Index() {
   return (
-    <div className="min-h-screen bg-gray-50/50 flex flex-col font-sans">
+    <div className="min-h-screen bg-gray-50/50 flex flex-col font-sans animate-fade-in">
       {/* Hero Section */}
       <section className="relative min-h-[70vh] flex items-center justify-center bg-[url('https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center py-16 px-4 md:py-24 overflow-hidden">
         {/* Sleek Gradient Overlay for superior text contrast */}
-        <div className="absolute inset-0 bg-gradient-to-b from-gray-950/95 via-gray-900/90 to-gray-950/95 backdrop-blur-[2px]"></div>
+        <div className="absolute inset-0 bg-linear-to-b from-gray-950/95 via-gray-900/90 to-gray-950/95 backdrop-blur-[2px]"></div>
         
         {/* Dynamic ambient lights (glowing blobs in background) */}
         <div className="absolute top-1/4 left-1/10 w-72 h-72 bg-sabor-dark/30 rounded-full blur-[100px] pointer-events-none"></div>
@@ -28,7 +28,7 @@ export default function Index() {
 
           {/* Main Hero Header */}
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white mb-4 leading-tight">
-            O Sabor Autêntico da <span className="bg-gradient-to-r from-sabor-primary to-emerald-400 bg-clip-text text-transparent">Amazônia</span> na sua Mesa
+            O Sabor Autêntico da <span className="bg-linear-to-r from-sabor-primary to-emerald-400 bg-clip-text text-transparent">Amazônia</span> na sua Mesa
           </h1>
           
           <p className="text-base md:text-lg text-gray-300 mb-8 max-w-2xl mx-auto font-light leading-relaxed">
@@ -346,7 +346,7 @@ export default function Index() {
 
       {/* Premium CTA Section */}
       <section className="py-16 md:py-24 bg-white relative overflow-hidden px-4">
-        <div className="max-w-5xl mx-auto bg-gradient-to-r from-sabor-dark to-slate-900 rounded-[2rem] relative overflow-hidden shadow-2xl p-8 md:p-12 text-center">
+        <div className="max-w-5xl mx-auto bg-linear-to-r from-sabor-dark to-slate-900 rounded-[2rem] relative overflow-hidden shadow-2xl p-8 md:p-12 text-center">
           {/* Subtle decoration dots */}
           <div className="absolute top-0 left-0 w-48 h-48 bg-sabor-primary/10 rounded-full blur-[80px]"></div>
           <div className="absolute bottom-0 right-0 w-64 h-64 bg-sabor-primary/20 rounded-full blur-[100px]"></div>

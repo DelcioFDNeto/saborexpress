@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { api } from '../../lib/api';
 import { toast } from 'sonner';
 
+interface ApiError {
+  response?: { data?: { message?: string } };
+}
+
 interface Table {
   id: number;
   number: number;
@@ -66,8 +70,9 @@ export default function DashboardTables({
       setEditingTable(null);
       setShowTableForm(false);
       await onRefresh();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Erro ao salvar mesa.');
+    } catch (err: unknown) {
+      const e = err as ApiError;
+      toast.error(e.response?.data?.message || 'Erro ao salvar mesa.');
     }
   };
 
@@ -84,8 +89,9 @@ export default function DashboardTables({
       await api.delete(`/tables/${id}`);
       toast.success('Mesa removida com sucesso!');
       await onRefresh();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Erro ao deletar mesa.');
+    } catch (err: unknown) {
+      const e = err as ApiError;
+      toast.error(e.response?.data?.message || 'Erro ao deletar mesa.');
     }
   };
 
@@ -111,7 +117,7 @@ export default function DashboardTables({
 
       {/* Modal de Mesas */}
       {showTableForm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-1000 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl animate-fade-in">
             <h3 className="text-xl font-black text-gray-900 mb-4">{editingTable ? '✏️ Editar Mesa' : '➕ Nova Mesa'}</h3>
             <form onSubmit={handleSaveTable} className="space-y-4">

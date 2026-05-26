@@ -1,73 +1,72 @@
-# React + TypeScript + Vite
+# SaborExpress — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Interface web construída com **React 18 + TypeScript + Vite** para o sistema de gestão de restaurantes SaborExpress.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **React 18** com TypeScript
+- **Vite** para bundling e HMR
+- **React Router v6** para navegação
+- **Axios** via cliente centralizado (`lib/api.ts`)
+- **Sonner** para notificações toast
+- **Laravel Echo + Reverb** para WebSocket em tempo real
+- **CSS customizado** com design system baseado em variáveis (`index.css`)
 
-## React Compiler
+## Configuração Local
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+# Instalar dependências
+npm install
 
-## Expanding the ESLint configuration
+# Iniciar servidor de desenvolvimento
+npm run dev
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Build para produção
+npm run build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Estrutura de Diretórios
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+src/
+├── components/
+│   ├── dashboard/     # Subcomponentes do painel (KPIs, Catalog, Tables, Staff, Clients, Audit)
+│   ├── Navigation.tsx # Barra de navegação principal
+│   ├── ProtectedRoute.tsx
+│   └── OrderCartModal.tsx
+├── contexts/
+│   └── AuthContext.tsx # Autenticação via Sanctum
+├── lib/
+│   └── api.ts         # Cliente Axios centralizado com interceptors
+├── pages/
+│   ├── Index.tsx       # Landing page
+│   ├── Menu.tsx        # Cardápio público com SWR cache + skeleton
+│   ├── Login.tsx       # Login com glassmorphism
+│   ├── Register.tsx    # Registro com confirmação de senha
+│   ├── Dashboard.tsx   # Painel administrativo (6 abas)
+│   ├── Kitchen.tsx     # KDS Kanban com WebSocket
+│   ├── Cashier.tsx     # Caixa com split payment
+│   ├── Tables.tsx      # Gestão de mesas
+│   ├── OrderDetails.tsx
+│   ├── DeliveryClient.tsx
+│   ├── DeliveryPanel.tsx
+│   └── ...
+├── echo.ts            # Configuração do Laravel Echo/Reverb
+└── App.tsx            # Rotas e layout principal
+```
+
+## Variáveis de Ambiente
+
+| Variável | Descrição | Default |
+|----------|-----------|---------|
+| `VITE_API_URL` | URL base da API backend | `http://localhost:8000` |
+| `VITE_REVERB_APP_KEY` | Chave do WebSocket Reverb | `saborexpresskey` |
+| `VITE_REVERB_HOST` | Host do WebSocket | `localhost` |
+| `VITE_REVERB_PORT` | Porta do WebSocket | `8080` |
+
+## Padrões
+
+- **SWR Cache**: Dados são cacheados em `localStorage` e exibidos instantaneamente com skeleton loaders enquanto a API atualiza em background
+- **API centralizada**: Todas as chamadas à API usam `import { api } from '../lib/api'` — nunca axios direto
+- **Tipagem forte**: Interfaces TypeScript para todos os modelos de dados, sem uso de `any`
+- **Componentes modulares**: Dashboard dividido em 6 subcomponentes independentes

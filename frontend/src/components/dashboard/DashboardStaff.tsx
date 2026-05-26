@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { api } from '../../lib/api';
 import { toast } from 'sonner';
 
+interface ApiError {
+  response?: { data?: { message?: string } };
+}
+
 interface User {
   id: number;
   name: string;
@@ -81,8 +85,9 @@ export default function DashboardStaff({
       setNewUserEmail('');
       setNewUserPassword('');
       await onRefresh();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Falha ao registrar colaborador.');
+    } catch (err: unknown) {
+      const e = err as ApiError;
+      toast.error(e.response?.data?.message || 'Falha ao registrar colaborador.');
     } finally {
       setIsCreatingUser(false);
     }
@@ -98,8 +103,9 @@ export default function DashboardStaff({
         toast.success(`Colaborador ${u.name} ativado com sucesso!`);
       }
       await onRefresh();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Erro ao alterar status.');
+    } catch (err: unknown) {
+      const e = err as ApiError;
+      toast.error(e.response?.data?.message || 'Erro ao alterar status.');
     }
   };
 
@@ -109,8 +115,9 @@ export default function DashboardStaff({
       await api.delete(`/users/${u.id}`);
       toast.success('Conta excluída com sucesso!');
       await onRefresh();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Erro ao excluir conta.');
+    } catch (err: unknown) {
+      const e = err as ApiError;
+      toast.error(e.response?.data?.message || 'Erro ao excluir conta.');
     }
   };
 
@@ -122,8 +129,9 @@ export default function DashboardStaff({
       toast.success(`Senha de ${editingUser.name} alterada com sucesso!`);
       setUserPasswordChange('');
       setEditingUser(null);
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Erro ao alterar senha.');
+    } catch (err: unknown) {
+      const e = err as ApiError;
+      toast.error(e.response?.data?.message || 'Erro ao alterar senha.');
     }
   };
 
@@ -138,7 +146,7 @@ export default function DashboardStaff({
 
       {/* Password Modal */}
       {editingUser && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-1000 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl animate-fade-in">
             <h3 className="text-xl font-black text-gray-900 mb-2 flex items-center gap-2">
               <svg className="w-5 h-5 stroke-gray-900 fill-none" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -251,7 +259,7 @@ export default function DashboardStaff({
                           <tr key={u.id} className="hover:bg-slate-50/40 transition-colors group">
                             <td className="px-6 py-5">
                               <div className="flex items-center gap-4">
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs uppercase tracking-wider shadow-sm flex-shrink-0 ${roleInfo.bg}`}>
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs uppercase tracking-wider shadow-sm shrink-0 ${roleInfo.bg}`}>
                                   {initials}
                                 </div>
                                 <div>

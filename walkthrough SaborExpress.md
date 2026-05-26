@@ -2,7 +2,7 @@
 **Data de Compilação:** Maio de 2026
 **Fase Atual:** Base, Infraestrutura (M00), Cardápio (M01) e Salão (M02) Concluídos.
 
-Este documento serve como o mapa definitivo de **literalmente tudo** o que foi projetado, codificado e hospedado no SaborExpress até o momento. A arquitetura segue rigorosamente o padrão **MVC desacoplado**, onde o backend (Laravel 11) age puramente como uma API RESTful e o frontend (React + Vite) consome esses dados reativamente.
+Este documento serve como o mapa definitivo de **literalmente tudo** o que foi projetado, codificado e hospedado no SaborExpress até o momento. A arquitetura segue rigorosamente o padrão **MVC desacoplado**, onde o backend (Laravel 12) age puramente como uma API RESTful e o frontend (React + Vite) consome esses dados reativamente.
 
 ---
 
@@ -20,7 +20,7 @@ A base do projeto foi projetada para ser robusta, moderna e Serverless.
 - **Frontend Dinâmico:** O React foi configurado para ler a URL do servidor através da variável de ambiente `import.meta.env.VITE_API_URL`, tornando-o capaz de alternar de `localhost:8000` para a URL do Render em produção sem alterar uma linha de código.
 
 ### Segurança e Performance
-- **CORS:** Liberado globalmente (`*`) no Laravel 11 para que requisições originárias da Vercel não sejam bloqueadas.
+- **CORS:** Restrito ao `FRONTEND_URL` configurado no ambiente (`http://localhost:5173` em desenvolvimento) para que requisições originárias da Vercel não sejam bloqueadas.
 - **Middleware `CheckRole`:** Um filtro rigoroso implementado na API. Ele checa o campo `user_role` de quem faz a requisição e devolve **403 Forbidden** se um garçom tentar acessar uma rota destinada a gerentes.
 - **Paginação de Dados:** Consultas massivas ao banco de dados no Laravel (`Product::all()`) foram refatoradas para utilizar paginação nativa (`paginate(30)`). Isso impede que a aplicação sobrecarregue a memória com payloads enormes.
 
@@ -51,7 +51,7 @@ Para garantir que o sistema abranja os **6 atores acadêmicos** descritos no esc
 
 ## 2. Autenticação e Segurança (Role-Based Access Control)
 O SaborExpress não é um sistema "aberto". Criamos uma barreira rígida usando o Laravel Sanctum e React Context API:
-- **Cadastro e Login (`/register` e `/login`):** Novas contas podem ser criadas definindo cargos específicos (`waiter`, `kitchen`, `cashier`, `delivery_driver`, `administrator`).
+- **Cadastro e Login (`/register` e `/login`):** Novas contas são criadas com papel `client`. Cargos administrativos (`waiter`, `kitchen`, `cashier`, `delivery`, `administrator`) só podem ser definidos por um administrador via painel de usuários.
 - **Múltiplas Visões Seguras:** O frontend usa um componente `ProtectedRoute` que avalia a *role* e o *token*. Um Garçom não consegue abrir a URL do Painel Administrativo; ele é barrado e devolvido à sua área permitida.
 - **Seeders de Teste:** O banco já foi populado com 6 contas para testes automáticos, possuindo os e-mails `admin@saborexpress.com`, `waiter@...`, `kitchen@...`, `cashier@...`, `delivery@...` e `client@...` (todos com a senha genérica `password`).
 - **Proteção Frontend (React AuthContext):** A navegação agora é inteligente e baseada no perfil. Garçons têm acesso ao Cardápio e Mesas. A Cozinha só enxergará o KDS no futuro. Acessar `/mesas` deslogado redireciona automaticamente para a nova tela de `/login`.

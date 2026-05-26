@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import { toast } from 'sonner';
 
@@ -77,7 +77,7 @@ interface AuditEvent {
   auditable_type: string;
   auditable_id: number;
   description: string;
-  metadata: any;
+  metadata: Record<string, unknown>;
   created_at: string;
 }
 
@@ -86,7 +86,7 @@ const getCache = <T,>(key: string, defaultValue: T): T => {
   try {
     const cached = localStorage.getItem(key);
     return cached ? JSON.parse(cached) : defaultValue;
-  } catch (e) {
+  } catch {
     return defaultValue;
   }
 };
@@ -107,9 +107,9 @@ export default function Dashboard() {
   const [kpis, setKpis] = useState<KPIs | null>(() => getCache('se_cache_kpis', null));
   const [abcCurve, setAbcCurve] = useState<ABCItem[]>(() => getCache('se_cache_abccurve', []));
   const [revenueChart, setRevenueChart] = useState<RevenuePoint[]>(() => getCache('se_cache_revenuechart', []));
-  const [channelsData, setChannelsData] = useState<any[]>(() => getCache('se_cache_channels', []));
-  const [methodsData, setMethodsData] = useState<any[]>(() => getCache('se_cache_methods', []));
-  const [operatorsData, setOperatorsData] = useState<any[]>(() => getCache('se_cache_operators', []));
+  const [channelsData, setChannelsData] = useState<Record<string, string>[]>(() => getCache('se_cache_channels', []));
+  const [methodsData, setMethodsData] = useState<Record<string, string>[]>(() => getCache('se_cache_methods', []));
+  const [operatorsData, setOperatorsData] = useState<Record<string, string>[]>(() => getCache('se_cache_operators', []));
 
   // Tab 2: Menu (Categories & Products) State (loaded from cache)
   const [categories, setCategories] = useState<Category[]>(() => getCache('se_cache_categories', []));
@@ -149,7 +149,7 @@ export default function Dashboard() {
       localStorage.setItem('se_cache_channels', JSON.stringify(res.data.channels || []));
       localStorage.setItem('se_cache_methods', JSON.stringify(res.data.payment_methods || []));
       localStorage.setItem('se_cache_operators', JSON.stringify(res.data.operators || []));
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       toast.error('Erro ao carregar dados dos indicadores.');
     } finally {

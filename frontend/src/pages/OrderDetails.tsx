@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { toast } from 'sonner';
+import { echo } from '../echo';
 import OrderCartModal from '../components/OrderCartModal';
+import { Clock, RotateCw, BellRing, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 interface Product {
   id: number;
@@ -89,7 +91,7 @@ export default function OrderDetails() {
     fetchOrderDetails();
     
     // WebSockets via Laravel Echo
-    const channel = window.Echo.channel('orders');
+    const channel = echo.channel('orders');
     channel.listen('.OrderUpdated', () => {
       fetchOrderDetails();
     });
@@ -125,9 +127,10 @@ export default function OrderDetails() {
       await api.post(`/orders/${order.id}/request-closing`);
       toast.success('Fechamento solicitado! A mesa está travada aguardando o caixa.');
       fetchOrderDetails();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      toast.error(err.response?.data?.message || 'Erro ao pedir fechamento.');
+      const e = err as { response?: { data?: { message?: string } } };
+      toast.error(e.response?.data?.message || 'Erro ao pedir fechamento.');
     }
   };
 
@@ -155,16 +158,17 @@ export default function OrderDetails() {
     try {      
       const endpoint = tableActionType === 'transfer' ? 'transfer-order' : 'merge-order';
       
-      const res = await api.post(`/tables/${tableId}/${endpoint}`, {
+      await api.post(`/tables/${tableId}/${endpoint}`, {
         target_table_id: targetTableId
       });
       
       toast.success('Mesa movida/agrupada com sucesso!');
       setIsTableActionModalOpen(false);
       navigate(`/mesas/${targetTableId}`);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      toast.error(err.response?.data?.message || 'Erro ao realizar a operação.');
+      const e = err as { response?: { data?: { message?: string } } };
+      toast.error(e.response?.data?.message || 'Erro ao realizar a operação.');
     }
   };
 
@@ -189,8 +193,9 @@ export default function OrderDetails() {
       toast.success('Item atualizado com sucesso!');
       setEditingItem(null);
       fetchOrderDetails();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Erro ao atualizar item.');
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } };
+      toast.error(e.response?.data?.message || 'Erro ao atualizar item.');
     } finally {
       setItemActionLoading(false);
     }
@@ -202,7 +207,7 @@ export default function OrderDetails() {
       await api.delete(`/order-items/${itemId}`);
       toast.success('Item removido com sucesso.');
       fetchOrderDetails();
-    } catch (err: any) {
+    } catch {
       toast.error('Erro ao remover item.');
     }
   };
@@ -213,7 +218,7 @@ export default function OrderDetails() {
       await api.patch(`/order-items/${itemId}/cancel`);
       toast.warning('Item cancelado.');
       fetchOrderDetails();
-    } catch (err: any) {
+    } catch {
       toast.error('Erro ao cancelar item.');
     }
   };
@@ -223,7 +228,7 @@ export default function OrderDetails() {
       await api.patch(`/order-items/${itemId}/deliver`);
       toast.success('Item marcado como entregue!');
       fetchOrderDetails();
-    } catch (err: any) {
+    } catch {
       toast.error('Erro ao registrar entrega.');
     }
   };
@@ -233,22 +238,47 @@ export default function OrderDetails() {
   const getItemStatusBadge = (status: string) => {
     switch (status) {
       case 'Pendente':
-        return <span className="text-[10px] bg-slate-100 text-slate-700 font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider">Pendente</span>;
+        return (
+          <span className="text-[10px] bg-slate-100 text-slate-600 font-black px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 border border-slate-200 shrink-0">
+            <Clock className="w-3.5 h-3.5 shrink-0" />
+            Pendente
+          </span>
+        );
       case 'Em Preparo':
-        return <span className="text-[10px] bg-amber-100 text-amber-800 font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider animate-pulse border border-amber-300">Preparando</span>;
+        return (
+          <span className="text-[10px] bg-amber-100 text-amber-800 font-black px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 border border-amber-300 shadow-sm animate-pulse shrink-0">
+            <RotateCw className="w-3.5 h-3.5 shrink-0 animate-spin" style={{ animationDuration: '3s' }} />
+            Preparando
+          </span>
+        );
       case 'Pronto':
-        return <span className="text-[10px] bg-rose-100 text-rose-700 font-black px-2.5 py-1 rounded-full uppercase tracking-wider border border-rose-300 shadow-sm animate-bounce">Pronto!</span>;
+        return (
+          <span className="text-[10px] bg-rose-100 text-rose-700 font-black px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 border border-rose-300 shadow-md animate-bounce shrink-0">
+            <BellRing className="w-3.5 h-3.5 shrink-0" />
+            Pronto!
+          </span>
+        );
       case 'Entregue':
-        return <span className="text-[10px] bg-sabor-light text-sabor-dark font-black px-2.5 py-1 rounded-full uppercase tracking-wider">Entregue</span>;
+        return (
+          <span className="text-[10px] bg-emerald-100 text-emerald-800 font-black px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 border border-emerald-300 shrink-0">
+            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+            Entregue
+          </span>
+        );
       case 'Cancelado':
-        return <span className="text-[10px] bg-red-50 text-red-500 font-bold px-2.5 py-1 rounded-full uppercase tracking-wider line-through">Cancelado</span>;
+        return (
+          <span className="text-[10px] bg-red-50 text-red-400 font-black px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 border border-red-200 line-through shrink-0">
+            <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+            Cancelado
+          </span>
+        );
       default:
         return <span className="text-[10px] bg-gray-100 text-gray-700 px-2 py-0.5 rounded uppercase">{status}</span>;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row font-sans">
+    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row font-sans animate-fade-in">
       
       {/* Left side: Order Info & Items List */}
       <div className="flex-1 p-6 md:p-10 flex flex-col">
@@ -329,9 +359,15 @@ export default function OrderDetails() {
               )}
             </div>
           ) : (
-            <div className="overflow-y-auto p-2 space-y-3 custom-scrollbar">
-              {order.items.map((item) => (
-                <div key={item.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-5 hover:bg-gray-50/50 rounded-2xl transition-colors border border-gray-100 bg-white shadow-sm relative group gap-4">
+            <div className="overflow-y-auto p-2 space-y-3.5 custom-scrollbar">
+              {order.items.map((item, idx) => (
+                <div 
+                  key={item.id} 
+                  className={`
+                    flex flex-col sm:flex-row justify-between items-start sm:items-center p-5 hover:bg-emerald-50/15 rounded-2xl transition-all border border-gray-100/75 shadow-sm relative group gap-4
+                    ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/20'}
+                  `}
+                >
                   <div className="flex gap-4 items-center">
                     <div className="w-10 h-10 rounded-xl bg-sabor-light text-sabor-dark flex items-center justify-center font-black text-sm shrink-0 border border-sabor-primary/20">
                       {item.quantity}x
@@ -415,8 +451,8 @@ export default function OrderDetails() {
         </div>
       </div>
 
-      {/* Right side: Sidebar Checkout Summary */}
-      <div className="w-full md:w-96 bg-white border-l border-gray-100 p-8 flex flex-col shadow-[-10px_0_20px_-10px_rgba(0,0,0,0.05)] z-10 relative">
+      {/* Right side: Sidebar Checkout Summary in Receipt paper pattern */}
+      <div className="w-full md:w-96 bg-receipt-paper border border-gray-200 p-8 flex flex-col shadow-[-10px_0_25px_-5px_rgba(0,0,0,0.04)] z-10 relative rounded-[2rem] border-dashed m-6 shrink-0 md:h-[calc(100vh-80px)] md:sticky md:top-24">
         <h3 className="text-lg font-bold mb-6">Resumo da Conta</h3>
         
         <div className="space-y-4 flex-1">
@@ -475,7 +511,7 @@ export default function OrderDetails() {
 
       {/* Item Quantity/Notes Editing Modal */}
       {editingItem && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-1000 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl animate-in fade-in slide-in-from-bottom-4">
             <h3 className="text-xl font-black text-gray-900 mb-2">✏️ Editar Item</h3>
             <p className="text-sm text-gray-500 mb-6 font-medium">Modifique a quantidade ou observações de <span className="font-bold text-gray-800">{editingItem.product.name}</span></p>

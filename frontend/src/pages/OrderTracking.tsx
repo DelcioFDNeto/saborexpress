@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../lib/api';
 import { toast } from 'sonner';
+import { echo } from '../echo';
 
 interface Product {
   id: number;
@@ -58,7 +59,7 @@ export default function OrderTracking() {
     const interval = setInterval(fetchOrder, 10000);
 
     // WebSockets via Laravel Reverb/Echo for instant updates!
-    const channel = window.Echo.channel('orders');
+    const channel = echo.channel('orders');
     channel.listen('.OrderUpdated', () => {
       fetchOrder();
       toast.success('Seu pedido foi atualizado pelo restaurante!');

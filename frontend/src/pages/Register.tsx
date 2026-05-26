@@ -4,11 +4,13 @@ import { useNavigate, Link } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import { AuthContext } from '../contexts/AuthContext';
 import { api } from '../lib/api';
+import { Mail, Lock, User, UserPlus } from 'lucide-react';
 
 export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordConfirmation, setPasswordConfirmation] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -23,7 +25,8 @@ export default function Register() {
       const res = await api.post('/register', {
         name,
         email,
-        password
+        password,
+        password_confirmation: passwordConfirmation,
       });
       
       const token = res.data.access_token;
@@ -45,79 +48,120 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="mt-6 flex justify-center">
+    <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-[url('https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center relative animate-fade-in">
+      {/* Back blur overlay + tech geometric grid overlay */}
+      <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-md z-0"></div>
+      <div className="absolute inset-0 bg-geometric-grid opacity-35 z-0"></div>
+
+      <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
+        <div className="mt-6 flex justify-center bg-white p-4 rounded-3xl shadow-xl w-40 mx-auto border border-gray-100">
           <img src="/logo.png" alt="SaborExpress" className="h-24 w-auto object-contain" />
         </div>
-        <p className="mt-2 text-center text-sm text-gray-600 font-medium">
-          Crie sua conta para pedir nossas delícias
+        <p className="mt-6 text-center text-lg text-white font-extrabold tracking-tight">
+          Crie sua Conta no SaborExpress
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow-xl sm:rounded-2xl sm:px-10 border border-gray-100">
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10 px-4 sm:px-0">
+        <div className="bg-white py-10 px-6 sm:px-10 border border-emerald-500/20 shadow-[0_0_35px_-5px_rgba(74,222,128,0.15)] rounded-[2.5rem]">
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
-              <div className="bg-rose-50 border border-rose-200 text-rose-600 text-sm font-medium rounded-lg p-4">
-                {error}
+              <div className="bg-rose-50 border border-rose-100 text-rose-600 text-xs font-extrabold rounded-xl p-3 text-center">
+                ⚠️ {error}
               </div>
             )}
             
             <div>
-              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2">
                 Nome Completo
               </label>
-              <input
-                type="text"
-                required
-                className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-sabor-primary focus:border-sabor-primary sm:text-sm font-medium"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Ex: João Silva"
-              />
+              <div className="mt-1 relative rounded-xl shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <User className="h-4.5 w-4.5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  required
+                  className="appearance-none block w-full pl-11 pr-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl shadow-inner placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/60 shadow-[0_0_10px_rgba(16,185,129,0.02)] transition-all duration-300 sm:text-sm font-semibold text-gray-700"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Ex: João Silva"
+                />
+              </div>
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider mb-2">
-                E-mail
+              <label className="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2">
+                E-mail de Acesso
               </label>
-              <input
-                type="email"
-                required
-                className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-sabor-primary focus:border-sabor-primary sm:text-sm font-medium"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="nome@saborexpress.com"
-              />
+              <div className="mt-1 relative rounded-xl shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <Mail className="h-4.5 w-4.5 text-gray-400" />
+                </div>
+                <input
+                  type="email"
+                  required
+                  className="appearance-none block w-full pl-11 pr-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl shadow-inner placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/60 shadow-[0_0_10px_rgba(16,185,129,0.02)] transition-all duration-300 sm:text-sm font-semibold text-gray-700"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="nome@saborexpress.com"
+                />
+              </div>
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider mb-2">
-                Senha
+              <label className="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2">
+                Senha Segura
               </label>
-              <input
-                type="password"
-                required
-                className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-sabor-primary focus:border-sabor-primary sm:text-sm font-medium"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Mínimo 6 caracteres"
-              />
+              <div className="mt-1 relative rounded-xl shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <Lock className="h-4.5 w-4.5 text-gray-400" />
+                </div>
+                <input
+                  type="password"
+                  required
+                  minLength={8}
+                  className="appearance-none block w-full pl-11 pr-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl shadow-inner placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/60 shadow-[0_0_10px_rgba(16,185,129,0.02)] transition-all duration-300 sm:text-sm font-semibold text-gray-700"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Mínimo 8 caracteres"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2">
+                Confirmar Senha
+              </label>
+              <div className="mt-1 relative rounded-xl shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <Lock className="h-4.5 w-4.5 text-gray-400" />
+                </div>
+                <input
+                  type="password"
+                  required
+                  minLength={8}
+                  className="appearance-none block w-full pl-11 pr-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl shadow-inner placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/60 shadow-[0_0_10px_rgba(16,185,129,0.02)] transition-all duration-300 sm:text-sm font-semibold text-gray-700"
+                  value={passwordConfirmation}
+                  onChange={(e) => setPasswordConfirmation(e.target.value)}
+                  placeholder="Repita sua senha"
+                />
+              </div>
             </div>
 
             <div>
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-sabor-primary hover:bg-sabor-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sabor-primary transition-colors"
+                className="w-full flex justify-center items-center gap-2 py-3.5 px-4 border border-transparent rounded-xl shadow-md text-sm font-extrabold text-sabor-dark bg-sabor-primary hover:bg-sabor-primary/90 focus:outline-none focus:ring-4 focus:ring-sabor-primary/20 hover:scale-[1.01] hover:shadow-lg transition-all duration-300 disabled:opacity-50 cursor-pointer"
               >
-                {loading ? 'Cadastrando...' : 'Criar Conta'}
+                <UserPlus className="w-4 h-4 shrink-0" />
+                {loading ? 'Cadastrando Usuário...' : 'Criar minha Conta'}
               </button>
             </div>
             
             <div className="text-center mt-4 border-t border-gray-100 pt-6">
-              <Link to="/login" className="text-sm font-medium text-sabor-primary hover:text-sabor-primary">
+              <Link to="/login" className="text-xs font-black text-emerald-600 hover:text-emerald-700 hover:underline">
                 Já tem uma conta? Faça Login
               </Link>
             </div>

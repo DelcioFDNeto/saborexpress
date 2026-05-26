@@ -1,16 +1,11 @@
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 
-declare global {
-    interface Window {
-        Pusher: typeof Pusher;
-        Echo: any;
-    }
-}
-
+// Keep Pusher reference available for Laravel Echo's internal use
+// @ts-expect-error - Pusher must be globally available for Echo's reverb broadcaster
 window.Pusher = Pusher;
 
-window.Echo = new Echo({
+export const echo = new Echo({
     broadcaster: 'reverb',
     key: import.meta.env.VITE_REVERB_APP_KEY || 'saborexpresskey',
     wsHost: import.meta.env.VITE_REVERB_HOST || 'localhost',
@@ -19,4 +14,3 @@ window.Echo = new Echo({
     forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'http') === 'https',
     enabledTransports: ['ws', 'wss'],
 });
-

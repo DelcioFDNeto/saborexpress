@@ -40,7 +40,7 @@ export default function DeliveryClient() {
     if (saved) {
       try {
         return JSON.parse(saved);
-      } catch (e) {
+      } catch {
         return [];
       }
     }
@@ -108,7 +108,7 @@ export default function DeliveryClient() {
       } else {
         toast.error('CEP não encontrado.');
       }
-    } catch (err) {
+    } catch {
       toast.error('Erro ao buscar CEP.');
     } finally {
       setAddressLoading(false);
@@ -200,9 +200,10 @@ export default function DeliveryClient() {
       setCreatedOrderId(orderId);
       setSuccess(true);
       setCart([]);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      toast.error(err.response?.data?.message || 'Erro ao processar pedido. Verifique os dados e tente novamente.');
+      const e = err as { response?: { data?: { message?: string } } };
+      toast.error(e.response?.data?.message || 'Erro ao processar pedido. Verifique os dados e tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -250,7 +251,7 @@ export default function DeliveryClient() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row font-sans">
+    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row font-sans animate-fade-in">
       
       {/* Left Area: Menu */}
       <div className="flex-1 p-6 md:p-10 max-h-screen overflow-y-auto">

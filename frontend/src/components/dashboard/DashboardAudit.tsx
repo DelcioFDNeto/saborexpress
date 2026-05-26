@@ -11,14 +11,14 @@ interface AuditEvent {
   auditable_type: string;
   auditable_id: number;
   description: string;
-  metadata: any;
+  metadata: Record<string, unknown>;
   created_at: string;
 }
 
 interface DashboardAuditProps {
   auditEvents: AuditEvent[];
   auditLoading: boolean;
-  auditPagination: any;
+  auditPagination: { last_page: number; [key: string]: unknown } | null;
   auditPage: number;
   setAuditPage: React.Dispatch<React.SetStateAction<number>>;
   auditFilterEvent: string;

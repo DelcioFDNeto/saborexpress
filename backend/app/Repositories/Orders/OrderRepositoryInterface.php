@@ -10,6 +10,8 @@ interface OrderRepositoryInterface
 {
     public function paginateWithDetails(int $perPage = 15): LengthAwarePaginator;
 
+    public function paginateForUser(int $userId, int $perPage = 15): LengthAwarePaginator;
+
     public function loadDetails(Order $order): Order;
 
     public function findActiveForTable(Table $table): ?Order;

@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { api } from '../../lib/api';
 import { toast } from 'sonner';
 
+interface ApiError {
+  response?: { data?: { message?: string } };
+}
+
 interface Category {
   id: number;
   name: string;
@@ -116,8 +120,9 @@ export default function DashboardCatalog({
       setEditingCategory(null);
       setShowCatForm(false);
       await onRefresh();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Falha ao salvar categoria.');
+    } catch (err: unknown) {
+      const e = err as ApiError;
+      toast.error(e.response?.data?.message || 'Falha ao salvar categoria.');
     }
   };
 
@@ -134,8 +139,9 @@ export default function DashboardCatalog({
       await api.delete(`/categories/${id}`);
       toast.success('Categoria excluída com sucesso!');
       await onRefresh();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Erro ao excluir categoria.');
+    } catch (err: unknown) {
+      const e = err as ApiError;
+      toast.error(e.response?.data?.message || 'Erro ao excluir categoria.');
     }
   };
 
@@ -164,8 +170,9 @@ export default function DashboardCatalog({
       }
       resetProductForm();
       await onRefresh();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Falha ao salvar produto.');
+    } catch (err: unknown) {
+      const e = err as ApiError;
+      toast.error(e.response?.data?.message || 'Falha ao salvar produto.');
     }
   };
 
@@ -199,8 +206,9 @@ export default function DashboardCatalog({
       await api.delete(`/products/${id}`);
       toast.success('Produto removido do cardápio com sucesso!');
       await onRefresh();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Erro ao deletar produto.');
+    } catch (err: unknown) {
+      const e = err as ApiError;
+      toast.error(e.response?.data?.message || 'Erro ao deletar produto.');
     }
   };
 
@@ -212,7 +220,7 @@ export default function DashboardCatalog({
       
       // Update local state without full reload
       setProducts(prev => prev.map(p => p.id === prod.id ? { ...p, is_available: nextAvailability } : p));
-    } catch (err: any) {
+    } catch {
       toast.error('Erro ao atualizar disponibilidade.');
     }
   };
@@ -257,7 +265,7 @@ export default function DashboardCatalog({
 
       {/* Modal de Categoria */}
       {showCatForm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-1000 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl animate-fade-in">
             <h3 className="text-xl font-black text-gray-900 mb-4">{editingCategory ? '✏️ Editar Categoria' : '➕ Nova Categoria'}</h3>
             <form onSubmit={handleSaveCategory} className="space-y-4">
@@ -280,7 +288,7 @@ export default function DashboardCatalog({
 
       {/* Modal de Produto */}
       {showProdForm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-1000 flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white rounded-3xl p-8 max-w-xl w-full shadow-2xl my-8 animate-fade-in">
             <h3 className="text-xl font-black text-gray-900 mb-6">{editingProduct ? '✏️ Editar Produto' : '➕ Novo Produto'}</h3>
             <form onSubmit={handleSaveProduct} className="space-y-4">
@@ -348,7 +356,7 @@ export default function DashboardCatalog({
                 onClick={() => setSelectedCategoryId('all')}
                 className={`w-full text-left px-5 py-3.5 rounded-2xl font-bold text-xs uppercase tracking-wider flex justify-between items-center transition-all ${
                   selectedCategoryId === 'all' 
-                    ? 'bg-gradient-to-r from-slate-900 to-slate-800 text-white font-extrabold shadow-md' 
+                    ? 'bg-linear-to-r from-slate-900 to-slate-800 text-white font-extrabold shadow-md' 
                     : 'bg-slate-50/50 text-slate-600 border border-slate-100 hover:bg-slate-100/70'
                 }`}
               >
@@ -362,7 +370,7 @@ export default function DashboardCatalog({
                     onClick={() => setSelectedCategoryId(c.id)}
                     className={`flex-1 text-left px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all truncate ${
                       selectedCategoryId === c.id 
-                        ? 'bg-gradient-to-r from-slate-900 to-slate-800 text-white font-extrabold shadow-md' 
+                        ? 'bg-linear-to-r from-slate-900 to-slate-800 text-white font-extrabold shadow-md' 
                         : 'text-slate-600 hover:bg-slate-100/50'
                     }`}
                   >
@@ -415,7 +423,7 @@ export default function DashboardCatalog({
                         <tr key={p.id} className="hover:bg-slate-50/40 transition-colors group">
                           <td className="px-6 py-5">
                             <div className="flex items-center gap-4">
-                              <div className="relative overflow-hidden w-12 h-12 md:w-14 md:h-14 rounded-2xl border border-slate-100 shadow-sm flex-shrink-0">
+                              <div className="relative overflow-hidden w-12 h-12 md:w-14 md:h-14 rounded-2xl border border-slate-100 shadow-sm shrink-0">
                                 <img src={p.image_url} alt={p.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
                               </div>
                               <div className="min-w-0">

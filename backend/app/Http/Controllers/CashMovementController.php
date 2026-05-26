@@ -2,21 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CashMovement;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use App\Actions\CashMovements\CreateCashMovementAction;
+use App\Repositories\CashMovements\CashMovementRepositoryInterface;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class CashMovementController extends Controller
 {
+    public function __construct(
+        private readonly CashMovementRepositoryInterface $cashMovements,
+        private readonly CreateCashMovementAction $createCashMovement,
+    ) {}
+
     public function index(Request $request)
     {
-        $today = Carbon::today();
-        
-        $movements = CashMovement::with('user')
-            ->whereDate('created_at', $today)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $movements = $this->cashMovements->todayMovements();
 
         $balanceIn = $movements->whereIn('type', ['Sale', 'Suprimento'])->sum('amount');
         $balanceOut = $movements->whereIn('type', ['Sangria', 'Refund'])->sum('amount');
@@ -40,33 +40,20 @@ class CashMovementController extends Controller
             'description' => ['required', 'string', 'max:255'],
         ]);
 
-        if ($validated['type'] === 'Sangria') {
-            // Check if there is enough cash
-            $today = Carbon::today();
-            $movements = CashMovement::whereDate('created_at', $today)->get();
-            $balanceIn = $movements->whereIn('type', ['Sale', 'Suprimento'])->sum('amount');
-            $balanceOut = $movements->whereIn('type', ['Sangria', 'Refund'])->sum('amount');
-            $cashBalance = $balanceIn - $balanceOut;
-
-            if ($validated['amount'] > $cashBalance) {
-                return response()->json(['message' => 'Saldo insuficiente em caixa para a sangria.'], 422);
-            }
-        }
-
-        $movement = CashMovement::create([
+        $movement = $this->createCashMovement->execute([
             'user_id' => $request->user()->id,
             'type' => $validated['type'],
             'amount' => $validated['amount'],
             'description' => $validated['description'],
         ]);
 
-        return response()->json($movement->load('user'), 201);
+        return response()->json($movement, 201);
     }
 
     public function report(Request $request)
     {
         $today = Carbon::today();
-        $movements = CashMovement::whereDate('created_at', $today)->get();
+        $movements = $this->cashMovements->todayMovements();
 
         $sales = (float) $movements->where('type', 'Sale')->sum('amount');
         $suprimentos = (float) $movements->where('type', 'Suprimento')->sum('amount');
@@ -74,12 +61,12 @@ class CashMovementController extends Controller
         $refunds = (float) $movements->where('type', 'Refund')->sum('amount');
 
         $pixSales = (float) $movements->where('type', 'Sale')->where('method', 'Pix')->sum('amount');
-        $cardSales = (float) $movements->where('type', 'Sale')->filter(fn($m) => in_array($m->method, ['Cartao', 'Cartão']))->sum('amount');
+        $cardSales = (float) $movements->where('type', 'Sale')->where('method', 'Cartao')->sum('amount');
         $cashSales = (float) $movements->where('type', 'Sale')->where('method', 'Dinheiro')->sum('amount');
 
         $totalIn = $sales + $suprimentos;
         $totalOut = $sangrias + $refunds;
-        
+
         $cashRefunds = $movements->where('type', 'Refund')->where('method', 'Dinheiro')->sum('amount');
         $cashBalance = $suprimentos + $cashSales - $sangrias - $cashRefunds;
 

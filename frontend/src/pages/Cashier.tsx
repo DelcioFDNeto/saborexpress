@@ -1,6 +1,33 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import { toast } from 'sonner';
+import { echo } from '../echo';
+import type { AxiosError } from 'axios';
+
+interface CashMovement {
+  id: number;
+  type: string;
+  amount: string;
+  description: string;
+  created_at: string;
+  order_id?: number;
+}
+
+interface SplitSimulation {
+  type?: string;
+  message?: string;
+  installments?: number[];
+}
+
+interface CashReport {
+  date: string;
+  sales: number;
+  drawer_cash_balance: number;
+  methods: { pix: number; card: number; cash: number };
+  suprimentos: number;
+  sangrias: number;
+  refunds: number;
+}
 
 interface OrderItem {
   id: number;
@@ -24,24 +51,28 @@ interface Order {
 export default function Cashier() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [movements, setMovements] = useState<any[]>([]);
+  const [movements, setMovements] = useState<CashMovement[]>([]);
   const [cashSummary, setCashSummary] = useState({ total_in: 0, total_out: 0, balance: 0 });
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [movementModal, setMovementModal] = useState<'Sangria' | 'Suprimento' | null>(null);
   const [movementAmount, setMovementAmount] = useState('');
   const [movementDesc, setMovementDesc] = useState('');
   
+  // Loading States
+  const [loadingOrders, setLoadingOrders] = useState(true);
+  const [loadingCash, setLoadingCash] = useState(true);
+  const [loadingSimulation, setLoadingSimulation] = useState(false);
+
   // Payment Simulation State
   const [splitType, setSplitType] = useState<'integral' | 'equal' | 'items' | 'custom'>('integral');
   const [numPeople, setNumPeople] = useState(1);
   const [selectedItemIds, setSelectedItemIds] = useState<number[]>([]);
-  const [simulation, setSimulation] = useState<any>(null);
-  const [paidTotal, setPaidTotal] = useState(0);
+  const [simulation, setSimulation] = useState<SplitSimulation | null>(null);
   const [customAmount, setCustomAmount] = useState('');
 
   // Fechamento de Caixa State
   const [isReportOpen, setIsReportOpen] = useState(false);
-  const [reportData, setReportData] = useState<any>(null);
+  const [reportData, setReportData] = useState<CashReport | null>(null);
 
   const fetchReport = async () => {
     try {
@@ -55,7 +86,8 @@ export default function Cashier() {
   };
 
   const fetchOrders = async () => {
-    try {      const res = await api.get(`/orders`);
+    try {
+      const res = await api.get(`/orders`);
       const actionable = res.data.data ? res.data.data : res.data;
       const filtered = actionable.filter((o: Order) => 
         (o.type === 'Mesa' && o.status === 'Fechada') || 
@@ -70,6 +102,8 @@ export default function Cashier() {
       }
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoadingOrders(false);
     }
   };
 
@@ -80,15 +114,19 @@ export default function Cashier() {
       setCashSummary(res.data.summary);
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoadingCash(false);
     }
   };
 
   useEffect(() => {
+    setLoadingOrders(true);
+    setLoadingCash(true);
     fetchOrders();
     fetchCash();
     
     // WebSockets via Laravel Echo
-    const channel = window.Echo.channel('orders');
+    const channel = echo.channel('orders');
     channel.listen('.OrderUpdated', () => {
       fetchOrders();
     });
@@ -111,15 +149,19 @@ export default function Cashier() {
 
     // Simulate Split
     const simulateSplit = async () => {
-      try {        const res = await api.post(`/orders/${selectedOrder.id}/split`, {
+      setLoadingSimulation(true);
+      try {
+        const res = await api.post(`/orders/${selectedOrder.id}/split`, {
           split_type: splitType,
           num_people: numPeople,
           item_ids: selectedItemIds
         });
         setSimulation(res.data);
-      } catch (err: any) {
+      } catch (err) {
         console.error(err);
         setSimulation(null);
+      } finally {
+        setLoadingSimulation(false);
       }
     };
     
@@ -127,7 +169,8 @@ export default function Cashier() {
   }, [selectedOrder, splitType, numPeople, selectedItemIds]);
 
   const handlePay = async (amount: number, method: string) => {
-    try {      await api.post(`/orders/${selectedOrder?.id}/pay`, {
+    try {
+      await api.post(`/orders/${selectedOrder?.id}/pay`, {
         amount,
         method
       });
@@ -162,8 +205,9 @@ export default function Cashier() {
       setMovementAmount('');
       setMovementDesc('');
       fetchCash();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Erro ao registrar movimentação.');
+    } catch (err) {
+      const axiosErr = err as AxiosError<{ message?: string }>;
+      toast.error(axiosErr.response?.data?.message || 'Erro ao registrar movimentação.');
     }
   };
 
@@ -173,13 +217,14 @@ export default function Cashier() {
       toast.success('Estorno realizado com sucesso!');
       fetchCash();
       fetchOrders();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Erro ao realizar estorno.');
+    } catch (err) {
+      const axiosErr = err as AxiosError<{ message?: string }>;
+      toast.error(axiosErr.response?.data?.message || 'Erro ao realizar estorno.');
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row">
+    <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row animate-fade-in">
       
       {/* Sidebar: Orders List */}
       <div className="w-full md:w-96 bg-white border-r border-gray-200 flex flex-col h-screen z-10 shadow-xl">
@@ -192,29 +237,44 @@ export default function Cashier() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          {orders.map(order => (
-            <div 
-              key={order.id} 
-              onClick={() => setSelectedOrder(order)}
-              className={`p-4 rounded-2xl border-2 transition-all cursor-pointer shadow-sm hover:shadow-md ${selectedOrder?.id === order.id ? 'border-sabor-primary bg-sabor-light' : 'border-gray-100 bg-white hover:border-gray-200'}`}
-            >
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded ${order.type === 'Mesa' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
-                    {order.type} {order.table ? `â€¢ Mesa ${order.table.number}` : ''}
-                  </span>
-                  <h3 className="font-bold text-gray-900 mt-1">Comanda #{order.id}</h3>
+          {loadingOrders ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="p-4 rounded-2xl border-2 border-gray-100 bg-white animate-pulse space-y-3 shadow-sm">
+                <div className="flex justify-between items-center">
+                  <div className="h-4 w-20 bg-gray-200 rounded"></div>
+                  <div className="h-4 w-16 bg-gray-200 rounded"></div>
                 </div>
-                <span className="font-black text-gray-900">R$ {Number(order.total_amount).toFixed(2)}</span>
+                <div className="h-6 w-32 bg-gray-200 rounded"></div>
+                <div className="h-3 w-40 bg-gray-200 rounded"></div>
               </div>
-              <p className="text-sm text-gray-500">{order.customer_name || 'Sem nome'}</p>
-            </div>
-          ))}
+            ))
+          ) : (
+            <>
+              {orders.map(order => (
+                <div 
+                  key={order.id} 
+                  onClick={() => setSelectedOrder(order)}
+                  className={`p-4 rounded-2xl border-2 transition-all cursor-pointer shadow-sm hover:shadow-md ${selectedOrder?.id === order.id ? 'border-sabor-primary bg-sabor-light' : 'border-gray-100 bg-white hover:border-gray-200'}`}
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded ${order.type === 'Mesa' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
+                        {order.type} {order.table ? `• Mesa ${order.table.number}` : ''}
+                      </span>
+                      <h3 className="font-bold text-gray-900 mt-1">Comanda #{order.id}</h3>
+                    </div>
+                    <span className="font-black text-gray-900">R$ {Number(order.total_amount).toFixed(2)}</span>
+                  </div>
+                  <p className="text-sm text-gray-500">{order.customer_name || 'Sem nome'}</p>
+                </div>
+              ))}
 
-          {orders.length === 0 && (
-            <div className="text-center text-gray-400 mt-10 p-4">
-              Nenhuma conta aguardando pagamento no momento.
-            </div>
+              {orders.length === 0 && (
+                <div className="text-center text-gray-400 mt-10 p-4">
+                  Nenhuma comanda aguardando pagamento no momento.
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -420,22 +480,38 @@ export default function Cashier() {
                   )}
 
                   {/* Parcelas (Simulation) */}
-                  {splitType !== 'custom' && simulation && simulation.installments && (
+                  {splitType !== 'custom' && (
                     <div className="space-y-3 mb-8">
                       <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Parcelas a Cobrar</h4>
-                      {simulation.installments.map((amount: number, index: number) => (
-                        <div key={index} className="flex justify-between items-center p-4 bg-blue-50/50 border border-blue-100 rounded-2xl group hover:bg-blue-50 transition-colors">
-                          <div className="flex items-center gap-3">
-                            <span className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm">{index + 1}</span>
-                            <span className="font-black text-gray-900 text-lg">R$ {amount.toFixed(2)}</span>
+                      {loadingSimulation ? (
+                        Array.from({ length: splitType === 'equal' ? numPeople : 1 }).map((_, index) => (
+                          <div key={index} className="flex justify-between items-center p-4 bg-blue-50/20 border border-blue-50 rounded-2xl animate-pulse">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-gray-200"></div>
+                              <div className="h-6 w-20 bg-gray-200 rounded"></div>
+                            </div>
+                            <div className="flex gap-2">
+                              <div className="h-8 w-12 bg-gray-200 rounded-lg"></div>
+                              <div className="h-8 w-16 bg-gray-200 rounded-lg"></div>
+                              <div className="h-8 w-16 bg-gray-200 rounded-lg"></div>
+                            </div>
                           </div>
-                          <div className="flex gap-2">
-                            <button onClick={() => handlePay(amount, 'PIX')} className="px-3 py-1.5 text-xs font-bold text-sabor-dark bg-sabor-light hover:bg-sabor-primary rounded-lg transition-colors">PIX</button>
-                            <button onClick={() => handlePay(amount, 'Cartão')} className="px-3 py-1.5 text-xs font-bold text-indigo-700 bg-indigo-100 hover:bg-indigo-200 rounded-lg transition-colors">Cartão</button>
-                            <button onClick={() => handlePay(amount, 'Dinheiro')} className="px-3 py-1.5 text-xs font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 rounded-lg transition-colors">Dinheiro</button>
+                        ))
+                      ) : (
+                        simulation && simulation.installments && simulation.installments.map((amount: number, index: number) => (
+                          <div key={index} className="flex justify-between items-center p-4 bg-blue-50/50 border border-blue-100 rounded-2xl group hover:bg-blue-50 transition-colors">
+                            <div className="flex items-center gap-3">
+                              <span className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm">{index + 1}</span>
+                              <span className="font-black text-gray-900 text-lg">R$ {amount.toFixed(2)}</span>
+                            </div>
+                            <div className="flex gap-2">
+                              <button onClick={() => handlePay(amount, 'PIX')} className="px-3 py-1.5 text-xs font-bold text-sabor-dark bg-sabor-light hover:bg-sabor-primary rounded-lg transition-colors">PIX</button>
+                              <button onClick={() => handlePay(amount, 'Cartão')} className="px-3 py-1.5 text-xs font-bold text-indigo-700 bg-indigo-100 hover:bg-indigo-200 rounded-lg transition-colors">Cartão</button>
+                              <button onClick={() => handlePay(amount, 'Dinheiro')} className="px-3 py-1.5 text-xs font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 rounded-lg transition-colors">Dinheiro</button>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))
+                      )}
                     </div>
                   )}
                 </>
@@ -469,31 +545,48 @@ export default function Cashier() {
             <div className="flex-1 overflow-y-auto p-6 bg-gray-50 custom-scrollbar">
               <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Movimentações de Hoje</h3>
               <div className="space-y-3">
-                {movements.map((mov) => (
-                  <div key={mov.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${
-                          mov.type === 'Sale' || mov.type === 'Suprimento' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
-                        }`}>
-                          {mov.type}
-                        </span>
-                        <p className="text-sm font-bold text-gray-800 mt-1">{mov.description}</p>
-                        <p className="text-xs text-gray-400">{new Date(mov.created_at).toLocaleTimeString()}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className={`font-black ${mov.type === 'Sale' || mov.type === 'Suprimento' ? 'text-emerald-600' : 'text-rose-600'}`}>
-                          {mov.type === 'Sale' || mov.type === 'Suprimento' ? '+' : '-'} R$ {Number(mov.amount).toFixed(2)}
-                        </p>
-                        {mov.type === 'Sale' && (
-                          <button onClick={() => handleRefund(mov.order_id)} className="text-xs text-red-500 hover:underline mt-1">Estornar</button>
-                        )}
+                {loadingCash ? (
+                  Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 animate-pulse space-y-2">
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-2 flex-1">
+                          <div className="h-3 w-16 bg-gray-200 rounded"></div>
+                          <div className="h-4 w-32 bg-gray-200 rounded"></div>
+                          <div className="h-3 w-24 bg-gray-200 rounded"></div>
+                        </div>
+                        <div className="h-5 w-20 bg-gray-200 rounded"></div>
                       </div>
                     </div>
-                  </div>
-                ))}
-                {movements.length === 0 && (
-                  <p className="text-center text-gray-400 mt-10 text-sm">Nenhuma movimentação hoje.</p>
+                  ))
+                ) : (
+                  <>
+                    {movements.map((mov) => (
+                      <div key={mov.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${
+                              mov.type === 'Sale' || mov.type === 'Suprimento' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+                            }`}>
+                              {mov.type}
+                            </span>
+                            <p className="text-sm font-bold text-gray-800 mt-1">{mov.description}</p>
+                            <p className="text-xs text-gray-400">{new Date(mov.created_at).toLocaleTimeString()}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className={`font-black ${mov.type === 'Sale' || mov.type === 'Suprimento' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                              {mov.type === 'Sale' || mov.type === 'Suprimento' ? '+' : '-'} R$ {Number(mov.amount).toFixed(2)}
+                            </p>
+                            {mov.type === 'Sale' && mov.order_id !== undefined && (
+                              <button onClick={() => handleRefund(mov.order_id!)} className="text-xs text-red-500 hover:underline mt-1">Estornar</button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {movements.length === 0 && (
+                      <p className="text-center text-gray-400 mt-10 text-sm">Nenhuma movimentação hoje.</p>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -653,4 +746,3 @@ export default function Cashier() {
     </div>
   );
 }
-
