@@ -27,6 +27,11 @@ class Product extends Model
         'stock_quantity' => 'integer',
     ];
 
+    public function setIsAvailableAttribute(mixed $value): void
+    {
+        $this->attributes['is_available'] = filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false';
+    }
+
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);

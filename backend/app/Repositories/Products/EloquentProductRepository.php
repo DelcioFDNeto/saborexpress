@@ -25,7 +25,7 @@ class EloquentProductRepository implements ProductRepositoryInterface
         }
 
         if (array_key_exists('is_available', $filters) && $filters['is_available'] !== null) {
-            $query->where('is_available', filter_var($filters['is_available'], FILTER_VALIDATE_BOOLEAN));
+            $query->where('is_available', $this->postgresBoolean($filters['is_available']));
         }
 
         if (array_key_exists('min_price', $filters) && $filters['min_price'] !== null) {
@@ -112,5 +112,10 @@ class EloquentProductRepository implements ProductRepositoryInterface
     public function delete(Product $product): void
     {
         $product->delete();
+    }
+
+    private function postgresBoolean(mixed $value): string
+    {
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false';
     }
 }

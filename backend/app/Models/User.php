@@ -35,6 +35,11 @@ class User extends Authenticatable
         ];
     }
 
+    public function setIsActiveAttribute(mixed $value): void
+    {
+        $this->attributes['is_active'] = filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false';
+    }
+
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);

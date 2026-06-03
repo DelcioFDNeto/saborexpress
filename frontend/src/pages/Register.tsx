@@ -22,6 +22,11 @@ export default function Register() {
     setLoading(true);
 
     try {
+      if (password !== passwordConfirmation) {
+        setError('A confirmacao de senha nao confere.');
+        return;
+      }
+
       const res = await api.post('/register', {
         name,
         email,

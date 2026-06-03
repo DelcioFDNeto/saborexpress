@@ -27,7 +27,6 @@ class AuthController extends Controller
             'email' => $validated['email'],
             'password' => $validated['password'],
             'role' => 'client',
-            'is_active' => true,
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;

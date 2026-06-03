@@ -11,7 +11,7 @@ class EloquentUserRepository implements UserRepositoryInterface
     {
         return User::query()
             ->when(isset($filters['role']), fn ($query) => $query->where('role', $filters['role']))
-            ->when(isset($filters['is_active']), fn ($query) => $query->where('is_active', filter_var($filters['is_active'], FILTER_VALIDATE_BOOLEAN)))
+            ->when(isset($filters['is_active']), fn ($query) => $query->where('is_active', $this->postgresBoolean($filters['is_active'])))
             ->when(isset($filters['search']), function ($query) use ($filters) {
                 $search = '%'.$filters['search'].'%';
 
@@ -31,11 +31,15 @@ class EloquentUserRepository implements UserRepositoryInterface
 
     public function create(array $data): User
     {
+        $data = $this->normalizeBooleanColumns($data);
+
         return User::create($data);
     }
 
     public function update(User $user, array $data): User
     {
+        $data = $this->normalizeBooleanColumns($data);
+
         $user->update($data);
 
         return $user->fresh();
@@ -44,5 +48,19 @@ class EloquentUserRepository implements UserRepositoryInterface
     public function delete(User $user): void
     {
         $user->delete();
+    }
+
+    private function normalizeBooleanColumns(array $data): array
+    {
+        if (array_key_exists('is_active', $data)) {
+            $data['is_active'] = $this->postgresBoolean($data['is_active']);
+        }
+
+        return $data;
+    }
+
+    private function postgresBoolean(mixed $value): string
+    {
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false';
     }
 }

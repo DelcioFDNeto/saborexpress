@@ -28,7 +28,7 @@ class DatabaseSeeder extends Seeder
                     'name' => ucfirst($role).' User',
                     'password' => bcrypt('password'),
                     'role' => $role,
-                    'is_active' => true,
+                    'is_active' => 'true',
                 ]
             );
         }
