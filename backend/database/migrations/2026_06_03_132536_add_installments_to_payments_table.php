@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('payments', function (Blueprint $table) {
-            $table->integer('installments')->default(1)->after('amount');
-        });
+        if (!Schema::hasColumn('payments', 'installments')) {
+            Schema::table('payments', function (Blueprint $table) {
+                $table->integer('installments')->default(1)->after('amount');
+            });
+        }
     }
 
     /**
