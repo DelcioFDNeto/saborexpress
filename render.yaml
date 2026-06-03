@@ -1,0 +1,63 @@
+version: "1"
+
+services:
+  # 1. Backend Principal (API REST)
+  - type: web
+    name: saborexpress-api
+    env: docker
+    rootDir: backend
+    plan: free # Modifique para o plano desejado
+    healthCheckPath: /api/config/debug # Ou qualquer rota de healthcheck
+    envVars:
+      - key: APP_NAME
+        value: SaborExpress
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: 5432
+      - key: DB_DATABASE
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: RUN_MIGRATIONS
+        value: true # Roda automaticamente no deploy
+
+  # 2. Servidor de WebSockets (Laravel Reverb)
+  - type: web
+    name: saborexpress-ws
+    env: docker
+    rootDir: backend
+    plan: free # Modifique para o plano desejado
+    dockerCommand: "php artisan reverb:start --host=0.0.0.0 --port=$PORT"
+    healthCheckPath: / # Reverb responde com 404/Upgrade no /, mas mantém a porta aberta
+    envVars:
+      - key: APP_NAME
+        value: SaborExpress
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: 5432
+      - key: DB_DATABASE
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: RUN_MIGRATIONS
+        value: false # Migrations já rodam na API
+      - key: REVERB_SERVER_HOST
+        value: 0.0.0.0
