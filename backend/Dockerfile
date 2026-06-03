@@ -5,7 +5,7 @@ RUN apt-get update \
         git \
         libpq-dev \
         unzip \
-    && docker-php-ext-install pdo pdo_pgsql \
+    && docker-php-ext-install pdo pdo_pgsql pcntl \
     && a2enmod rewrite \
     && echo "ServerName localhost" > /etc/apache2/conf-available/servername.conf \
     && a2enconf servername \
