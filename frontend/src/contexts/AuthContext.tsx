@@ -1,6 +1,6 @@
 import { createContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import { setAuthToken } from '../lib/api';
+import { api, clearStoredAuthSession, getStoredToken, getStoredUser, setAuthToken, storeAuthSession } from '../lib/api';
 
 interface User {
   id: number;
@@ -13,7 +13,7 @@ interface AuthContextData {
   user: User | null;
   token: string | null;
   login: (token: string, user: User) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
   isLoading: boolean;
 }
@@ -26,14 +26,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('@SaborExpress:token');
-    const storedUser = localStorage.getItem('@SaborExpress:user');
+    const storedToken = getStoredToken();
+    const storedUser = getStoredUser();
 
     if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-      
-      setAuthToken(storedToken);
+      try {
+        const parsedUser = JSON.parse(storedUser);
+
+        setToken(storedToken);
+        setUser(parsedUser);
+        setAuthToken(storedToken);
+        storeAuthSession(storedToken, parsedUser);
+      } catch {
+        clearStoredAuthSession();
+        setAuthToken(null);
+      }
     }
     
     setIsLoading(false);
@@ -43,18 +50,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(newToken);
     setUser(loggedUser);
     
-    localStorage.setItem('@SaborExpress:token', newToken);
-    localStorage.setItem('@SaborExpress:user', JSON.stringify(loggedUser));
-    
+    storeAuthSession(newToken, loggedUser);
     setAuthToken(newToken);
   };
 
-  const logout = () => {
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem('@SaborExpress:token');
-    localStorage.removeItem('@SaborExpress:user');
-    setAuthToken(null);
+  const logout = async () => {
+    try {
+      if (token) {
+        await api.post('/logout');
+      }
+    } finally {
+      setToken(null);
+      setUser(null);
+      clearStoredAuthSession();
+      setAuthToken(null);
+    }
   };
 
   return (

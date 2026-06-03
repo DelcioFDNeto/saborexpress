@@ -85,17 +85,7 @@ export default function DigitalMenu() {
       const allTables: Table[] = res.data.data ? res.data.data : res.data || [];
       setTables(allTables);
 
-      // Sincronizar mesa travada no local storage ou na URL
-      const savedTable = localStorage.getItem('saborexpress_tablet_table');
-      if (savedTable) {
-        try {
-          const parsed = JSON.parse(savedTable) as Table;
-          setSelectedTable(parsed);
-          fetchActiveOrderForTable(parsed.id);
-        } catch {
-          localStorage.removeItem('saborexpress_tablet_table');
-        }
-      } else if (tableNumberFromUrl) {
+      if (tableNumberFromUrl) {
         const found = allTables.find(t => t.number === tableNumberFromUrl);
         if (found) {
           setSelectedTable(found);
@@ -121,16 +111,8 @@ export default function DigitalMenu() {
     }
   };
 
-  // Load categories and products (cached SWR)
+  // Load categories and products
   const fetchMenu = async () => {
-    const cachedCategories = localStorage.getItem('saborexpress_categories');
-    const cachedProducts = localStorage.getItem('saborexpress_products');
-    
-    if (cachedCategories && cachedProducts) {
-      setCategories(JSON.parse(cachedCategories));
-      setProducts(JSON.parse(cachedProducts));
-    }
-
     try {
       const [catRes, prodRes] = await Promise.all([
         api.get('/categories'),
@@ -141,37 +123,21 @@ export default function DigitalMenu() {
       
       setCategories(freshCat);
       setProducts(freshProd);
-      localStorage.setItem('saborexpress_categories', JSON.stringify(freshCat));
-      localStorage.setItem('saborexpress_products', JSON.stringify(freshProd));
     } catch (err) {
       console.error(err);
     }
   };
 
-  // On mount, check locked storage first
+  // On mount, load table metadata and menu
   useEffect(() => {
     if (authLoading) return;
-
-    const savedTable = localStorage.getItem('saborexpress_tablet_table');
-    if (savedTable) {
-      try {
-        const parsed = JSON.parse(savedTable) as Table;
-        setSelectedTable(parsed);
-        fetchActiveOrderForTable(parsed.id);
-        setLoading(false);
-      } catch {
-        localStorage.removeItem('saborexpress_tablet_table');
-      }
-    }
     
-    // Fetch fresh table metadata in background
     fetchAllTables();
     fetchMenu();
   }, [tableNumberFromUrl, isAuthenticated, authLoading]);
 
-  // Handle table selection and lock it to tablet storage
+  // Handle table selection
   const selectLocalTable = (table: Table) => {
-    localStorage.setItem('saborexpress_tablet_table', JSON.stringify(table));
     setSelectedTable(table);
     setSearchParams({ table: table.number });
     toast.success(`Este tablet foi vinculado e travado na Mesa ${table.number}! ⚙️`);
@@ -242,8 +208,8 @@ export default function DigitalMenu() {
   const handleReleaseConfig = () => {
     if (isStaff) {
       if (confirm('Deseja realmente desvincular este dispositivo e liberar a mesa?')) {
-        localStorage.removeItem('saborexpress_tablet_table');
         setSelectedTable(null);
+        setActiveOrder(null);
         setSearchParams({});
         toast.info('Tablet desvinculado. Redirecionando para seletor administrativo.');
       }

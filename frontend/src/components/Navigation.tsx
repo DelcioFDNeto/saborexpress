@@ -28,9 +28,9 @@ function Navigation() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setDropdownOpen(false);
-    logout();
+    await logout();
     navigate('/');
   };
 

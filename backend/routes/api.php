@@ -16,14 +16,6 @@ use App\Http\Controllers\CashMovementController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/debug-config', function() {
-    return response()->json([
-        'cache_default' => config('cache.default'),
-        'session_driver' => config('session.driver'),
-        'db_host' => config('database.connections.pgsql.host'),
-    ]);
-});
-
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);

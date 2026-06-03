@@ -66,7 +66,7 @@ src/
 
 ## Padrões
 
-- **SWR Cache**: Dados são cacheados em `localStorage` e exibidos instantaneamente com skeleton loaders enquanto a API atualiza em background
+- **Dados sempre atualizados**: As telas consultam a API diretamente e usam skeleton loaders durante o carregamento
 - **API centralizada**: Todas as chamadas à API usam `import { api } from '../lib/api'` — nunca axios direto
 - **Tipagem forte**: Interfaces TypeScript para todos os modelos de dados, sem uso de `any`
 - **Componentes modulares**: Dashboard dividido em 6 subcomponentes independentes

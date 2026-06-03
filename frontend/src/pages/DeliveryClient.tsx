@@ -4,13 +4,15 @@ import axios from 'axios';
 import { api } from '../lib/api';
 import { toast } from 'sonner';
 import { AuthContext } from '../contexts/AuthContext';
+import { useCart } from '../contexts/CartContext';
+import type { CartProduct } from '../contexts/CartContext';
 
 interface Category {
   id: number;
   name: string;
 }
 
-interface Product {
+interface Product extends CartProduct {
   id: number;
   name: string;
   description: string;
@@ -18,12 +20,6 @@ interface Product {
   category_id: number;
   is_available: boolean;
   image_url?: string | null;
-}
-
-interface CartItem {
-  product: Product;
-  quantity: number;
-  notes: string;
 }
 
 export default function DeliveryClient() {
@@ -34,22 +30,7 @@ export default function DeliveryClient() {
   const [products, setProducts] = useState<Product[]>([]);
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
   const [menuLoading, setMenuLoading] = useState(true);
-  
-  const [cart, setCart] = useState<CartItem[]>(() => {
-    const saved = localStorage.getItem('saborexpress_cart');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        return [];
-      }
-    }
-    return [];
-  });
-
-  useEffect(() => {
-    localStorage.setItem('saborexpress_cart', JSON.stringify(cart));
-  }, [cart]);
+  const { cart, setCart, clearCart } = useCart();
 
   // Redireciona clientes não logados para a tela de login
   useEffect(() => {
@@ -116,17 +97,6 @@ export default function DeliveryClient() {
   };
 
   useEffect(() => {    
-    // 1. Try to load cached data for instant render
-    const cachedCategories = localStorage.getItem('saborexpress_categories');
-    const cachedProducts = localStorage.getItem('saborexpress_products');
-    
-    if (cachedCategories && cachedProducts) {
-      setCategories(JSON.parse(cachedCategories));
-      setProducts(JSON.parse(cachedProducts));
-      setMenuLoading(false);
-    }
-
-    // 2. Fetch fresh data in the background (SWR pattern)
     Promise.all([
       api.get(`/categories`),
       api.get(`/products`)
@@ -137,10 +107,6 @@ export default function DeliveryClient() {
       setCategories(freshCategories);
       setProducts(freshProducts);
       setMenuLoading(false);
-      
-      // Update cache
-      localStorage.setItem('saborexpress_categories', JSON.stringify(freshCategories));
-      localStorage.setItem('saborexpress_products', JSON.stringify(freshProducts));
     }).catch(err => {
       console.error('Failed to fetch menu', err);
       setMenuLoading(false);
@@ -199,7 +165,7 @@ export default function DeliveryClient() {
       const orderId = res.data.data?.id || res.data.id;
       setCreatedOrderId(orderId);
       setSuccess(true);
-      setCart([]);
+      clearCart();
     } catch (err: unknown) {
       console.error(err);
       const e = err as { response?: { data?: { message?: string } } };

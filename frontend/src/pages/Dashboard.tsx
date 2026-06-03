@@ -81,48 +81,32 @@ interface AuditEvent {
   created_at: string;
 }
 
-// Safe cache retriever helper for SWR caching
-const getCache = <T,>(key: string, defaultValue: T): T => {
-  try {
-    const cached = localStorage.getItem(key);
-    return cached ? JSON.parse(cached) : defaultValue;
-  } catch {
-    return defaultValue;
-  }
-};
-
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<'indicators' | 'menu' | 'tables' | 'team' | 'clients' | 'audit'>('indicators');
   
-  // Local silent loading states
-  const [kpisLoading, setKpisLoading] = useState(!localStorage.getItem('se_cache_kpis'));
-  const [menuLoading, setMenuLoading] = useState(!localStorage.getItem('se_cache_products'));
-  const [tablesLoading, setTablesLoading] = useState(!localStorage.getItem('se_cache_tables'));
-  const [teamLoading, setTeamLoading] = useState(!localStorage.getItem('se_cache_users'));
-  const [auditLoading, setAuditLoading] = useState(!localStorage.getItem('se_cache_audit'));
+  const [kpisLoading, setKpisLoading] = useState(true);
+  const [menuLoading, setMenuLoading] = useState(true);
+  const [tablesLoading, setTablesLoading] = useState(true);
+  const [teamLoading, setTeamLoading] = useState(true);
+  const [auditLoading, setAuditLoading] = useState(true);
 
   const [period, setPeriod] = useState('all');
 
-  // Tab 1: Indicators State (loaded from cache)
-  const [kpis, setKpis] = useState<KPIs | null>(() => getCache('se_cache_kpis', null));
-  const [abcCurve, setAbcCurve] = useState<ABCItem[]>(() => getCache('se_cache_abccurve', []));
-  const [revenueChart, setRevenueChart] = useState<RevenuePoint[]>(() => getCache('se_cache_revenuechart', []));
-  const [channelsData, setChannelsData] = useState<Record<string, string>[]>(() => getCache('se_cache_channels', []));
-  const [methodsData, setMethodsData] = useState<Record<string, string>[]>(() => getCache('se_cache_methods', []));
-  const [operatorsData, setOperatorsData] = useState<Record<string, string>[]>(() => getCache('se_cache_operators', []));
+  const [kpis, setKpis] = useState<KPIs | null>(null);
+  const [abcCurve, setAbcCurve] = useState<ABCItem[]>([]);
+  const [revenueChart, setRevenueChart] = useState<RevenuePoint[]>([]);
+  const [channelsData, setChannelsData] = useState<Record<string, string>[]>([]);
+  const [methodsData, setMethodsData] = useState<Record<string, string>[]>([]);
+  const [operatorsData, setOperatorsData] = useState<Record<string, string>[]>([]);
 
-  // Tab 2: Menu (Categories & Products) State (loaded from cache)
-  const [categories, setCategories] = useState<Category[]>(() => getCache('se_cache_categories', []));
-  const [products, setProducts] = useState<Product[]>(() => getCache('se_cache_products', []));
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
 
-  // Tab 3: Tables State (loaded from cache)
-  const [tables, setTables] = useState<Table[]>(() => getCache('se_cache_tables', []));
+  const [tables, setTables] = useState<Table[]>([]);
 
-  // Tab 4: Team/Users State (loaded from cache)
-  const [users, setUsers] = useState<User[]>(() => getCache('se_cache_users', []));
+  const [users, setUsers] = useState<User[]>([]);
 
-  // Tab 5: Audit Events State (loaded from cache)
-  const [auditEvents, setAuditEvents] = useState<AuditEvent[]>(() => getCache('se_cache_audit', []));
+  const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
   const [auditFilterEvent, setAuditFilterEvent] = useState('');
   const [auditFilterUser, setAuditFilterUser] = useState('');
   const [auditDateFrom, setAuditDateFrom] = useState('');
@@ -142,13 +126,6 @@ export default function Dashboard() {
       setMethodsData(res.data.payment_methods || []);
       setOperatorsData(res.data.operators || []);
 
-      // Gravando no cache do localStorage
-      localStorage.setItem('se_cache_kpis', JSON.stringify(res.data.kpis));
-      localStorage.setItem('se_cache_abccurve', JSON.stringify(res.data.abc_curve || []));
-      localStorage.setItem('se_cache_revenuechart', JSON.stringify(res.data.revenue_chart || []));
-      localStorage.setItem('se_cache_channels', JSON.stringify(res.data.channels || []));
-      localStorage.setItem('se_cache_methods', JSON.stringify(res.data.payment_methods || []));
-      localStorage.setItem('se_cache_operators', JSON.stringify(res.data.operators || []));
     } catch (err: unknown) {
       console.error(err);
       toast.error('Erro ao carregar dados dos indicadores.');
@@ -164,12 +141,10 @@ export default function Dashboard() {
       const catRes = await api.get('/categories');
       const cats = catRes.data.data || catRes.data;
       setCategories(cats);
-      localStorage.setItem('se_cache_categories', JSON.stringify(cats));
       
       const prodRes = await api.get('/products?per_page=100');
       const prods = prodRes.data.data || prodRes.data;
       setProducts(prods);
-      localStorage.setItem('se_cache_products', JSON.stringify(prods));
     } catch (err) {
       console.error(err);
       toast.error('Erro ao carregar dados do cardápio.');
@@ -185,7 +160,6 @@ export default function Dashboard() {
       const res = await api.get('/tables');
       const tbls = res.data.data || res.data;
       setTables(tbls);
-      localStorage.setItem('se_cache_tables', JSON.stringify(tbls));
     } catch (err) {
       console.error(err);
       toast.error('Erro ao carregar mesas.');
@@ -201,7 +175,6 @@ export default function Dashboard() {
       const res = await api.get('/users');
       const usrs = res.data.data || res.data;
       setUsers(usrs);
-      localStorage.setItem('se_cache_users', JSON.stringify(usrs));
     } catch (err) {
       console.error(err);
       toast.error('Erro ao carregar equipe.');
@@ -224,7 +197,6 @@ export default function Dashboard() {
       const evs = res.data.data || res.data;
       setAuditEvents(evs);
       setAuditPagination(res.data.meta || null);
-      localStorage.setItem('se_cache_audit', JSON.stringify(evs));
     } catch (err) {
       console.error(err);
       toast.error('Erro ao carregar log de auditoria.');
