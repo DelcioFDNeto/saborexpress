@@ -23,7 +23,7 @@ class StartOrderItemPreparationAction
             $lockedItem = $this->orderItems->lockById($orderItem->id);
             $order = $this->orders->lockById($lockedItem->order_id);
 
-            if ($order->status !== OrderStatus::Open->value) {
+            if ($order->status !== OrderStatus::Open->value && $order->status !== OrderStatus::Paid->value) {
                 throw new ConflictHttpException('Order is not open for kitchen updates.');
             }
 
