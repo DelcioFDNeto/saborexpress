@@ -57,6 +57,7 @@ export default function OrderDetails() {
   const [editQuantity, setEditQuantity] = useState<number>(1);
   const [editNotes, setEditNotes] = useState<string>('');
   const [itemActionLoading, setItemActionLoading] = useState(false);
+  const [processingItems, setProcessingItems] = useState<number[]>([]);
 
   const [isTableActionModalOpen, setIsTableActionModalOpen] = useState(false);
   const [tableActionType, setTableActionType] = useState<'transfer' | 'merge'>('transfer');
@@ -77,7 +78,7 @@ export default function OrderDetails() {
 
       // Then, fetch the full order with relations
       const orderRes = await api.get(`/orders/${activeOrderData.id}`);
-      setOrder(orderRes.data);
+      setOrder(orderRes.data.data || orderRes.data);
     } catch (err) {
       console.error(err);
       toast.error('Erro ao carregar comanda.');
@@ -202,34 +203,46 @@ export default function OrderDetails() {
   };
 
   const handleRemoveItem = async (itemId: number) => {
-    if (!confirm('Deseja realmente remover este item da comanda?')) return;
+    if (!confirm('Deseja realmente remover este item pendente?')) return;
+    if (processingItems.includes(itemId)) return;
+    setProcessingItems(prev => [...prev, itemId]);
     try {
       await api.delete(`/order-items/${itemId}`);
-      toast.success('Item removido com sucesso.');
+      toast.success('Item removido com sucesso!');
       fetchOrderDetails();
     } catch {
       toast.error('Erro ao remover item.');
+    } finally {
+      setProcessingItems(prev => prev.filter(id => id !== itemId));
     }
   };
 
   const handleCancelItem = async (itemId: number) => {
     if (!confirm('Deseja realmente cancelar este item que já está em preparo?')) return;
+    if (processingItems.includes(itemId)) return;
+    setProcessingItems(prev => [...prev, itemId]);
     try {
       await api.patch(`/order-items/${itemId}/cancel`);
       toast.warning('Item cancelado.');
       fetchOrderDetails();
     } catch {
       toast.error('Erro ao cancelar item.');
+    } finally {
+      setProcessingItems(prev => prev.filter(id => id !== itemId));
     }
   };
 
   const handleDeliverItem = async (itemId: number) => {
+    if (processingItems.includes(itemId)) return;
+    setProcessingItems(prev => [...prev, itemId]);
     try {
       await api.patch(`/order-items/${itemId}/deliver`);
       toast.success('Item marcado como entregue!');
       fetchOrderDetails();
     } catch {
       toast.error('Erro ao registrar entrega.');
+    } finally {
+      setProcessingItems(prev => prev.filter(id => id !== itemId));
     }
   };
 
@@ -331,7 +344,7 @@ export default function OrderDetails() {
             </div>
             <div className="bg-gray-50 p-4 rounded-2xl">
               <span className="block text-gray-400 mb-1">Atendente</span>
-              <span className="font-extrabold text-gray-900">{order.user.name}</span>
+              <span className="font-extrabold text-gray-900">{order.user?.name || 'Auto-atendimento'}</span>
             </div>
           </div>
         </div>
@@ -402,8 +415,9 @@ export default function OrderDetails() {
                         {item.status === 'Pendente' && (
                           <button 
                             onClick={() => handleEditClick(item)}
+                            disabled={processingItems.includes(item.id)}
                             title="Editar quantidade ou notas"
-                            className="p-1.5 hover:bg-white hover:text-slate-800 text-slate-500 rounded-lg transition-all"
+                            className={`p-1.5 rounded-lg transition-all ${processingItems.includes(item.id) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white hover:text-slate-800 text-slate-500'}`}
                           >
                             ✏️
                           </button>
@@ -413,10 +427,11 @@ export default function OrderDetails() {
                         {item.status === 'Pronto' && (
                           <button 
                             onClick={() => handleDeliverItem(item.id)}
+                            disabled={processingItems.includes(item.id)}
                             title="Marcar como entregue na mesa"
-                            className="p-1.5 hover:bg-white text-emerald-600 rounded-lg transition-all text-xs font-black bg-emerald-50 px-2"
+                            className={`p-1.5 rounded-lg transition-all text-xs font-black px-2 ${processingItems.includes(item.id) ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'hover:bg-white text-emerald-600 bg-emerald-50'}`}
                           >
-                            ✅ Servir
+                            {processingItems.includes(item.id) ? '⏳ ...' : '✅ Servir'}
                           </button>
                         )}
 
@@ -424,8 +439,9 @@ export default function OrderDetails() {
                         {(item.status === 'Em Preparo' || item.status === 'Pronto') && (
                           <button 
                             onClick={() => handleCancelItem(item.id)}
+                            disabled={processingItems.includes(item.id)}
                             title="Cancelar item"
-                            className="p-1.5 hover:bg-white text-rose-600 rounded-lg transition-all"
+                            className={`p-1.5 rounded-lg transition-all ${processingItems.includes(item.id) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white text-rose-600'}`}
                           >
                             🚫
                           </button>
@@ -435,8 +451,9 @@ export default function OrderDetails() {
                         {item.status === 'Pendente' && (
                           <button 
                             onClick={() => handleRemoveItem(item.id)}
+                            disabled={processingItems.includes(item.id)}
                             title="Remover da comanda"
-                            className="p-1.5 hover:bg-white text-rose-500 rounded-lg transition-all"
+                            className={`p-1.5 rounded-lg transition-all ${processingItems.includes(item.id) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white text-rose-500'}`}
                           >
                             🗑️
                           </button>

@@ -106,6 +106,7 @@ export default function Register() {
                 <input
                   type="email"
                   required
+                  autoComplete="username"
                   className="appearance-none block w-full pl-11 pr-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl shadow-inner placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/60 shadow-[0_0_10px_rgba(16,185,129,0.02)] transition-all duration-300 sm:text-sm font-semibold text-gray-700"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -126,6 +127,7 @@ export default function Register() {
                   type="password"
                   required
                   minLength={8}
+                  autoComplete="new-password"
                   className="appearance-none block w-full pl-11 pr-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl shadow-inner placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/60 shadow-[0_0_10px_rgba(16,185,129,0.02)] transition-all duration-300 sm:text-sm font-semibold text-gray-700"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -146,6 +148,7 @@ export default function Register() {
                   type="password"
                   required
                   minLength={8}
+                  autoComplete="new-password"
                   className="appearance-none block w-full pl-11 pr-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl shadow-inner placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/60 shadow-[0_0_10px_rgba(16,185,129,0.02)] transition-all duration-300 sm:text-sm font-semibold text-gray-700"
                   value={passwordConfirmation}
                   onChange={(e) => setPasswordConfirmation(e.target.value)}

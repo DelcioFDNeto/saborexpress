@@ -23,8 +23,9 @@ class PayRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'amount' => ['required', 'numeric', 'min:0.01'],
-            'method' => ['required', Rule::enum(PaymentMethod::class)],
+            'amount' => 'required|numeric|min:0.01',
+            'method' => 'required|string|in:Pix,Cartao,Dinheiro',
+            'installments' => 'nullable|integer|min:1|max:12',
         ];
     }
 }

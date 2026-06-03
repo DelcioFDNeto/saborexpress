@@ -95,7 +95,7 @@ function Navigation() {
         </div>
 
         {/* Lado Direito: Navegação Responsiva com Bordas Animadas */}
-        <nav className="flex items-center gap-4 lg:gap-6 overflow-x-auto max-w-full pb-2 md:pb-0 scrollbar-none w-full md:w-auto justify-center md:justify-end">
+        <nav className="flex flex-wrap items-center gap-4 lg:gap-6 max-w-full pb-2 md:pb-0 w-full md:w-auto justify-center md:justify-end">
           <Link to="/cardapio" className="text-gray-600 font-extrabold text-sm md:text-base hover:text-sabor-dark transition-colors shrink-0 py-1 border-b-2 border-transparent hover:border-sabor-primary">
             Cardápio
           </Link>
@@ -118,7 +118,7 @@ function Navigation() {
             </Link>
           )}
 
-          {isAuthenticated && (user?.role === 'administrator' || user?.role === 'kitchen' || user?.role === 'delivery') && (
+          {isAuthenticated && (user?.role === 'administrator' || user?.role === 'delivery') && (
             <Link to="/entregas" className="text-gray-600 font-extrabold text-sm md:text-base hover:text-sabor-dark transition-colors shrink-0 py-1 border-b-2 border-transparent hover:border-sabor-primary">
               Entregas
             </Link>

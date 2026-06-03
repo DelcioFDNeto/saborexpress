@@ -3,6 +3,8 @@ import { api } from '../lib/api';
 import { toast } from 'sonner';
 import { echo } from '../echo';
 import type { AxiosError } from 'axios';
+import { QRCodeSVG } from 'qrcode.react';
+import { generatePixPayload } from '../lib/pix';
 
 interface CashMovement {
   id: number;
@@ -70,6 +72,11 @@ export default function Cashier() {
   const [simulation, setSimulation] = useState<SplitSimulation | null>(null);
   const [customAmount, setCustomAmount] = useState('');
 
+  // Payment Modal State
+  const [paymentModal, setPaymentModal] = useState<{ amount: number, method: 'Pix' | 'Cartao' | 'Dinheiro' } | null>(null);
+  const [installments, setInstallments] = useState<number>(1);
+  const [receivedAmount, setReceivedAmount] = useState<string>('');
+
   // Fechamento de Caixa State
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [reportData, setReportData] = useState<CashReport | null>(null);
@@ -90,8 +97,9 @@ export default function Cashier() {
       const res = await api.get(`/orders`);
       const actionable = res.data.data ? res.data.data : res.data;
       const filtered = actionable.filter((o: Order) => 
-        (o.type === 'Mesa' && o.status === 'Fechada') || 
-        (o.type === 'Delivery' && o.status === 'Aberta')
+        (o.type === 'Mesa' && o.status === 'Fechamento') || 
+        (o.type === 'Delivery' && o.status === 'Aberta') ||
+        (o.type === 'Takeout' && o.status === 'Aberta')
       );
       setOrders(filtered);
       
@@ -172,7 +180,8 @@ export default function Cashier() {
     try {
       await api.post(`/orders/${selectedOrder?.id}/pay`, {
         amount,
-        method
+        method,
+        installments: method === 'Cartao' ? installments : 1
       });
       
       const audio = new Audio('/sounds/caixa.mp3');
@@ -183,6 +192,9 @@ export default function Cashier() {
       fetchCash();
       setSplitType('integral');
       setSelectedItemIds([]);
+      setPaymentModal(null);
+      setInstallments(1);
+      setReceivedAmount('');
     } catch (err) {
       console.error(err);
       toast.error('Erro ao registrar pagamento.');
@@ -429,7 +441,13 @@ export default function Cashier() {
 
                   {/* Custom / Partial Payment */}
                   {splitType === 'custom' && (
-                    <div className="mt-4 p-5 bg-amber-50 border border-amber-100 rounded-2xl space-y-4 mb-8">
+                    <div className="mt-4 p-5 bg-amber-50/50 border border-amber-100 rounded-2xl space-y-4 mb-8">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-bold text-amber-800">Falta Pagar:</span>
+                        <span className="text-xl font-black text-amber-900">
+                          R$ {((Number(selectedOrder.total_amount) + Number(selectedOrder.service_fee || 0) - Number(selectedOrder.discount || 0)) - (movements.filter(m => m.order_id === selectedOrder.id && m.type === 'Sale').reduce((sum, m) => sum + Number(m.amount), 0))).toFixed(2)}
+                        </span>
+                      </div>
                       <div>
                         <label className="block text-xs font-bold text-amber-800 uppercase tracking-wider mb-2">Quantia a Receber (R$)</label>
                         <input 
@@ -441,39 +459,51 @@ export default function Cashier() {
                           placeholder="Ex: 50.00"
                         />
                       </div>
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-3 gap-3">
                         <button 
                           onClick={() => {
                             const amt = parseFloat(customAmount);
                             if (isNaN(amt) || amt <= 0) return toast.error('Insira uma quantia válida.');
-                            handlePay(amt, 'PIX');
+                            setPaymentModal({ amount: amt, method: 'Pix' });
                             setCustomAmount('');
                           }}
-                          className="py-3 bg-sabor-light text-sabor-dark hover:bg-sabor-primary rounded-xl font-bold text-xs border border-sabor-primary/30 transition-colors"
+                          className="flex-1 py-3 px-2 flex items-center justify-center gap-2 bg-sabor-light text-sabor-dark hover:bg-sabor-primary rounded-xl font-black text-xs transition-colors shadow-sm"
                         >
+                          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M7.746 19.308L1.134 12.69a1.002 1.002 0 010-1.42l6.612-6.618a1.002 1.002 0 011.42 0l2.062 2.061-6.198 6.197 6.198 6.197-2.062 2.061a1.002 1.002 0 01-1.42 0zm15.12-8.038l-6.612-6.618a1.002 1.002 0 00-1.42 0l-2.062 2.061 6.198 6.197-6.198 6.197 2.062 2.061a1.002 1.002 0 001.42 0l6.612-6.618a1.002 1.002 0 000-1.42z" />
+                            <path d="M12.001 8.932l-3.064 3.063 3.064 3.063 3.063-3.063-3.063-3.063z" />
+                          </svg>
                           PIX
                         </button>
                         <button 
                           onClick={() => {
                             const amt = parseFloat(customAmount);
                             if (isNaN(amt) || amt <= 0) return toast.error('Insira uma quantia válida.');
-                            handlePay(amt, 'Cartão');
+                            setPaymentModal({ amount: amt, method: 'Cartao' });
                             setCustomAmount('');
                           }}
-                          className="py-3 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 rounded-xl font-bold text-xs transition-colors"
+                          className="flex-1 py-3 px-2 flex items-center justify-center gap-2 bg-indigo-50 text-indigo-700 border border-indigo-100 hover:bg-indigo-100 hover:border-indigo-200 rounded-xl font-black text-xs transition-colors shadow-sm"
                         >
-                          Cartão
+                          <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <rect x="2" y="5" width="20" height="14" rx="2" strokeWidth="2.5"></rect>
+                            <line x1="2" y1="10" x2="22" y2="10" strokeWidth="2.5"></line>
+                          </svg>
+                          CARTÃO
                         </button>
                         <button 
                           onClick={() => {
                             const amt = parseFloat(customAmount);
                             if (isNaN(amt) || amt <= 0) return toast.error('Insira uma quantia válida.');
-                            handlePay(amt, 'Dinheiro');
+                            setPaymentModal({ amount: amt, method: 'Dinheiro' });
                             setCustomAmount('');
                           }}
-                          className="py-3 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 rounded-xl font-bold text-xs transition-colors"
+                          className="flex-1 py-3 px-2 flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 hover:border-emerald-200 rounded-xl font-black text-xs transition-colors shadow-sm"
                         >
-                          Dinheiro
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <rect x="2" y="6" width="20" height="12" rx="2" strokeWidth="2.5"></rect>
+                            <circle cx="12" cy="12" r="2" strokeWidth="2.5"></circle>
+                          </svg>
+                          DINHEIRO
                         </button>
                       </div>
                     </div>
@@ -482,32 +512,50 @@ export default function Cashier() {
                   {/* Parcelas (Simulation) */}
                   {splitType !== 'custom' && (
                     <div className="space-y-3 mb-8">
-                      <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Parcelas a Cobrar</h4>
+                      <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Pagar com:</h4>
                       {loadingSimulation ? (
                         Array.from({ length: splitType === 'equal' ? numPeople : 1 }).map((_, index) => (
-                          <div key={index} className="flex justify-between items-center p-4 bg-blue-50/20 border border-blue-50 rounded-2xl animate-pulse">
+                          <div key={index} className="flex justify-between items-center p-4 bg-gray-50/50 border border-gray-100 rounded-2xl animate-pulse">
                             <div className="flex items-center gap-3">
                               <div className="w-8 h-8 rounded-full bg-gray-200"></div>
                               <div className="h-6 w-20 bg-gray-200 rounded"></div>
                             </div>
                             <div className="flex gap-2">
-                              <div className="h-8 w-12 bg-gray-200 rounded-lg"></div>
-                              <div className="h-8 w-16 bg-gray-200 rounded-lg"></div>
-                              <div className="h-8 w-16 bg-gray-200 rounded-lg"></div>
+                              <div className="h-10 w-20 bg-gray-200 rounded-xl"></div>
+                              <div className="h-10 w-24 bg-gray-200 rounded-xl"></div>
+                              <div className="h-10 w-24 bg-gray-200 rounded-xl"></div>
                             </div>
                           </div>
                         ))
                       ) : (
                         simulation && simulation.installments && simulation.installments.map((amount: number, index: number) => (
-                          <div key={index} className="flex justify-between items-center p-4 bg-blue-50/50 border border-blue-100 rounded-2xl group hover:bg-blue-50 transition-colors">
+                          <div key={index} className="flex flex-col gap-4 p-5 bg-white border-2 border-gray-100 rounded-2xl group hover:border-gray-200 transition-colors">
                             <div className="flex items-center gap-3">
-                              <span className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm">{index + 1}</span>
-                              <span className="font-black text-gray-900 text-lg">R$ {amount.toFixed(2)}</span>
+                              <span className="w-8 h-8 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center font-black text-sm shrink-0">{index + 1}</span>
+                              <span className="font-black text-gray-900 text-xl tracking-tight">R$ {amount.toFixed(2)}</span>
                             </div>
-                            <div className="flex gap-2">
-                              <button onClick={() => handlePay(amount, 'PIX')} className="px-3 py-1.5 text-xs font-bold text-sabor-dark bg-sabor-light hover:bg-sabor-primary rounded-lg transition-colors">PIX</button>
-                              <button onClick={() => handlePay(amount, 'Cartão')} className="px-3 py-1.5 text-xs font-bold text-indigo-700 bg-indigo-100 hover:bg-indigo-200 rounded-lg transition-colors">Cartão</button>
-                              <button onClick={() => handlePay(amount, 'Dinheiro')} className="px-3 py-1.5 text-xs font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 rounded-lg transition-colors">Dinheiro</button>
+                            <div className="flex flex-col sm:flex-row gap-2 w-full">
+                              <button onClick={() => setPaymentModal({ amount, method: 'Pix' })} className="flex-1 py-2.5 px-3 flex items-center justify-center gap-1.5 text-[11px] font-black text-sabor-dark bg-sabor-light hover:bg-sabor-primary rounded-xl transition-all shadow-sm">
+                                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                                  <path d="M7.746 19.308L1.134 12.69a1.002 1.002 0 010-1.42l6.612-6.618a1.002 1.002 0 011.42 0l2.062 2.061-6.198 6.197 6.198 6.197-2.062 2.061a1.002 1.002 0 01-1.42 0zm15.12-8.038l-6.612-6.618a1.002 1.002 0 00-1.42 0l-2.062 2.061 6.198 6.197-6.198 6.197 2.062 2.061a1.002 1.002 0 001.42 0l6.612-6.618a1.002 1.002 0 000-1.42z" />
+                                  <path d="M12.001 8.932l-3.064 3.063 3.064 3.063 3.063-3.063-3.063-3.063z" />
+                                </svg>
+                                PIX
+                              </button>
+                              <button onClick={() => setPaymentModal({ amount, method: 'Cartao' })} className="flex-1 py-2.5 px-3 flex items-center justify-center gap-1.5 text-[11px] font-black text-indigo-700 bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 rounded-xl transition-all shadow-sm">
+                                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <rect x="2" y="5" width="20" height="14" rx="2" strokeWidth="2.5"></rect>
+                                  <line x1="2" y1="10" x2="22" y2="10" strokeWidth="2.5"></line>
+                                </svg>
+                                CARTÃO
+                              </button>
+                              <button onClick={() => setPaymentModal({ amount, method: 'Dinheiro' })} className="flex-1 py-2.5 px-3 flex items-center justify-center gap-1.5 text-[11px] font-black text-emerald-700 bg-emerald-50 border border-emerald-100 hover:bg-emerald-100 rounded-xl transition-all shadow-sm">
+                                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <rect x="2" y="6" width="20" height="12" rx="2" strokeWidth="2.5"></rect>
+                                  <circle cx="12" cy="12" r="2" strokeWidth="2.5"></circle>
+                                </svg>
+                                ESPÉCIE
+                              </button>
                             </div>
                           </div>
                         ))
@@ -738,6 +786,109 @@ export default function Cashier() {
                 className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-colors"
               >
                 Fechar Painel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Payment Modal */}
+      {paymentModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+              <h3 className="text-xl font-black text-gray-900 flex items-center gap-2">
+                {paymentModal.method === 'Pix' && 'Recebimento via PIX'}
+                {paymentModal.method === 'Cartao' && 'Recebimento no Cartão'}
+                {paymentModal.method === 'Dinheiro' && 'Recebimento em Dinheiro'}
+              </h3>
+              <button onClick={() => { setPaymentModal(null); setInstallments(1); setReceivedAmount(''); }} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 font-bold transition-colors">×</button>
+            </div>
+            
+            <div className="p-8 flex flex-col items-center">
+              <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Total a Cobrar</p>
+              <h2 className="text-4xl font-black text-gray-900 mb-8">R$ {paymentModal.amount.toFixed(2)}</h2>
+
+              {paymentModal.method === 'Pix' && (
+                <div className="flex flex-col items-center w-full space-y-6">
+                  <div className="p-4 bg-white rounded-2xl border-4 border-gray-100 shadow-sm relative group overflow-hidden">
+                    <QRCodeSVG 
+                      value={generatePixPayload('91984928535', paymentModal.amount)} 
+                      size={200} 
+                    />
+                  </div>
+                  <p className="text-sm text-gray-500 text-center font-medium">Peça para o cliente escanear o código no aplicativo do banco.</p>
+                </div>
+              )}
+
+              {paymentModal.method === 'Cartao' && (
+                <div className="w-full space-y-4">
+                  <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider mb-2">Número de Parcelas</label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {[1,2,3,4,5,6,7,8,9,10,11,12].map(num => (
+                      <button 
+                        key={num}
+                        onClick={() => setInstallments(num)}
+                        className={`py-3 rounded-xl font-black text-sm border-2 transition-all ${installments === num ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-gray-100 bg-white text-gray-500 hover:border-gray-200'}`}
+                      >
+                        {num}x
+                      </button>
+                    ))}
+                  </div>
+                  {installments > 1 && (
+                    <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100 text-center mt-4">
+                      <p className="text-indigo-800 font-bold">
+                        Serão cobradas {installments} parcelas de <span className="font-black">R$ {(paymentModal.amount / installments).toFixed(2)}</span>
+                      </p>
+                    </div>
+                  )}
+                  <p className="text-sm text-gray-500 text-center font-medium mt-4">Insira ou passe o cartão na maquininha.</p>
+                </div>
+              )}
+
+              {paymentModal.method === 'Dinheiro' && (
+                <div className="w-full space-y-4">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 uppercase tracking-wider mb-2">Valor Recebido (R$)</label>
+                    <input 
+                      type="number" 
+                      step="0.01"
+                      value={receivedAmount}
+                      onChange={(e) => setReceivedAmount(e.target.value)}
+                      className="w-full text-center text-3xl font-black text-emerald-700 p-4 bg-emerald-50 border-2 border-emerald-200 rounded-2xl focus:outline-none focus:border-emerald-400"
+                      placeholder="0.00"
+                      autoFocus
+                    />
+                  </div>
+                  {Number(receivedAmount) >= paymentModal.amount ? (
+                    <div className="p-4 bg-gray-900 rounded-2xl text-center space-y-1">
+                      <span className="text-gray-400 font-bold text-sm uppercase">Troco a Devolver</span>
+                      <p className="text-3xl font-black text-sabor-primary">
+                        R$ {(Number(receivedAmount) - paymentModal.amount).toFixed(2)}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="p-4 bg-gray-50 rounded-2xl text-center border border-gray-100">
+                      <p className="text-gray-400 font-bold">Aguardando valor total...</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 bg-gray-50 border-t border-gray-100 flex flex-col gap-3">
+              <button 
+                disabled={paymentModal.method === 'Dinheiro' && Number(receivedAmount) < paymentModal.amount}
+                onClick={() => handlePay(paymentModal.amount, paymentModal.method)}
+                className="w-full py-4 rounded-xl font-black text-lg transition-all flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed bg-gray-900 text-white hover:bg-gray-800 shadow-xl hover:shadow-2xl"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"></path></svg>
+                Confirmar Recebimento
+              </button>
+              <button 
+                onClick={() => { setPaymentModal(null); setInstallments(1); setReceivedAmount(''); }}
+                className="w-full py-3 rounded-xl font-bold text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-200/50 transition-colors"
+              >
+                Cancelar e Voltar
               </button>
             </div>
           </div>

@@ -17,6 +17,7 @@ class Payment extends Model
         'method',
         'status',
         'amount',
+        'installments',
         'paid_at',
         'notes',
     ];

@@ -58,6 +58,7 @@ class RegisterOrderPaymentAction
                 'method' => $data['method'],
                 'status' => PaymentStatus::Paid->value,
                 'amount' => $receivedAmount,
+                'installments' => $data['installments'] ?? 1,
                 'paid_at' => now(),
                 'notes' => $data['notes'] ?? null,
             ]);
