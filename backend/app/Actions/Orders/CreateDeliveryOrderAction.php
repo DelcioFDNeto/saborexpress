@@ -59,7 +59,7 @@ class CreateDeliveryOrderAction
                     'user_id' => $userId,
                     'amount' => $order->total_amount,
                     'method' => $validated['payment_method'],
-                    'status' => 'Paga',
+                    'status' => 'Pago',
                     'paid_at' => now(),
                 ]);
 
