@@ -63,3 +63,6 @@ export function clearStoredAuthSession() {
   deleteCookie(AUTH_TOKEN_COOKIE);
   deleteCookie(AUTH_USER_COOKIE);
 }
+
+// Initialize the token synchronously so that API calls on the first render don't fail with 401
+setAuthToken(getStoredToken());

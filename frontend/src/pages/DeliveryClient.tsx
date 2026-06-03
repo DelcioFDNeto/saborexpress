@@ -633,6 +633,7 @@ export default function DeliveryClient() {
                           maxLength={3}
                           value={cardCvv}
                           onChange={e => setCardCvv(e.target.value.replace(/\D/g, ''))}
+                          autoComplete="cc-csc"
                           className="w-full bg-white border border-gray-200 px-4 py-2.5 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-sabor-primary focus:outline-none transition-all text-center"
                         />
                       </div>
