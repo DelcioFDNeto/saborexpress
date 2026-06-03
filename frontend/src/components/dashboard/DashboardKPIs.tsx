@@ -195,7 +195,7 @@ export default function DashboardKPIs({
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
                       <XAxis dataKey="date" tick={{fontSize: 12, fill: '#6b7280'}} axisLine={false} tickLine={false} />
                       <YAxis tick={{fontSize: 12, fill: '#6b7280'}} axisLine={false} tickLine={false} tickFormatter={val => `R$${val}`} />
-                      <Tooltip formatter={(value: any) => [formatCurrency(Number(value || 0)), 'Faturamento']} labelFormatter={l => `Data: ${l}`} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                      <Tooltip formatter={(value: number | string) => [formatCurrency(Number(value || 0)), 'Faturamento']} labelFormatter={l => `Data: ${l}`} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
                       <Area type="monotone" dataKey="revenue" stroke="#059669" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -214,7 +214,7 @@ export default function DashboardKPIs({
                       <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f3f4f6" />
                       <XAxis type="number" hide />
                       <YAxis dataKey="name" type="category" width={120} tick={{fontSize: 11, fill: '#374151', fontWeight: 600}} axisLine={false} tickLine={false} />
-                      <Tooltip formatter={(value: any, name: any) => name === 'total_revenue' ? [formatCurrency(Number(value || 0)), 'Receita'] : [value, 'Qtd']} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                      <Tooltip formatter={(value: number | string, name: string) => name === 'total_revenue' ? [formatCurrency(Number(value || 0)), 'Receita'] : [value, 'Qtd']} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
                       <Bar dataKey="total_revenue" radius={[0, 4, 4, 0]} maxBarSize={24}>
                         {abcCurve.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={index < 3 ? '#fbbf24' : '#10b981'} />
