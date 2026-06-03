@@ -23,4 +23,4 @@ export const echo = reverbHost ? new Echo({
             stopListening() { return this; }
         };
     }
-} as unknown as Echo;
+} as any;

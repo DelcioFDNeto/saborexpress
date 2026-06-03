@@ -153,7 +153,7 @@ export default function Dashboard() {
   const methodsData = (dashboardQuery.data?.methodsData || []) as Record<string, string>[];
   const operatorsData = (dashboardQuery.data?.operatorsData || []) as Record<string, string>[];
   const categories = (menuQuery.data?.categories || []) as Category[];
-  const products = (menuQuery.data?.products || []).map(product => ({
+  const products = (menuQuery.data?.products || []).map((product: any) => ({
     ...product,
     price: Number(product.price),
     image_url: product.image_url || '',
