@@ -269,6 +269,7 @@ Para garantir que o SaborExpress alcance a maturidade de um produto completo e p
   - `/mark-ready`: Transiciona para `Pronto` e dispara em background o evento `OrderItemMarkedReady` notificando os garçons.
   - `/deliver`: Registra a entrega física ao cliente/salão.
   - `/cancel`: Cancela o item da comanda (com devolução automática de estoque dos produtos).
+* **Flexibilidade de Pagamentos Antecipados**: Refatoramos as Actions do KDS (`StartOrderItemPreparationAction`, `MarkOrderItemReadyAction`, `DeliverOrderItemAction` e `CancelOrderItemAction`) para permitirem que os cozinheiros processem normalmente pratos de comandas que já possuam o status de `Paga` (crucial para o fluxo de pagamentos imediatos via PIX ou Cartão em Delivery Online).
 * **Interface Fluida e Resiliente**: O frontend em `Kitchen.tsx` foi atualizado com um botão visual de **"Sincronizar Fila"**, *loading indicators* nas transações, e tratamento sonoro e visual para novos pedidos em tempo real via Laravel Echo.
 
 ### 13.2 M07 - O Caixa e Motor Financeiro Completo
@@ -410,7 +411,7 @@ Realizamos uma integração completa e profunda entre o backend refatorado pelos
 - **Tratamento de Erros Global**: Respostas JSON consistentes e padronizadas no `bootstrap/app.php` para todas as exceções operacionais.
 
 ### Centralização e Segurança do Frontend
-- **Cliente API Centralizado (`src/lib/api.ts`)**: Migramos todas as páginas e componentes do frontend para utilizar um cliente Axios centralizado, eliminando variáveis ad-hoc de `apiUrl`. A instância inclui inserção automatizada e dinâmica de tokens Sanctum.
+- **Cliente API Centralizado (`src/lib/api.ts`)**: Migramos todas as páginas e componentes do frontend para utilizar um cliente Axios centralizado, eliminando variáveis ad-hoc de `apiUrl`. A instância inclui inserção automatizada e **síncrona** de tokens Sanctum (prevenindo condições de corrida e retornos `401 Unauthorized` nos carregamentos iniciais de página).
 - **Correção de Permissões de Acesso (RBAC)**: Separamos as rotas no React Router permitindo que o perfil `delivery` (Entregador) acesse corretamente o painel `/entregas`, enquanto a rota `/cozinha` permanece exclusiva para a equipe KDS.
 
 ---

@@ -305,6 +305,8 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 - [x] Revisar responsividade das telas operacionais (landing page, login, mesas, comandas, cozinha, caixa e delivery otimizados para mobile, tablet e desktop).
 - [x] Corrigir `hover:scale-[1.02]` (substituir `hover:scale-102` em todo o frontend).
 - [x] Normalizar `Cartao`/`Cartão`: controllers usam `Cartao`, validações normalizam `Cartão` → `Cartao`.
+- [x] Sincronização da inicialização do Auth Token no `api.ts` para prevenir condições de corrida (Erro 401).
+- [x] Aprimorar acessibilidade e compliance de formulários com `autoComplete="cc-csc"`.
 
 ## M13 - Refatoração de Arquitetura (Padrão Repository/Action)
 
@@ -324,6 +326,8 @@ Este documento acompanha o estado atual do SaborExpress por módulos. A marcaç�
 - [x] `OrderController::myOrders()` usa `$this->orders->paginateForUser()`.
 - [x] CORS `supports_credentials` corrigido para `true`.
 - [x] Rota `/orders/{order}/track` movida para dentro de `auth:sanctum`.
+- [x] Permitir que a Cozinha e o Delivery manipulem itens de comandas previamente pagas (Status `Paga`).
+- [x] Adequar o status de transação para `Pago` nas Actions de Delivery/Takeout para passar no Check Constraint do BD.
 
 ## M14 - Identidade Visual e Branding
 
