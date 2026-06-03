@@ -12,6 +12,7 @@ import {
   fetchUsersData,
   queryKeys,
 } from '../lib/queries';
+import type { Product as QueryProduct } from '../lib/queries';
 
 // Import subcomponents
 import DashboardKPIs from '../components/dashboard/DashboardKPIs';
@@ -153,7 +154,7 @@ export default function Dashboard() {
   const methodsData = (dashboardQuery.data?.methodsData || []) as Record<string, string>[];
   const operatorsData = (dashboardQuery.data?.operatorsData || []) as Record<string, string>[];
   const categories = (menuQuery.data?.categories || []) as Category[];
-  const products = (menuQuery.data?.products || []).map((product: any) => ({
+  const products = (menuQuery.data?.products || []).map((product: QueryProduct) => ({
     ...product,
     price: Number(product.price),
     image_url: product.image_url || '',
