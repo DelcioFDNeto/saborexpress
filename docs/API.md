@@ -63,7 +63,10 @@ Produtos aceitam filtros por busca, categoria, disponibilidade, faixa de preço,
 Exigem `administrator`, `waiter` ou `cashier`. As rotas `GET /orders` e `GET /orders/{order}` também são acessíveis ao perfil `delivery`.
 
 - `GET /tables`
+- `POST /tables`
 - `GET /tables/{table}`
+- `PUT|PATCH /tables/{table}`
+- `DELETE /tables/{table}`
 - `POST /tables/{table}/open`
 - `PATCH /tables/{table}/reserve`
 - `PATCH /tables/{table}/cancel-reservation`
