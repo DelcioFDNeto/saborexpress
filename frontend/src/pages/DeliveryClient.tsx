@@ -6,6 +6,8 @@ import { toast } from 'sonner';
 import { AuthContext } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import type { CartProduct } from '../contexts/CartContext';
+import { useQuery } from '@tanstack/react-query';
+import { fetchMenuData, MENU_STALE_TIME, queryKeys } from '../lib/queries';
 
 interface Category {
   id: number;
@@ -26,11 +28,16 @@ export default function DeliveryClient() {
   const navigate = useNavigate();
   const { isAuthenticated, user, isLoading: authLoading } = useContext(AuthContext);
 
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
-  const [menuLoading, setMenuLoading] = useState(true);
   const { cart, setCart, clearCart } = useCart();
+  const { data: menuData, isLoading: menuLoading } = useQuery({
+    queryKey: queryKeys.menu(),
+    queryFn: () => fetchMenuData(),
+    staleTime: MENU_STALE_TIME,
+    enabled: !authLoading && isAuthenticated,
+  });
+  const categories = (menuData?.categories || []) as Category[];
+  const products = (menuData?.products || []) as Product[];
 
   // Redireciona clientes não logados para a tela de login
   useEffect(() => {
@@ -95,23 +102,6 @@ export default function DeliveryClient() {
       setAddressLoading(false);
     }
   };
-
-  useEffect(() => {    
-    Promise.all([
-      api.get(`/categories`),
-      api.get(`/products`)
-    ]).then(([catRes, prodRes]) => {
-      const freshCategories = catRes.data.data || catRes.data || [];
-      const freshProducts = prodRes.data.data || prodRes.data || [];
-      
-      setCategories(freshCategories);
-      setProducts(freshProducts);
-      setMenuLoading(false);
-    }).catch(err => {
-      console.error('Failed to fetch menu', err);
-      setMenuLoading(false);
-    });
-  }, []);
 
   const addToCart = (product: Product) => {
     const existing = cart.find(item => item.product.id === product.id);

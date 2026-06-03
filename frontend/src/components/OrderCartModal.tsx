@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { api } from '../lib/api';
+import { useQuery } from '@tanstack/react-query';
+import { fetchMenuData, MENU_STALE_TIME, queryKeys } from '../lib/queries';
 
 interface Category {
   id: number;
@@ -24,35 +26,21 @@ interface OrderCartModalProps {
 }
 
 export default function OrderCartModal({ orderId, isOpen, onClose, onItemAdded }: OrderCartModalProps) {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
   
-  const [loading, setLoading] = useState(false);
   const [addingProductId, setAddingProductId] = useState<number | null>(null);
   const [expandedProductId, setExpandedProductId] = useState<number | null>(null);
   const [currentNote, setCurrentNote] = useState('');
   const [currentQuantity, setCurrentQuantity] = useState(1);
+  const { data: menuData, isLoading: loading } = useQuery({
+    queryKey: queryKeys.menu(),
+    queryFn: () => fetchMenuData(),
+    staleTime: MENU_STALE_TIME,
+    enabled: isOpen,
+  });
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const fetchMenu = async () => {
-      setLoading(true);
-      try {        const [catRes, prodRes] = await Promise.all([
-          api.get(`/categories`),
-          api.get(`/products`)
-        ]);
-        setCategories(catRes.data.data || catRes.data || []);
-        setProducts(prodRes.data.data || prodRes.data || []);
-      } catch (err) {
-        console.error('Failed to fetch menu', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchMenu();
-  }, [isOpen]);
+  const categories = (menuData?.categories || []) as Category[];
+  const products = (menuData?.products || []) as Product[];
 
   if (!isOpen) return null;
 

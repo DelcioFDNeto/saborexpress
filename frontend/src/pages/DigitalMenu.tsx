@@ -3,6 +3,8 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { api } from '../lib/api';
 import { AuthContext } from '../contexts/AuthContext';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
+import { fetchMenuData, MENU_STALE_TIME, queryKeys } from '../lib/queries';
 
 interface Category {
   id: number;
@@ -55,8 +57,6 @@ export default function DigitalMenu() {
   const [tables, setTables] = useState<Table[]>([]);
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
 
   // UI State
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
@@ -72,6 +72,14 @@ export default function DigitalMenu() {
 
   // Check if current session belongs to restaurant staff
   const isStaff = isAuthenticated && (user?.role === 'administrator' || user?.role === 'waiter' || user?.role === 'cashier');
+  const { data: menuData, isLoading: menuLoading } = useQuery({
+    queryKey: queryKeys.menu(),
+    queryFn: () => fetchMenuData(),
+    staleTime: MENU_STALE_TIME,
+    enabled: !authLoading,
+  });
+  const categories = (menuData?.categories || []) as Category[];
+  const products = (menuData?.products || []) as Product[];
 
   // Load basic tables (only fetched if the user is authenticated as staff)
   const fetchAllTables = async () => {
@@ -111,29 +119,11 @@ export default function DigitalMenu() {
     }
   };
 
-  // Load categories and products
-  const fetchMenu = async () => {
-    try {
-      const [catRes, prodRes] = await Promise.all([
-        api.get('/categories'),
-        api.get('/products')
-      ]);
-      const freshCat = catRes.data.data || catRes.data || [];
-      const freshProd = prodRes.data.data || prodRes.data || [];
-      
-      setCategories(freshCat);
-      setProducts(freshProd);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   // On mount, load table metadata and menu
   useEffect(() => {
     if (authLoading) return;
     
     fetchAllTables();
-    fetchMenu();
   }, [tableNumberFromUrl, isAuthenticated, authLoading]);
 
   // Handle table selection
@@ -218,7 +208,7 @@ export default function DigitalMenu() {
     }
   };
 
-  if (loading || authLoading) {
+  if (loading || authLoading || (selectedTable && activeOrder && menuLoading)) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sabor-primary"></div>

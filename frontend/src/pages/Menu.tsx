@@ -1,10 +1,11 @@
-import { useEffect, useState, useContext } from 'react';
+import { useState, useContext } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { api } from '../lib/api';
 import { toast } from 'sonner';
 import { AuthContext } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import type { CartItem, CartProduct } from '../contexts/CartContext';
+import { useQuery } from '@tanstack/react-query';
+import { fetchMenuData, MENU_STALE_TIME, queryKeys } from '../lib/queries';
 
 interface Category {
   id: number;
@@ -26,30 +27,18 @@ export default function Menu() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const searchParam = searchParams.get('search') || '';
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
   const { isAuthenticated } = useContext(AuthContext);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { cart, setCart } = useCart();
+  const { data: menuData, isLoading: loading } = useQuery({
+    queryKey: queryKeys.menu(),
+    queryFn: () => fetchMenuData(),
+    staleTime: MENU_STALE_TIME,
+  });
 
-  useEffect(() => {    
-    Promise.all([
-      api.get(`/categories`),
-      api.get(`/products`)
-    ]).then(([catRes, prodRes]) => {
-      const freshCategories = catRes.data.data || catRes.data || [];
-      const freshProducts = prodRes.data.data || prodRes.data || [];
-      
-      setCategories(freshCategories);
-      setProducts(freshProducts);
-      setLoading(false);
-    }).catch(err => {
-      console.error('Error fetching fresh menu data:', err);
-      setLoading(false);
-    });
-  }, []);
+  const categories = (menuData?.categories || []) as Category[];
+  const products = (menuData?.products || []) as Product[];
 
   const addToCart = (product: Product) => {
     const existing = cart.find(item => item.product.id === product.id);

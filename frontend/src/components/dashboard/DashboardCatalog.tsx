@@ -220,6 +220,7 @@ export default function DashboardCatalog({
       
       // Update local state without full reload
       setProducts(prev => prev.map(p => p.id === prod.id ? { ...p, is_available: nextAvailability } : p));
+      await onRefresh();
     } catch {
       toast.error('Erro ao atualizar disponibilidade.');
     }

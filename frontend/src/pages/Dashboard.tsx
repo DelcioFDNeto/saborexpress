@@ -1,6 +1,17 @@
-import { useEffect, useState } from 'react';
-import { api } from '../lib/api';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  ADMIN_LIST_STALE_TIME,
+  AUDIT_STALE_TIME,
+  DASHBOARD_STALE_TIME,
+  fetchAuditData,
+  fetchDashboardData,
+  fetchMenuData,
+  fetchTablesData,
+  fetchUsersData,
+  queryKeys,
+} from '../lib/queries';
 
 // Import subcomponents
 import DashboardKPIs from '../components/dashboard/DashboardKPIs';
@@ -82,143 +93,111 @@ interface AuditEvent {
 }
 
 export default function Dashboard() {
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'indicators' | 'menu' | 'tables' | 'team' | 'clients' | 'audit'>('indicators');
-  
-  const [kpisLoading, setKpisLoading] = useState(true);
-  const [menuLoading, setMenuLoading] = useState(true);
-  const [tablesLoading, setTablesLoading] = useState(true);
-  const [teamLoading, setTeamLoading] = useState(true);
-  const [auditLoading, setAuditLoading] = useState(true);
-
   const [period, setPeriod] = useState('all');
 
-  const [kpis, setKpis] = useState<KPIs | null>(null);
-  const [abcCurve, setAbcCurve] = useState<ABCItem[]>([]);
-  const [revenueChart, setRevenueChart] = useState<RevenuePoint[]>([]);
-  const [channelsData, setChannelsData] = useState<Record<string, string>[]>([]);
-  const [methodsData, setMethodsData] = useState<Record<string, string>[]>([]);
-  const [operatorsData, setOperatorsData] = useState<Record<string, string>[]>([]);
-
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-
-  const [tables, setTables] = useState<Table[]>([]);
-
-  const [users, setUsers] = useState<User[]>([]);
-
-  const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
   const [auditFilterEvent, setAuditFilterEvent] = useState('');
   const [auditFilterUser, setAuditFilterUser] = useState('');
   const [auditDateFrom, setAuditDateFrom] = useState('');
   const [auditDateTo, setAuditDateTo] = useState('');
   const [auditPage, setAuditPage] = useState(1);
-  const [auditPagination, setAuditPagination] = useState<any>(null);
 
-  // Load Indicator Data
-  const fetchDashboardData = async () => {
-    if (!kpis) setKpisLoading(true);
-    try {
-      const res = await api.get(`/dashboard?period=${period}`);
-      setKpis(res.data.kpis);
-      setAbcCurve(res.data.abc_curve || []);
-      setRevenueChart(res.data.revenue_chart || []);
-      setChannelsData(res.data.channels || []);
-      setMethodsData(res.data.payment_methods || []);
-      setOperatorsData(res.data.operators || []);
+  const auditParams = useMemo(() => ({
+    page: auditPage,
+    event: auditFilterEvent,
+    userId: auditFilterUser,
+    dateFrom: auditDateFrom,
+    dateTo: auditDateTo,
+  }), [auditDateFrom, auditDateTo, auditFilterEvent, auditFilterUser, auditPage]);
 
-    } catch (err: unknown) {
-      console.error(err);
-      toast.error('Erro ao carregar dados dos indicadores.');
-    } finally {
-      setKpisLoading(false);
-    }
+  const dashboardQuery = useQuery({
+    queryKey: queryKeys.dashboard(period),
+    queryFn: () => fetchDashboardData(period),
+    staleTime: DASHBOARD_STALE_TIME,
+    enabled: activeTab === 'indicators',
+  });
+
+  const menuQuery = useQuery({
+    queryKey: queryKeys.menu('/products?per_page=100'),
+    queryFn: () => fetchMenuData('/products?per_page=100'),
+    staleTime: ADMIN_LIST_STALE_TIME,
+    enabled: activeTab === 'menu',
+  });
+
+  const tablesQuery = useQuery({
+    queryKey: queryKeys.tables,
+    queryFn: fetchTablesData,
+    staleTime: ADMIN_LIST_STALE_TIME,
+    enabled: activeTab === 'tables',
+  });
+
+  const usersQuery = useQuery({
+    queryKey: queryKeys.users,
+    queryFn: fetchUsersData,
+    staleTime: ADMIN_LIST_STALE_TIME,
+    enabled: activeTab === 'team' || activeTab === 'clients',
+  });
+
+  const auditQuery = useQuery({
+    queryKey: queryKeys.audit(auditParams),
+    queryFn: () => fetchAuditData(auditParams),
+    staleTime: AUDIT_STALE_TIME,
+    enabled: activeTab === 'audit',
+  });
+
+  const kpis = (dashboardQuery.data?.kpis || null) as KPIs | null;
+  const abcCurve = (dashboardQuery.data?.abcCurve || []) as ABCItem[];
+  const revenueChart = (dashboardQuery.data?.revenueChart || []) as RevenuePoint[];
+  const channelsData = (dashboardQuery.data?.channelsData || []) as Record<string, string>[];
+  const methodsData = (dashboardQuery.data?.methodsData || []) as Record<string, string>[];
+  const operatorsData = (dashboardQuery.data?.operatorsData || []) as Record<string, string>[];
+  const categories = (menuQuery.data?.categories || []) as Category[];
+  const products = (menuQuery.data?.products || []).map(product => ({
+    ...product,
+    price: Number(product.price),
+    image_url: product.image_url || '',
+  })) as Product[];
+  const tables = (tablesQuery.data || []) as Table[];
+  const users = (usersQuery.data || []) as User[];
+  const auditEvents = (auditQuery.data?.events || []) as AuditEvent[];
+  const auditPagination = auditQuery.data?.pagination || null;
+
+  const kpisLoading = dashboardQuery.isLoading;
+  const menuLoading = menuQuery.isLoading;
+  const tablesLoading = tablesQuery.isLoading;
+  const teamLoading = usersQuery.isLoading;
+  const auditLoading = auditQuery.isLoading;
+
+  const refetchMenuData = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['menu'] });
   };
 
-  // Load Menu Data
-  const fetchMenuData = async () => {
-    if (categories.length === 0 || products.length === 0) setMenuLoading(true);
-    try {
-      const catRes = await api.get('/categories');
-      const cats = catRes.data.data || catRes.data;
-      setCategories(cats);
-      
-      const prodRes = await api.get('/products?per_page=100');
-      const prods = prodRes.data.data || prodRes.data;
-      setProducts(prods);
-    } catch (err) {
-      console.error(err);
-      toast.error('Erro ao carregar dados do cardápio.');
-    } finally {
-      setMenuLoading(false);
-    }
+  const refetchTablesData = async () => {
+    await tablesQuery.refetch();
   };
 
-  // Load Tables
-  const fetchTablesData = async () => {
-    if (tables.length === 0) setTablesLoading(true);
-    try {
-      const res = await api.get('/tables');
-      const tbls = res.data.data || res.data;
-      setTables(tbls);
-    } catch (err) {
-      console.error(err);
-      toast.error('Erro ao carregar mesas.');
-    } finally {
-      setTablesLoading(false);
-    }
+  const refetchUsersData = async () => {
+    await usersQuery.refetch();
   };
 
-  // Load Users
-  const fetchUsersData = async () => {
-    if (users.length === 0) setTeamLoading(true);
-    try {
-      const res = await api.get('/users');
-      const usrs = res.data.data || res.data;
-      setUsers(usrs);
-    } catch (err) {
-      console.error(err);
-      toast.error('Erro ao carregar equipe.');
-    } finally {
-      setTeamLoading(false);
-    }
+  const refetchAuditData = async () => {
+    await auditQuery.refetch();
   };
 
-  // Load Audit Events
-  const fetchAuditData = async () => {
-    if (auditEvents.length === 0) setAuditLoading(true);
-    try {
-      let url = `/audit-events?page=${auditPage}`;
-      if (auditFilterEvent) url += `&event=${auditFilterEvent}`;
-      if (auditFilterUser) url += `&user_id=${auditFilterUser}`;
-      if (auditDateFrom) url += `&date_from=${auditDateFrom}`;
-      if (auditDateTo) url += `&date_to=${auditDateTo}`;
-      
-      const res = await api.get(url);
-      const evs = res.data.data || res.data;
-      setAuditEvents(evs);
-      setAuditPagination(res.data.meta || null);
-    } catch (err) {
-      console.error(err);
-      toast.error('Erro ao carregar log de auditoria.');
-    } finally {
-      setAuditLoading(false);
-    }
-  };
-
-  // Tab switcher loader
   useEffect(() => {
-    if (activeTab === 'indicators') {
-      fetchDashboardData();
-    } else if (activeTab === 'menu') {
-      fetchMenuData();
-    } else if (activeTab === 'tables') {
-      fetchTablesData();
-    } else if (activeTab === 'team' || activeTab === 'clients') {
-      fetchUsersData();
-    } else if (activeTab === 'audit') {
-      fetchAuditData();
-    }
-  }, [activeTab, period, auditPage]);
+    if (dashboardQuery.isError) toast.error('Erro ao carregar dados dos indicadores.');
+    if (menuQuery.isError) toast.error('Erro ao carregar dados do cardápio.');
+    if (tablesQuery.isError) toast.error('Erro ao carregar mesas.');
+    if (usersQuery.isError) toast.error('Erro ao carregar equipe.');
+    if (auditQuery.isError) toast.error('Erro ao carregar log de auditoria.');
+  }, [
+    dashboardQuery.isError,
+    menuQuery.isError,
+    tablesQuery.isError,
+    usersQuery.isError,
+    auditQuery.isError,
+  ]);
 
   return (
     <div className="flex flex-col md:flex-row bg-slate-900 font-sans min-h-[calc(100vh-88px)] md:h-[calc(100vh-88px)] overflow-hidden">
@@ -330,7 +309,7 @@ export default function Dashboard() {
             categories={categories}
             products={products}
             menuLoading={menuLoading}
-            onRefresh={fetchMenuData}
+            onRefresh={refetchMenuData}
           />
         )}
 
@@ -338,7 +317,7 @@ export default function Dashboard() {
           <DashboardTables 
             tables={tables}
             tablesLoading={tablesLoading}
-            onRefresh={fetchTablesData}
+            onRefresh={refetchTablesData}
           />
         )}
 
@@ -346,7 +325,7 @@ export default function Dashboard() {
           <DashboardStaff 
             users={users}
             teamLoading={teamLoading}
-            onRefresh={fetchUsersData}
+            onRefresh={refetchUsersData}
           />
         )}
 
@@ -354,7 +333,7 @@ export default function Dashboard() {
           <DashboardClients 
             users={users}
             teamLoading={teamLoading}
-            onRefresh={fetchUsersData}
+            onRefresh={refetchUsersData}
           />
         )}
 
@@ -373,7 +352,7 @@ export default function Dashboard() {
             setAuditDateFrom={setAuditDateFrom}
             auditDateTo={auditDateTo}
             setAuditDateTo={setAuditDateTo}
-            onRefresh={fetchAuditData}
+            onRefresh={refetchAuditData}
           />
         )}
       </main>

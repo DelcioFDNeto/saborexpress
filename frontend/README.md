@@ -66,7 +66,7 @@ src/
 
 ## Padrões
 
-- **Dados sempre atualizados**: As telas consultam a API diretamente e usam skeleton loaders durante o carregamento
+- **Cache em memória**: Dados de cardápio e dashboard usam TanStack Query com TTL curto, sem persistência no navegador
 - **API centralizada**: Todas as chamadas à API usam `import { api } from '../lib/api'` — nunca axios direto
 - **Tipagem forte**: Interfaces TypeScript para todos os modelos de dados, sem uso de `any`
 - **Componentes modulares**: Dashboard dividido em 6 subcomponentes independentes
